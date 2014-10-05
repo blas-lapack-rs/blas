@@ -19,6 +19,9 @@ extern {
         ldc: *const c_int);
 }
 
+pub static NORMAL: i8 = 'N' as i8;
+pub static TRANSPOSED: i8 = 'T' as i8;
+
 pub fn dgemv(trans: i8, m: i32, n: i32, alpha: f64, a: &[f64], lda: i32,
     x: &[f64], incx: i32, beta: f64, y: &mut[f64], incy: i32) {
 
@@ -55,14 +58,13 @@ mod tests {
 
     #[test]
     fn dgemv() {
-        let m: i32 = 2;
-        let n: i32 = 3;
+        let (m, n) = (2, 3);
 
         let a = [1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
         let x = [1.0, 2.0, 3.0];
         let mut y = [6.0, 8.0];
 
-        super::dgemv('N' as i8, m, n, 1.0, a, m, x, 1, 1.0, y, 1);
+        super::dgemv(super::NORMAL, m, n, 1.0, a, m, x, 1, 1.0, y, 1);
 
         let expected_y = [20.0, 40.0];
 
@@ -71,15 +73,13 @@ mod tests {
 
     #[test]
     fn dgemm() {
-        let m: i32 = 2;
-        let n: i32 = 4;
-        let k: i32 = 3;
+        let (m, n, k) = (2, 4, 3);
 
         let a = [1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
         let b = [1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
         let mut c = [2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 
-        super::dgemm('N' as i8, 'N' as i8, m, n, k, 1.0, a, m, b, k, 1.0, c, m);
+        super::dgemm(super::NORMAL, super::NORMAL, m, n, k, 1.0, a, m, b, k, 1.0, c, m);
 
         let expected_c = [40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
 
@@ -96,7 +96,7 @@ mod tests {
         let mut y = box [0.0, ..m*1];
 
         b.iter(|| {
-            super::dgemv('N' as i8, m as i32, m as i32, 1.0, &*a,
+            super::dgemv(super::NORMAL, m as i32, m as i32, 1.0, &*a,
                 m as i32, &*x, 1, 1.0, &mut *y, 1)
         })
     }
@@ -112,7 +112,7 @@ mod tests {
 
         b.iter(|| {
             for _ in range(0u, 20000) {
-                super::dgemv('N' as i8, m as i32, m as i32, 1.0, &*a,
+                super::dgemv(super::NORMAL, m as i32, m as i32, 1.0, &*a,
                     m as i32, &*x, 1, 1.0, &mut *y, 1);
             }
         })
