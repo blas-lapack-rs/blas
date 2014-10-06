@@ -1,7 +1,7 @@
 # BLAS
 
-The package provides an interface to the
-[Basic Linear Algebra Subprograms](http://www.netlib.org/blas/).
+The library provides an interface to the [Basic Linear Algebra Subprograms](
+http://www.netlib.org/blas/).
 
 ## Contributing
 
