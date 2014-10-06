@@ -22,22 +22,21 @@ extern {
 pub static NORMAL: i8 = 'N' as i8;
 pub static TRANSPOSED: i8 = 'T' as i8;
 
-pub fn dgemv(trans: i8, m: i32, n: i32, alpha: f64, a: &[f64], lda: i32,
-    x: &[f64], incx: i32, beta: f64, y: &mut[f64], incy: i32) {
+#[inline]
+pub fn dgemv(trans: i8, m: i32, n: i32, alpha: f64, a: *const f64,
+    lda: i32, x: *const f64, incx: i32, beta: f64, y: *mut f64, incy: i32) {
 
     unsafe {
-        dgemv_(&trans, &m, &n, &alpha, a.as_ptr(), &lda, x.as_ptr(), &incx,
-            &beta, y.as_mut_ptr(), &incy);
+        dgemv_(&trans, &m, &n, &alpha, a, &lda, x, &incx, &beta, y, &incy);
     }
 }
 
-pub fn dgemm(transa: i8, transb: i8, m: i32, n: i32, k: i32, alpha: f64,
-    a: &[f64], lda: i32, b: &[f64], ldb: i32, beta: f64, c: &mut[f64],
-    ldc: i32) {
+#[inline]
+pub fn dgemm(transa: i8, transb: i8, m: i32, n: i32, k: i32, alpha: f64, a: *const f64,
+    lda: i32, b: *const f64, ldb: i32, beta: f64, c: *mut f64, ldc: i32) {
 
     unsafe {
-        dgemm_(&transa, &transb, &m, &n, &k, &alpha, a.as_ptr(), &lda,
-            b.as_ptr(), &ldb, &beta, c.as_mut_ptr(), &ldc);
+        dgemm_(&transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
     }
 }
 
@@ -59,61 +58,55 @@ mod tests {
     #[test]
     fn dgemv() {
         let (m, n) = (2, 3);
+        let a = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
+        let x = vec![1.0, 2.0, 3.0];
+        let mut y = vec![6.0, 8.0];
 
-        let a = [1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
-        let x = [1.0, 2.0, 3.0];
-        let mut y = [6.0, 8.0];
+        super::dgemv(super::NORMAL, m, n, 1.0, a.as_ptr(), m, x.as_ptr(), 1,
+            1.0, y.as_mut_ptr(), 1);
 
-        super::dgemv(super::NORMAL, m, n, 1.0, a, m, x, 1, 1.0, y, 1);
-
-        let expected_y = [20.0, 40.0];
-
+        let expected_y = vec![20.0, 40.0];
         assert_equal!(y, expected_y);
     }
 
     #[test]
     fn dgemm() {
         let (m, n, k) = (2, 4, 3);
+        let a = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
+        let b = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
+        let mut c = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 
-        let a = [1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
-        let b = [1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
-        let mut c = [2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
+        super::dgemm(super::NORMAL, super::NORMAL, m, n, k, 1.0, a.as_ptr(),
+            m, b.as_ptr(), k, 1.0, c.as_mut_ptr(), m);
 
-        super::dgemm(super::NORMAL, super::NORMAL, m, n, k, 1.0, a, m, b, k, 1.0, c, m);
-
-        let expected_c = [40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
-
+        let expected_c = vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
         assert_equal!(c, expected_c);
     }
 
     #[bench]
     fn dgemv_few_large(b: &mut Bencher) {
-        #[allow(non_uppercase_statics)]
-        static m: uint = 1000;
-
-        let a = box [0.0, ..m*m];
-        let x = box [0.0, ..m*1];
-        let mut y = box [0.0, ..m*1];
+        let m = 1000;
+        let a = Vec::from_elem(m * m, 1.0);
+        let x = Vec::from_elem(m * 1, 1.0);
+        let mut y = Vec::from_elem(m * 1, 1.0);
 
         b.iter(|| {
-            super::dgemv(super::NORMAL, m as i32, m as i32, 1.0, &*a,
-                m as i32, &*x, 1, 1.0, &mut *y, 1)
+            super::dgemv(super::NORMAL, m as i32, m as i32, 1.0, a.as_ptr(),
+                m as i32, x.as_ptr(), 1, 1.0, y.as_mut_ptr(), 1)
         })
     }
 
     #[bench]
     fn dgemv_many_small(b: &mut Bencher) {
-        #[allow(non_uppercase_statics)]
-        static m: uint = 20;
-
-        let a = box [0.0, ..m*m];
-        let x = box [0.0, ..m*1];
-        let mut y = box [0.0, ..m*1];
+        let m = 20;
+        let a = Vec::from_elem(m * m, 1.0);
+        let x = Vec::from_elem(m * 1, 1.0);
+        let mut y = Vec::from_elem(m * 1, 1.0);
 
         b.iter(|| {
             for _ in range(0u, 20000) {
-                super::dgemv(super::NORMAL, m as i32, m as i32, 1.0, &*a,
-                    m as i32, &*x, 1, 1.0, &mut *y, 1);
+                super::dgemv(super::NORMAL, m as i32, m as i32, 1.0, a.as_ptr(),
+                    m as i32, x.as_ptr(), 1, 1.0, y.as_mut_ptr(), 1);
             }
         })
     }
