@@ -12,8 +12,8 @@ fn dgemv_few_large(b: &mut Bencher) {
     let mut y = Vec::from_elem(m * 1, 1.0);
 
     b.iter(|| {
-        blas::dgemv('N' as i8, m as i32, m as i32, 1.0, a.as_ptr(), m as i32,
-                    x.as_ptr(), 1, 1.0, y.as_mut_ptr(), 1)
+        blas::dgemv(b'N', m, m, 1.0, a.as_ptr(), m, x.as_ptr(), 1, 1.0,
+                    y.as_mut_ptr(), 1)
     })
 }
 
@@ -27,8 +27,8 @@ fn dgemv_many_small(b: &mut Bencher) {
 
     b.iter(|| {
         for _ in range(0u, 20000) {
-            blas::dgemv('N' as i8, m as i32, m as i32, 1.0, a.as_ptr(),
-                        m as i32, x.as_ptr(), 1, 1.0, y.as_mut_ptr(), 1);
+            blas::dgemv(b'N', m, m, 1.0, a.as_ptr(), m, x.as_ptr(), 1, 1.0,
+                        y.as_mut_ptr(), 1);
         }
     })
 }

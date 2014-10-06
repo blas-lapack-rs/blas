@@ -19,7 +19,7 @@ fn dgemv() {
     let x = vec![1.0, 2.0, 3.0];
     let mut y = vec![6.0, 8.0];
 
-    blas::dgemv('N' as i8, m, n, 1.0, a.as_ptr(), m, x.as_ptr(), 1, 1.0,
+    blas::dgemv(b'N', m, n, 1.0, a.as_ptr(), m, x.as_ptr(), 1, 1.0,
                 y.as_mut_ptr(), 1);
 
     let expected_y = vec![20.0, 40.0];
@@ -34,8 +34,8 @@ fn dgemm() {
     let b = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
     let mut c = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 
-    blas::dgemm('N' as i8, 'N' as i8, m, n, k, 1.0, a.as_ptr(), m, b.as_ptr(),
-                k, 1.0, c.as_mut_ptr(), m);
+    blas::dgemm(b'N', b'N', m, n, k, 1.0, a.as_ptr(), m, b.as_ptr(), k, 1.0,
+                c.as_mut_ptr(), m);
 
     let expected_c = vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
     assert_equal!(c, expected_c);

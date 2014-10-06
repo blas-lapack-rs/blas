@@ -32,11 +32,12 @@ extern {
 ///
 /// http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html
 #[inline]
-pub fn dgemv(trans: i8, m: i32, n: i32, alpha: f64, a: *const f64, lda: i32,
-             x: *const f64, incx: i32, beta: f64, y: *mut f64, incy: i32) {
+pub fn dgemv(trans: u8, m: uint, n: uint, alpha: f64, a: *const f64, lda: uint,
+             x: *const f64, incx: uint, beta: f64, y: *mut f64, incy: uint) {
 
     unsafe {
-        dgemv_(&trans, &m, &n, &alpha, a, &lda, x, &incx, &beta, y, &incy);
+        dgemv_(&(trans as i8), &(m as i32), &(n as i32), &alpha, a,
+               &(lda as i32), x, &(incx as i32), &beta, y, &(incy as i32));
     }
 }
 
@@ -58,11 +59,13 @@ pub fn dgemv(trans: i8, m: i32, n: i32, alpha: f64, a: *const f64, lda: i32,
 ///
 /// http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html
 #[inline]
-pub fn dgemm(transa: i8, transb: i8, m: i32, n: i32, k: i32, alpha: f64,
-             a: *const f64, lda: i32, b: *const f64, ldb: i32, beta: f64,
-             c: *mut f64, ldc: i32) {
+pub fn dgemm(transa: u8, transb: u8, m: uint, n: uint, k: uint, alpha: f64,
+             a: *const f64, lda: uint, b: *const f64, ldb: uint, beta: f64,
+             c: *mut f64, ldc: uint) {
 
     unsafe {
-        dgemm_(&transa, &transb, &m, &n, &k, &alpha, a, &lda, b, &ldb, &beta, c, &ldc);
+        dgemm_(&(transa as i8), &(transb as i8), &(m as i32), &(n as i32),
+               &(k as i32), &alpha, a, &(lda as i32), b, &(ldb as i32), &beta,
+               c, &(ldc as i32));
     }
 }
