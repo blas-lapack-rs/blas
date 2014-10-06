@@ -58,6 +58,7 @@ mod tests {
     #[test]
     fn dgemv() {
         let (m, n) = (2, 3);
+
         let a = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
         let x = vec![1.0, 2.0, 3.0];
         let mut y = vec![6.0, 8.0];
@@ -72,6 +73,7 @@ mod tests {
     #[test]
     fn dgemm() {
         let (m, n, k) = (2, 4, 3);
+
         let a = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
         let b = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
         let mut c = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
@@ -86,6 +88,7 @@ mod tests {
     #[bench]
     fn dgemv_few_large(b: &mut Bencher) {
         let m = 1000;
+
         let a = Vec::from_elem(m * m, 1.0);
         let x = Vec::from_elem(m * 1, 1.0);
         let mut y = Vec::from_elem(m * 1, 1.0);
@@ -99,6 +102,7 @@ mod tests {
     #[bench]
     fn dgemv_many_small(b: &mut Bencher) {
         let m = 20;
+
         let a = Vec::from_elem(m * m, 1.0);
         let x = Vec::from_elem(m * 1, 1.0);
         let mut y = Vec::from_elem(m * 1, 1.0);
