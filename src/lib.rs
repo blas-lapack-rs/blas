@@ -21,15 +21,17 @@ extern {
               ldc: *const c_int);
 }
 
-/// Performs one of the matrix-vector operations
+/// Performs a matrix-vector operation.
+///
+/// The function performs one of the matrix-vector operations
 ///
 /// ```ignore
-/// y := alpha * A * x + beta * y or
-/// y := alpha * A**T * x + beta * y
+/// y := alpha * a * x + beta * y or
+/// y := alpha * a^T * x + beta * y
 /// ```
 ///
-/// where alpha and beta are scalars, x and y are vectors, and A is an m-by-n
-/// matrix.
+/// where `alpha` and `beta` are scalars, `x` and `y` are vectors, and `a` is
+/// an `m`-by-`n` matrix.
 ///
 /// http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html
 #[inline]
@@ -42,21 +44,24 @@ pub fn dgemv(trans: u8, m: uint, n: uint, alpha: f64, a: *const f64, lda: uint,
     }
 }
 
-/// Performs one of the matrix-matrix operations
+/// Performs a matrix-matrix operation.
+///
+/// The function performs one of the matrix-matrix operations
 ///
 /// ```ignore
-/// C := alpha * op(A) * op(B) + beta * C
+/// c := alpha * op(a) * op(b) + beta * c
 /// ```
 ///
-/// where op(X) is one of
+/// where `op(x)` is one of
 ///
 /// ```ignore
-/// op(X) = X or
-/// op(X) = X**T,
+/// op(x) = x or
+/// op(x) = x^T,
 /// ```
 ///
-/// alpha and beta are scalars, and A, B, and C are matrices, with op(A)
-/// an m-by-k matrix, op(B) a k-by-n matrix, and C an m-by-n matrix.
+/// `alpha` and `beta` are scalars, and `a`, `b`, and `c` are matrices, with
+/// `op(a)` an `m`-by-`k` matrix, `op(b)` a `k`-by-`n` matrix, and `c` an
+/// `m`-by-`n` matrix.
 ///
 /// http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html
 #[inline]
