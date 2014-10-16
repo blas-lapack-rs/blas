@@ -1,5 +1,6 @@
-//! The library provides an interface to the [Basic Linear Algebra Subprograms](
-//! http://www.netlib.org/blas/).
+//! The library provides an interface to the [Basic Linear Algebra Subprograms][1].
+//!
+//! [1]: http://www.netlib.org/blas/
 
 extern crate libc;
 
