@@ -2,7 +2,7 @@
 //!
 //! [1]: http://www.netlib.org/blas/
 
-#![feature(macro_rules)]
+#![feature(phase)]
 
 extern crate libc;
 
@@ -76,14 +76,7 @@ pub fn dgemm(transa: u8, transb: u8, m: uint, n: uint, k: uint, alpha: f64, a: *
 
 #[cfg(test)]
 mod test {
-    macro_rules! assert_equal(
-        ($given:expr , $expected:expr) => ({
-            assert_eq!($given.len(), $expected.len());
-            for i in range(0u, $given.len()) {
-                assert_eq!($given[i], $expected[i]);
-            }
-        });
-    )
+    #[phase(plugin)] extern crate assert;
 
     #[test]
     fn dgemv() {
