@@ -35,12 +35,12 @@ extern {
 ///
 /// http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html
 #[inline]
-pub fn dgemv(trans: u8, m: uint, n: uint, alpha: f64, a: *const f64, lda: uint,
-             x: *const f64, incx: uint, beta: f64, y: *mut f64, incy: uint) {
+pub fn dgemv(trans: u8, m: uint, n: uint, alpha: f64, a: &[f64], lda: uint,
+             x: &[f64], incx: uint, beta: f64, y: &mut [f64], incy: uint) {
 
     unsafe {
-        dgemv_(&(trans as i8), &(m as i32), &(n as i32), &alpha, a, &(lda as i32),
-               x, &(incx as i32), &beta, y, &(incy as i32));
+        dgemv_(&(trans as i8), &(m as i32), &(n as i32), &alpha, a.as_ptr(), &(lda as i32),
+               x.as_ptr(), &(incx as i32), &beta, y.as_mut_ptr(), &(incy as i32));
     }
 }
 
@@ -65,12 +65,13 @@ pub fn dgemv(trans: u8, m: uint, n: uint, alpha: f64, a: *const f64, lda: uint,
 ///
 /// http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html
 #[inline]
-pub fn dgemm(transa: u8, transb: u8, m: uint, n: uint, k: uint, alpha: f64, a: *const f64,
-             lda: uint, b: *const f64, ldb: uint, beta: f64, c: *mut f64, ldc: uint) {
+pub fn dgemm(transa: u8, transb: u8, m: uint, n: uint, k: uint, alpha: f64, a: &[f64],
+             lda: uint, b: &[f64], ldb: uint, beta: f64, c: &mut [f64], ldc: uint) {
 
     unsafe {
-        dgemm_(&(transa as i8), &(transb as i8), &(m as i32), &(n as i32), &(k as i32),
-               &alpha, a, &(lda as i32), b, &(ldb as i32), &beta, c, &(ldc as i32));
+        dgemm_(&(transa as i8), &(transb as i8), &(m as i32), &(n as i32),
+               &(k as i32), &alpha, a.as_ptr(), &(lda as i32), b.as_ptr(),
+               &(ldb as i32), &beta, c.as_mut_ptr(), &(ldc as i32));
     }
 }
 
@@ -86,8 +87,8 @@ mod test {
         let x = vec![1.0, 2.0, 3.0];
         let mut y = vec![6.0, 8.0];
 
-        super::dgemv(b'N', m, n, 1.0, a.as_ptr(), m, x.as_ptr(), 1,
-                     1.0, y.as_mut_ptr(), 1);
+        super::dgemv(b'N', m, n, 1.0, a.as_slice(), m, x.as_slice(),
+                     1, 1.0, y.as_mut_slice(), 1);
 
         let expected_y = vec![20.0, 40.0];
         assert_equal!(y, expected_y);
@@ -101,8 +102,8 @@ mod test {
         let b = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
         let mut c = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 
-        super::dgemm(b'N', b'N', m, n, k, 1.0, a.as_ptr(), m, b.as_ptr(), k,
-                     1.0, c.as_mut_ptr(), m);
+        super::dgemm(b'N', b'N', m, n, k, 1.0, a.as_slice(), m,
+                     b.as_slice(), k, 1.0, c.as_mut_slice(), m);
 
         let expected_c = vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
         assert_equal!(c, expected_c);
@@ -122,8 +123,8 @@ mod bench {
         let mut y = Vec::from_elem(m * 1, 1.0);
 
         b.iter(|| {
-            super::dgemv(b'N', m, m, 1.0, a.as_ptr(), m, x.as_ptr(), 1,
-                         1.0, y.as_mut_ptr(), 1)
+            super::dgemv(b'N', m, m, 1.0, a.as_slice(), m, x.as_slice(),
+                         1, 1.0, y.as_mut_slice(), 1)
         });
     }
 
@@ -137,8 +138,8 @@ mod bench {
 
         b.iter(|| {
             for _ in range(0u, 20000) {
-                super::dgemv(b'N', m, m, 1.0, a.as_ptr(), m, x.as_ptr(), 1,
-                             1.0, y.as_mut_ptr(), 1);
+                super::dgemv(b'N', m, m, 1.0, a.as_slice(), m, x.as_slice(),
+                             1, 1.0, y.as_mut_slice(), 1);
             }
         });
     }
