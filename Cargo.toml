@@ -9,4 +9,4 @@ name = "blas"
 doctest = false
 
 [dev-dependencies.assert]
-git = "https://github.com/rs-math/assert"
+git = "https://github.com/stainless-steel/assert"
