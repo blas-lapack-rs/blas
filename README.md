@@ -17,5 +17,5 @@ The list can be extended upon request.
 
 [1]: http://www.netlib.org/blas/
 
-[travis-svg]: https://travis-ci.org/rs-math/blas.svg?branch=master
-[travis-url]: https://travis-ci.org/rs-math/blas
+[travis-svg]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
+[travis-url]: https://travis-ci.org/stainless-steel/blas
