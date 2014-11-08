@@ -4,7 +4,7 @@ The library provides an interface to the [Basic Linear Algebra Subprograms][1].
 
 The list of available routines currently includes
 
-* [DGEMM](http://www.netlib.org/lapack/explore-html/dc/da8/dgemm_8f.html) and
+* [DGEMM](http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html) and
 * [DGEMV](http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html).
 
 The list can be extended upon request.
