@@ -9,6 +9,8 @@ The list of available routines currently includes
 
 The list can be extended upon request.
 
+## [Documentation][docs]
+
 ## Contributing
 
 1. Fork the project.
@@ -19,3 +21,4 @@ The list can be extended upon request.
 
 [travis-svg]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [travis-url]: https://travis-ci.org/stainless-steel/blas
+[docs]: https://stainless-steel.github.io/blas
