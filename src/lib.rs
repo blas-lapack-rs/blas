@@ -6,18 +6,6 @@
 
 extern crate "libblas-sys" as raw;
 
-/// Perform a matrix-vector multiplication followed by an addition.
-///
-/// The function performs one of the matrix-vector operations
-///
-/// ```math
-/// y := alpha * A * x + beta * y or
-/// y := alpha * A^T * x + beta * y
-/// ```
-///
-/// where `alpha` and `beta` are scalars, `x` and `y` are vectors, and `A` is
-/// an `m`-by-`n` matrix.
-///
 /// http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html
 #[inline]
 pub fn dgemv(trans: u8, m: uint, n: uint, alpha: f64, a: &[f64], lda: uint,
@@ -30,25 +18,6 @@ pub fn dgemv(trans: u8, m: uint, n: uint, alpha: f64, a: &[f64], lda: uint,
     }
 }
 
-/// Perform a matrix-matrix multiplication followed by an addition.
-///
-/// The function performs one of the matrix-matrix operations
-///
-/// ```math
-/// C := alpha * op(A) * op(B) + beta * C
-/// ```
-///
-/// where `op(X)` is one of
-///
-/// ```math
-/// op(X) = X or
-/// op(X) = X^T,
-/// ```
-///
-/// `alpha` and `beta` are scalars, and `A`, `B`, and `C` are matrices, with
-/// `op(A)` an `m`-by-`k` matrix, `op(B)` a `k`-by-`n` matrix, and `C` an
-/// `m`-by-`n` matrix.
-///
 /// http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html
 #[inline]
 pub fn dgemm(transa: u8, transb: u8, m: uint, n: uint, k: uint, alpha: f64, a: &[f64],
