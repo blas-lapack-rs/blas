@@ -3,10 +3,6 @@ name = "blas"
 version = "0.0.1"
 authors = ["Ivan Ukhov <ivan.ukhov@gmail.com>"]
 
-[lib]
-name = "blas"
-doctest = false
-
 [dependencies.libblas-sys]
 git = "https://github.com/stainless-steel/libblas-sys"
 
