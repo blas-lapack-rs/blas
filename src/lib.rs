@@ -37,32 +37,32 @@ mod test {
 
     #[test]
     fn dgemv() {
-        let (m, n) = (2, 3);
+        let (M, N) = (2, 3);
 
         let A = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
         let X = vec![1.0, 2.0, 3.0];
         let mut Y = vec![6.0, 8.0];
 
-        ::dgemv(b'N', m, n, 1.0, A.as_slice(), m, X.as_slice(), 1, 1.0,
+        ::dgemv(b'N', M, N, 1.0, A.as_slice(), M, X.as_slice(), 1, 1.0,
                 Y.as_mut_slice(), 1);
 
-        let expected_y = vec![20.0, 40.0];
-        assert_equal!(Y, expected_y);
+        let expected_Y = vec![20.0, 40.0];
+        assert_equal!(Y, expected_Y);
     }
 
     #[test]
     fn dgemm() {
-        let (m, n, k) = (2, 4, 3);
+        let (M, N, K) = (2, 4, 3);
 
         let A = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
-        let b = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
-        let mut c = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
+        let B = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
+        let mut C = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 
-        ::dgemm(b'N', b'N', m, n, k, 1.0, A.as_slice(), m, b.as_slice(), k, 1.0,
-                c.as_mut_slice(), m);
+        ::dgemm(b'N', b'N', M, N, K, 1.0, A.as_slice(), M, B.as_slice(), K, 1.0,
+                C.as_mut_slice(), M);
 
-        let expected_c = vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
-        assert_equal!(c, expected_c);
+        let expected_C = vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
+        assert_equal!(C, expected_C);
     }
 }
 
@@ -72,29 +72,29 @@ mod bench {
 
     #[bench]
     fn dgemv_few_large(bench: &mut test::Bencher) {
-        let m = 1000;
+        let M = 1000;
 
-        let A = Vec::from_elem(m * m, 1.0);
-        let X = Vec::from_elem(m * 1, 1.0);
-        let mut Y = Vec::from_elem(m * 1, 1.0);
+        let A = Vec::from_elem(M * M, 1.0);
+        let X = Vec::from_elem(M * 1, 1.0);
+        let mut Y = Vec::from_elem(M * 1, 1.0);
 
         bench.iter(|| {
-            ::dgemv(b'N', m, m, 1.0, A.as_slice(), m, X.as_slice(), 1, 1.0,
+            ::dgemv(b'N', M, M, 1.0, A.as_slice(), M, X.as_slice(), 1, 1.0,
                     Y.as_mut_slice(), 1)
         });
     }
 
     #[bench]
     fn dgemv_many_small(bench: &mut test::Bencher) {
-        let m = 20;
+        let M = 20;
 
-        let A = Vec::from_elem(m * m, 1.0);
-        let X = Vec::from_elem(m * 1, 1.0);
-        let mut Y = Vec::from_elem(m * 1, 1.0);
+        let A = Vec::from_elem(M * M, 1.0);
+        let X = Vec::from_elem(M * 1, 1.0);
+        let mut Y = Vec::from_elem(M * 1, 1.0);
 
         bench.iter(|| {
             for _ in range(0u, 20000) {
-                ::dgemv(b'N', m, m, 1.0, A.as_slice(), m, X.as_slice(), 1, 1.0,
+                ::dgemv(b'N', M, M, 1.0, A.as_slice(), M, X.as_slice(), 1, 1.0,
                         Y.as_mut_slice(), 1);
             }
         });
