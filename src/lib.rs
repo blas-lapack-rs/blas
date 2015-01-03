@@ -70,13 +70,15 @@ mod test {
 mod bench {
     extern crate test;
 
+    use std::iter::repeat;
+
     #[bench]
     fn dgemv_few_large(bench: &mut test::Bencher) {
         let M = 1000;
 
-        let A = Vec::from_elem(M * M, 1.0);
-        let X = Vec::from_elem(M * 1, 1.0);
-        let mut Y = Vec::from_elem(M * 1, 1.0);
+        let A = repeat(1.0).take(M * M).collect::<Vec<_>>();
+        let X = repeat(1.0).take(M * 1).collect::<Vec<_>>();
+        let mut Y = repeat(1.0).take(M * 1).collect::<Vec<_>>();
 
         bench.iter(|| {
             ::dgemv(b'N', M, M, 1.0, A.as_slice(), M, X.as_slice(), 1, 1.0,
@@ -88,9 +90,9 @@ mod bench {
     fn dgemv_many_small(bench: &mut test::Bencher) {
         let M = 20;
 
-        let A = Vec::from_elem(M * M, 1.0);
-        let X = Vec::from_elem(M * 1, 1.0);
-        let mut Y = Vec::from_elem(M * 1, 1.0);
+        let A = repeat(1.0).take(M * M).collect::<Vec<_>>();
+        let X = repeat(1.0).take(M * 1).collect::<Vec<_>>();
+        let mut Y = repeat(1.0).take(M * 1).collect::<Vec<_>>();
 
         bench.iter(|| {
             for _ in range(0u, 20000) {
