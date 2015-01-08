@@ -5,6 +5,10 @@
 #![feature(phase)]
 #![allow(non_snake_case)]
 
+#[cfg(test)]
+#[macro_use]
+extern crate assert;
+
 extern crate "libblas-sys" as raw;
 
 /// http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html
@@ -33,8 +37,6 @@ pub fn dgemm(TRANSA: u8, TRANSB: u8, M: uint, N: uint, K: uint, ALPHA: f64, A: &
 
 #[cfg(test)]
 mod test {
-    #[phase(plugin)] extern crate assert;
-
     #[test]
     fn dgemv() {
         let (M, N) = (2, 3);
