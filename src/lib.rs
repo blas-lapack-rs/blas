@@ -2,8 +2,7 @@
 //!
 //! [1]: http://www.netlib.org/blas/
 
-#![feature(phase)]
-#![allow(non_snake_case)]
+#![allow(non_snake_case, unstable)]
 
 #[cfg(test)]
 #[macro_use]
@@ -13,8 +12,8 @@ extern crate "libblas-sys" as raw;
 
 /// http://www.netlib.org/lapack/explore-html/dc/da8/dgemv_8f.html
 #[inline]
-pub fn dgemv(TRANS: u8, M: uint, N: uint, ALPHA: f64, A: &[f64], LDA: uint,
-             X: &[f64], INCX: uint, BETA: f64, Y: &mut [f64], INCY: uint) {
+pub fn dgemv(TRANS: u8, M: usize, N: usize, ALPHA: f64, A: &[f64], LDA: usize,
+             X: &[f64], INCX: usize, BETA: f64, Y: &mut [f64], INCY: usize) {
 
     unsafe {
         raw::dgemv(&(TRANS as i8), &(M as i32), &(N as i32), &ALPHA,
@@ -25,8 +24,8 @@ pub fn dgemv(TRANS: u8, M: uint, N: uint, ALPHA: f64, A: &[f64], LDA: uint,
 
 /// http://www.netlib.org/lapack/explore-html/d7/d2b/dgemm_8f.html
 #[inline]
-pub fn dgemm(TRANSA: u8, TRANSB: u8, M: uint, N: uint, K: uint, ALPHA: f64, A: &[f64],
-             LDA: uint, B: &[f64], LDB: uint, BETA: f64, C: &mut [f64], LDC: uint) {
+pub fn dgemm(TRANSA: u8, TRANSB: u8, M: usize, N: usize, K: usize, ALPHA: f64, A: &[f64],
+             LDA: usize, B: &[f64], LDB: usize, BETA: f64, C: &mut [f64], LDC: usize) {
 
     unsafe {
         raw::dgemm(&(TRANSA as i8), &(TRANSB as i8), &(M as i32), &(N as i32),
@@ -97,7 +96,7 @@ mod bench {
         let mut Y = repeat(1.0).take(M * 1).collect::<Vec<_>>();
 
         bench.iter(|| {
-            for _ in range(0u, 20000) {
+            for _ in range(0, 20000) {
                 ::dgemv(b'N', M, M, 1.0, A.as_slice(), M, X.as_slice(), 1, 1.0,
                         Y.as_mut_slice(), 1);
             }
