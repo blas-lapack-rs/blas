@@ -2,7 +2,7 @@
 //!
 //! [1]: http://www.netlib.org/blas/
 
-#![allow(non_snake_case, unstable)]
+#![allow(non_snake_case)]
 
 #[cfg(test)]
 #[macro_use]
