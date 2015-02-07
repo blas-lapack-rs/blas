@@ -2,11 +2,16 @@
 //!
 //! [1]: http://www.netlib.org/blas/
 
+#![cfg_attr(test, feature(core, test))]
+
 #![allow(non_snake_case)]
 
 #[cfg(test)]
 #[macro_use]
 extern crate assert;
+
+#[cfg(test)]
+extern crate test;
 
 extern crate "libblas-sys" as raw;
 
@@ -35,7 +40,7 @@ pub fn dgemm(TRANSA: u8, TRANSB: u8, M: usize, N: usize, K: usize, ALPHA: f64, A
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     #[test]
     fn dgemv() {
         let (M, N) = (2, 3);
@@ -66,13 +71,11 @@ mod test {
 }
 
 #[cfg(test)]
-mod bench {
-    extern crate test;
-
+mod benches {
     use std::iter::repeat;
 
     #[bench]
-    fn dgemv_few_large(bench: &mut test::Bencher) {
+    fn dgemv_few_large(bench: &mut ::test::Bencher) {
         let M = 1000;
 
         let A = repeat(1.0).take(M * M).collect::<Vec<f64>>();
@@ -85,7 +88,7 @@ mod bench {
     }
 
     #[bench]
-    fn dgemv_many_small(bench: &mut test::Bencher) {
+    fn dgemv_many_small(bench: &mut ::test::Bencher) {
         let M = 20;
 
         let A = repeat(1.0).take(M * M).collect::<Vec<f64>>();
