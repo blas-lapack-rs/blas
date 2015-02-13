@@ -2,7 +2,7 @@
 //!
 //! [1]: http://www.netlib.org/blas/
 
-#![cfg_attr(test, feature(core, test))]
+#![cfg_attr(test, feature(test))]
 
 #![allow(non_snake_case)]
 
