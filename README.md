@@ -1,6 +1,6 @@
 # BLAS [![Build Status][travis-svg]][travis-url]
 
-The library provides an interface to the [Basic Linear Algebra Subprograms][1].
+The package provides an interface to the [Basic Linear Algebra Subprograms][1].
 
 The list of available routines currently includes
 

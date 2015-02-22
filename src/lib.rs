@@ -49,7 +49,7 @@ mod tests {
         let X = vec![1.0, 2.0, 3.0];
         let mut Y = vec![6.0, 8.0];
 
-        ::dgemv(b'N', M, N, 1.0, &A[], M, &X[], 1, 1.0, &mut Y[], 1);
+        ::dgemv(b'N', M, N, 1.0, &A, M, &X, 1, 1.0, &mut Y, 1);
 
         let expected_Y = vec![20.0, 40.0];
         assert_equal!(Y, expected_Y);
@@ -63,7 +63,7 @@ mod tests {
         let B = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
         let mut C = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 
-        ::dgemm(b'N', b'N', M, N, K, 1.0, &A[], M, &B[], K, 1.0, &mut C[], M);
+        ::dgemm(b'N', b'N', M, N, K, 1.0, &A, M, &B, K, 1.0, &mut C, M);
 
         let expected_C = vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
         assert_equal!(C, expected_C);
@@ -78,12 +78,12 @@ mod benches {
     fn dgemv_few_large(bench: &mut ::test::Bencher) {
         let M = 1000;
 
-        let A = repeat(1.0).take(M * M).collect::<Vec<f64>>();
-        let X = repeat(1.0).take(M * 1).collect::<Vec<f64>>();
-        let mut Y = repeat(1.0).take(M * 1).collect::<Vec<f64>>();
+        let A = repeat(1.0).take(M * M).collect::<Vec<_>>();
+        let X = repeat(1.0).take(M * 1).collect::<Vec<_>>();
+        let mut Y = repeat(1.0).take(M * 1).collect::<Vec<_>>();
 
         bench.iter(|| {
-            ::dgemv(b'N', M, M, 1.0, &A[], M, &X[], 1, 1.0, &mut Y[], 1)
+            ::dgemv(b'N', M, M, 1.0, &A, M, &X, 1, 1.0, &mut Y, 1)
         });
     }
 
@@ -91,13 +91,13 @@ mod benches {
     fn dgemv_many_small(bench: &mut ::test::Bencher) {
         let M = 20;
 
-        let A = repeat(1.0).take(M * M).collect::<Vec<f64>>();
-        let X = repeat(1.0).take(M * 1).collect::<Vec<f64>>();
-        let mut Y = repeat(1.0).take(M * 1).collect::<Vec<f64>>();
+        let A = repeat(1.0).take(M * M).collect::<Vec<_>>();
+        let X = repeat(1.0).take(M * 1).collect::<Vec<_>>();
+        let mut Y = repeat(1.0).take(M * 1).collect::<Vec<_>>();
 
         bench.iter(|| {
-            for _ in range(0, 20000) {
-                ::dgemv(b'N', M, M, 1.0, &A[], M, &X[], 1, 1.0, &mut Y[], 1);
+            for _ in 0..20000 {
+                ::dgemv(b'N', M, M, 1.0, &A, M, &X, 1, 1.0, &mut Y, 1);
             }
         });
     }
