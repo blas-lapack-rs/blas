@@ -17,7 +17,7 @@ The list can be extended upon request.
 2. Implement your idea.
 3. Create a pull request.
 
-[1]: http://www.netlib.org/blas/
+[1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
 [travis-svg]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [travis-url]: https://travis-ci.org/stainless-steel/blas
