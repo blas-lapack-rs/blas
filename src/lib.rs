@@ -99,9 +99,15 @@ mod tests {
 /// Well, consider what happens if you want to implement this trait for `Complex<f32>`. Returning
 /// Self isn't always the right thing, sometimes you want to return the f32 directly. There's no
 /// other good way to handle that.
+///
+/// So, in many cases, `Self` is used. `Float` is used when the function directly references the
+/// inner float type representation for. `RetSelf` is used to paper over the difference between
+/// functions returning `_Complex` and `Self` being a Rust type. `Weird` is used similarly, but for
+/// scalar arguments that need a pointer to `Float` for Complex types.
 pub unsafe trait Num: Copy {
     type Float: Copy;
     type RetSelf: Copy;
+    type Weird: Copy;
 
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self::Float, incx: blasint, y: *const Self::Float, incy: blasint) -> Self::RetSelf;
     fn axpy() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, y: *mut Self, incy: blasint);
@@ -112,6 +118,23 @@ pub unsafe trait Num: Copy {
     fn asum() -> unsafe extern fn(N: blasint, x: *const Self::Float, incx: blasint) -> Self::Float;
     fn iamax() -> unsafe extern fn(N: blasint, x: *const Self::Float, incx: blasint) -> size_t;
     fn nrm2() -> unsafe extern fn(N: blasint, X: *const Self::Float, incX: blasint) -> Self::Float;
+
+    fn gemv() -> unsafe extern fn(order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: <Self as Num>::Weird, a: *const <Self as Num>::Float, lda: blasint, x: *const <Self as Num>::Float, incx: blasint, beta: <Self as Num>::Weird, y: *mut <Self as Num>::Float, incy: blasint) -> ();
+    fn ger() -> unsafe extern fn(order: CBLAS_ORDER, M: blasint, N: blasint, alpha: <Self as Num>::Weird, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> ();
+    fn trsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> ();
+    fn trmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> ();
+    fn gbmv() -> unsafe extern fn(order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, M: blasint, N: blasint, KL: blasint, KU: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
+    fn tbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> ();
+    fn tpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> ();
+    fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> ();
+    fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> ();
+
+    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
+    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
 }
 
 /// A trait representing the various data types BLAS can operate on.
@@ -119,37 +142,39 @@ pub unsafe trait Real: Num {
     fn rotm() -> unsafe extern fn(N: blasint, X: *mut Self, incX: blasint, Y: *mut Self, incY: blasint, P: *const Self);
     fn rotmg() -> unsafe extern fn( d1: *mut Self, d2: *mut Self, b1: *mut Self, b2: Self, P: *mut Self);
 
-    fn gemv() -> unsafe extern fn(order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: Self, a: *const Self, lda: blasint, x: *const Self, incx: blasint, beta: Self, y: *mut Self, incy: blasint) -> ();
-    fn ger() -> unsafe extern fn(order: CBLAS_ORDER, M: blasint, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self, lda: blasint) -> ();
-    fn trsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> ();
-    fn trmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> ();
     fn syr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, A: *mut Self, lda: blasint) -> ();
     fn syr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self, lda: blasint) -> ();
-    fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> ();
-    fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> ();
     fn symv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> ();
     fn spr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Ap: *mut Self) -> ();
     fn spr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self) -> ();
-    fn tpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> ();
     fn spmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, Ap: *const Self, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> ();
-    fn gbmv() -> unsafe extern fn(order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, M: blasint, N: blasint, KL: blasint, KU: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> ();
-    fn tbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> ();
     fn sbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> ();
+}
 
+pub unsafe trait Complex: Num {
+    fn from_retself(val: <Self as Num>::RetSelf) -> Self;
+    fn dotc() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf;
+    fn dotu_sub() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint, ret: *mut <Self as Num>::RetSelf);
+    fn dotc_sub() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint, ret: *mut <Self as Num>::RetSelf);
 
-    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> ();
-    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> ();
-    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, beta: Self, C: *mut Self, ldc: blasint) -> ();
-    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> ();
-    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> ();
-    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> ();
-    fn omatcopy() -> unsafe extern fn(CORDER: CBLAS_ORDER, CTRANS: CBLAS_TRANSPOSE, crows: blasint, ccols: blasint, calpha: Self, a: *const Self, clda: blasint, b: *mut Self, cldb: blasint) -> ();
-    fn imatcopy() -> unsafe extern fn(CORDER: CBLAS_ORDER, CTRANS: CBLAS_TRANSPOSE, crows: blasint, ccols: blasint, calpha: Self, a: *mut Self, clda: blasint, cldb: blasint) -> ();
+    fn her() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> ();
+    fn her2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> ();
+    fn hemv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
+    fn hpr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float) -> ();
+    fn hpr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, Ap: *mut <Self as Num>::Float) -> ();
+    fn hbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
+    fn hpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, Ap: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
+
+    fn gemm3m() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn hemm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn herk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn her2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
 }
 
 unsafe impl Num for f32 {
     type Float = f32;
     type RetSelf = f32;
+    type Weird = f32;
 
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint, y: *const Self, incy: blasint) -> Self { cblas_sdot }
@@ -169,6 +194,38 @@ unsafe impl Num for f32 {
     fn iamax() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint) -> size_t { cblas_isamax }
     #[inline(always)]
     fn nrm2() -> unsafe extern fn(N: blasint, X: *const <Self as Num>::Float, incX: blasint) -> Self { cblas_snrm2 }
+
+    #[inline(always)]
+    fn gemv() -> unsafe extern fn(order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: Self, a: *const Self, lda: blasint, x: *const Self, incx: blasint, beta: Self, y: *mut Self, incy: blasint) -> () { cblas_sgemv }
+    #[inline(always)]
+    fn ger() -> unsafe extern fn(order: CBLAS_ORDER, M: blasint, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self, lda: blasint) -> () { cblas_sger }
+    #[inline(always)]
+    fn trsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_strsv }
+    #[inline(always)]
+    fn trmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_strmv }
+    #[inline(always)]
+    fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_stbsv }
+    #[inline(always)]
+    fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> () { cblas_stpsv }
+    #[inline(always)]
+    fn tpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> () { cblas_stpmv }
+    #[inline(always)]
+    fn gbmv() -> unsafe extern fn(order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, M: blasint, N: blasint, KL: blasint, KU: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_sgbmv }
+    #[inline(always)]
+    fn tbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_stbmv }
+
+    #[inline(always)]
+    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_sgemm }
+    #[inline(always)]
+    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_ssymm }
+    #[inline(always)]
+    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_ssyrk }
+    #[inline(always)]
+    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_ssyr2k }
+    #[inline(always)]
+    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> () { cblas_strmm }
+    #[inline(always)]
+    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> () { cblas_strsm }
 }
 
 fn c2f(a: &C) -> *const f32 {
@@ -192,6 +249,7 @@ unsafe extern fn cscal_wrap(n: blasint, alpha: C, x: *mut C, incx: blasint) {
 unsafe impl Num for C {
     type Float = f32;
     type RetSelf = [f32; 2];
+    type Weird = *const f32;
 
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf { cblas_cdotu }
@@ -211,6 +269,79 @@ unsafe impl Num for C {
     fn iamax() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint) -> size_t { cblas_icamax }
     #[inline(always)]
     fn nrm2() -> unsafe extern fn(N: blasint, X: *const <Self as Num>::Float, incX: blasint) -> <Self as Num>::Float { cblas_scnrm2 }
+
+    #[inline(always)]
+    fn gemv() -> unsafe extern fn(order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: <Self as Num>::Weird, a: *const <Self as Num>::Float, lda: blasint, x: *const <Self as Num>::Float, incx: blasint, beta: <Self as Num>::Weird, y: *mut <Self as Num>::Float, incy: blasint) -> () { cblas_cgemv }
+    #[inline(always)]
+    fn ger() -> unsafe extern fn(order: CBLAS_ORDER, M: blasint, N: blasint, alpha: <Self as Num>::Weird, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> () { cblas_cgeru }
+    #[inline(always)]
+    fn trsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ctrsv }
+    #[inline(always)]
+    fn trmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ctrmv }
+    #[inline(always)]
+    fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ctbsv }
+    #[inline(always)]
+    fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ctpsv }
+    #[inline(always)]
+    fn tpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ctpmv }
+    #[inline(always)]
+    fn gbmv() -> unsafe extern fn(order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, M: blasint, N: blasint, KL: blasint, KU: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_cgbmv }
+    #[inline(always)]
+    fn tbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ctbmv }
+
+    #[inline(always)]
+    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_cgemm }
+    #[inline(always)]
+    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_csymm }
+    #[inline(always)]
+    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_csyrk }
+    #[inline(always)]
+    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_csyr2k }
+    #[inline(always)]
+    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> () { cblas_ctrmm }
+    #[inline(always)]
+    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> () { cblas_ctrsm }
+}
+
+unsafe impl Complex for C {
+    #[inline(always)]
+    fn from_retself(val: <Self as Num>::RetSelf) -> Self {
+        num::Complex {
+            re: val[0],
+            im: val[1],
+        }
+    }
+
+    #[inline(always)]
+    fn dotc() -> unsafe extern fn(n: blasint, x: *const <C as Num>::Float, incx: blasint, y: *const <C as Num>::Float, incy: blasint) -> <C as Num>::RetSelf { cblas_cdotc }
+    #[inline(always)]
+    fn dotu_sub() -> unsafe extern fn(n: blasint, x: *const <C as Num>::Float, incx: blasint, y: *const <C as Num>::Float, incy: blasint, ret: *mut <C as Num>::RetSelf) -> () { cblas_cdotu_sub }
+    #[inline(always)]
+    fn dotc_sub() -> unsafe extern fn(n: blasint, x: *const <C as Num>::Float, incx: blasint, y: *const <C as Num>::Float, incy: blasint, ret: *mut <C as Num>::RetSelf) -> () { cblas_cdotc_sub }
+
+    #[inline(always)]
+    fn her() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> () { cblas_cher }
+    #[inline(always)]
+    fn her2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> () { cblas_cher2 }
+    #[inline(always)]
+    fn hemv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_chemv }
+    #[inline(always)]
+    fn hpr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float) -> () { cblas_chpr }
+    #[inline(always)]
+    fn hpr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, Ap: *mut <Self as Num>::Float) -> () { cblas_chpr2 }
+    #[inline(always)]
+    fn hbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_chbmv }
+    #[inline(always)]
+    fn hpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, Ap: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_chpmv }
+
+    #[inline(always)]
+    fn gemm3m() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_cgemm3m }
+    #[inline(always)]
+    fn hemm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_chemm }
+    #[inline(always)]
+    fn herk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_cherk }
+    #[inline(always)]
+    fn her2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_cher2k }
 }
 
 fn z2f(a: &Z) -> *const f64 {
@@ -236,6 +367,7 @@ unsafe extern fn zscal_wrap(n: blasint, alpha: Z, x: *mut Z, incx: blasint) {
 unsafe impl Num for Z {
     type Float = f64;
     type RetSelf = [f64; 2];
+    type Weird = *const f64;
 
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf { cblas_zdotu }
@@ -255,6 +387,78 @@ unsafe impl Num for Z {
     fn iamax() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint) -> size_t { cblas_izamax }
     #[inline(always)]
     fn nrm2() -> unsafe extern fn(N: blasint, X: *const <Self as Num>::Float, incX: blasint) -> <Self as Num>::Float { cblas_dznrm2 }
+
+    #[inline(always)]
+    fn gemv() -> unsafe extern fn(order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: <Self as Num>::Weird, a: *const <Self as Num>::Float, lda: blasint, x: *const <Self as Num>::Float, incx: blasint, beta: <Self as Num>::Weird, y: *mut <Self as Num>::Float, incy: blasint) -> () { cblas_zgemv }
+    #[inline(always)]
+    fn ger() -> unsafe extern fn(order: CBLAS_ORDER, M: blasint, N: blasint, alpha: <Self as Num>::Weird, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> () { cblas_zgeru }
+    #[inline(always)]
+    fn trsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ztrsv }
+    #[inline(always)]
+    fn trmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ztrmv }
+    #[inline(always)]
+    fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ztbsv }
+    #[inline(always)]
+    fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ztpsv }
+    #[inline(always)]
+    fn tpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ztpmv }
+    #[inline(always)]
+    fn gbmv() -> unsafe extern fn(order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, M: blasint, N: blasint, KL: blasint, KU: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_zgbmv }
+    #[inline(always)]
+    fn tbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> () { cblas_ztbmv }
+
+    #[inline(always)]
+    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zgemm }
+    #[inline(always)]
+    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zsymm }
+    #[inline(always)]
+    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zsyrk }
+    #[inline(always)]
+    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zsyr2k }
+    #[inline(always)]
+    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> () { cblas_ztrmm }
+    #[inline(always)]
+    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> () { cblas_ztrsm }
+}
+
+unsafe impl Complex for Z {
+    #[inline(always)]
+    fn from_retself(val: <Self as Num>::RetSelf) -> Self {
+        num::Complex {
+            re: val[0],
+            im: val[1],
+        }
+    }
+    #[inline(always)]
+    fn dotc() -> unsafe extern fn(n: blasint, x: *const <Z as Num>::Float, incx: blasint, y: *const <Z as Num>::Float, incy: blasint) -> <Z as Num>::RetSelf { cblas_zdotc }
+    #[inline(always)]
+    fn dotu_sub() -> unsafe extern fn(n: blasint, x: *const <Z as Num>::Float, incx: blasint, y: *const <Z as Num>::Float, incy: blasint, ret: *mut <Z as Num>::RetSelf) -> () { cblas_zdotu_sub }
+    #[inline(always)]
+    fn dotc_sub() -> unsafe extern fn(n: blasint, x: *const <Z as Num>::Float, incx: blasint, y: *const <Z as Num>::Float, incy: blasint, ret: *mut <Z as Num>::RetSelf) -> () { cblas_zdotc_sub }
+
+    #[inline(always)]
+    fn her() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> () { cblas_zher }
+    #[inline(always)]
+    fn her2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> () { cblas_zher2 }
+    #[inline(always)]
+    fn hemv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_zhemv }
+    #[inline(always)]
+    fn hpr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float) -> () { cblas_zhpr }
+    #[inline(always)]
+    fn hpr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, Ap: *mut <Self as Num>::Float) -> () { cblas_zhpr2 }
+    #[inline(always)]
+    fn hbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_zhbmv }
+    #[inline(always)]
+    fn hpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, Ap: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> () { cblas_zhpmv }
+
+    #[inline(always)]
+    fn gemm3m() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zgemm3m }
+    #[inline(always)]
+    fn hemm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zhemm }
+    #[inline(always)]
+    fn herk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zherk }
+    #[inline(always)]
+    fn her2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> () { cblas_zher2k }
 }
 
 unsafe impl Real for f32 {
@@ -264,21 +468,9 @@ unsafe impl Real for f32 {
     fn rotmg() -> unsafe extern fn( d1: *mut Self, d2: *mut Self, b1: *mut Self, b2: Self, P: *mut Self) { cblas_srotmg }
 
     #[inline(always)]
-    fn gemv() -> unsafe extern fn(order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: Self, a: *const Self, lda: blasint, x: *const Self, incx: blasint, beta: Self, y: *mut Self, incy: blasint) -> () { cblas_sgemv }
-    #[inline(always)]
-    fn ger() -> unsafe extern fn(order: CBLAS_ORDER, M: blasint, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self, lda: blasint) -> () { cblas_sger }
-    #[inline(always)]
-    fn trsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_strsv }
-    #[inline(always)]
-    fn trmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_strmv }
-    #[inline(always)]
     fn syr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, A: *mut Self, lda: blasint) -> () { cblas_ssyr }
     #[inline(always)]
     fn syr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self, lda: blasint) -> () { cblas_ssyr2 }
-    #[inline(always)]
-    fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_stbsv }
-    #[inline(always)]
-    fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> () { cblas_stpsv }
     #[inline(always)]
     fn symv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_ssymv }
     #[inline(always)]
@@ -286,38 +478,15 @@ unsafe impl Real for f32 {
     #[inline(always)]
     fn spr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self) -> () { cblas_sspr2 }
     #[inline(always)]
-    fn tpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> () { cblas_stpmv }
-    #[inline(always)]
     fn spmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, Ap: *const Self, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_sspmv }
     #[inline(always)]
-    fn gbmv() -> unsafe extern fn(order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, M: blasint, N: blasint, KL: blasint, KU: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_sgbmv }
-    #[inline(always)]
-    fn tbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_stbmv }
-    #[inline(always)]
     fn sbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_ssbmv }
-
-
-    #[inline(always)]
-    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_sgemm }
-    #[inline(always)]
-    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_ssymm }
-    #[inline(always)]
-    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_ssyrk }
-    #[inline(always)]
-    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, B: *const Self, ldb: blasint, beta: Self, C: *mut Self, ldc: blasint) -> () { cblas_ssyr2k }
-    #[inline(always)]
-    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> () { cblas_strmm }
-    #[inline(always)]
-    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> () { cblas_strsm }
-    #[inline(always)]
-    fn omatcopy() -> unsafe extern fn(CORDER: CBLAS_ORDER, CTRANS: CBLAS_TRANSPOSE, crows: blasint, ccols: blasint, calpha: Self, a: *const Self, clda: blasint, b: *mut Self, cldb: blasint) -> () { cblas_somatcopy }
-    #[inline(always)]
-    fn imatcopy() -> unsafe extern fn(CORDER: CBLAS_ORDER, CTRANS: CBLAS_TRANSPOSE, crows: blasint, ccols: blasint, calpha: Self, a: *mut Self, clda: blasint, cldb: blasint) -> () { cblas_simatcopy }
 }
 
 unsafe impl Num for f64 {
     type Float = f64;
     type RetSelf = f64;
+    type Weird = f64;
 
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint, y: *const Self, incy: blasint) -> Self { cblas_ddot }
@@ -337,13 +506,6 @@ unsafe impl Num for f64 {
     fn iamax() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint) -> size_t { cblas_idamax }
     #[inline(always)]
     fn nrm2() -> unsafe extern fn(N: blasint, X: *const Self, incX: blasint) -> Self { cblas_dnrm2 }
-}
-
-unsafe impl Real for f64 {
-    #[inline(always)]
-    fn rotm() -> unsafe extern fn(N: blasint, X: *mut Self, incX: blasint, Y: *mut Self, incY: blasint, P: *const Self) { cblas_drotm }
-    #[inline(always)]
-    fn rotmg() -> unsafe extern fn( d1: *mut Self, d2: *mut Self, b1: *mut Self, b2: Self, P: *mut Self) { cblas_drotmg }
 
     #[inline(always)]
     fn gemv() -> unsafe extern fn(order: CBLAS_ORDER, trans: CBLAS_TRANSPOSE, m: blasint, n: blasint, alpha: Self, a: *const Self, lda: blasint, x: *const Self, incx: blasint, beta: Self, y: *mut Self, incy: blasint) -> () { cblas_dgemv }
@@ -354,29 +516,15 @@ unsafe impl Real for f64 {
     #[inline(always)]
     fn trmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_dtrmv }
     #[inline(always)]
-    fn syr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, A: *mut Self, lda: blasint) -> () { cblas_dsyr }
-    #[inline(always)]
-    fn syr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self, lda: blasint) -> () { cblas_dsyr2 }
-    #[inline(always)]
     fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_dtbsv }
     #[inline(always)]
     fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> () { cblas_dtpsv }
     #[inline(always)]
-    fn symv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dsymv }
-    #[inline(always)]
-    fn spr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Ap: *mut Self) -> () { cblas_dspr }
-    #[inline(always)]
-    fn spr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self) -> () { cblas_dspr2 }
-    #[inline(always)]
     fn tpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const Self, X: *mut Self, incX: blasint) -> () { cblas_dtpmv }
-    #[inline(always)]
-    fn spmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, Ap: *const Self, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dspmv }
     #[inline(always)]
     fn gbmv() -> unsafe extern fn(order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, M: blasint, N: blasint, KL: blasint, KU: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dgbmv }
     #[inline(always)]
     fn tbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const Self, lda: blasint, X: *mut Self, incX: blasint) -> () { cblas_dtbmv }
-    #[inline(always)]
-    fn sbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dsbmv }
 
 
     #[inline(always)]
@@ -391,10 +539,28 @@ unsafe impl Real for f64 {
     fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> () { cblas_dtrmm }
     #[inline(always)]
     fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: Self, A: *const Self, lda: blasint, B: *mut Self, ldb: blasint) -> () { cblas_dtrsm }
+}
+
+unsafe impl Real for f64 {
     #[inline(always)]
-    fn omatcopy() -> unsafe extern fn(CORDER: CBLAS_ORDER, CTRANS: CBLAS_TRANSPOSE, crows: blasint, ccols: blasint, calpha: Self, a: *const Self, clda: blasint, b: *mut Self, cldb: blasint) -> () { cblas_domatcopy }
+    fn rotm() -> unsafe extern fn(N: blasint, X: *mut Self, incX: blasint, Y: *mut Self, incY: blasint, P: *const Self) { cblas_drotm }
     #[inline(always)]
-    fn imatcopy() -> unsafe extern fn(CORDER: CBLAS_ORDER, CTRANS: CBLAS_TRANSPOSE, crows: blasint, ccols: blasint, calpha: Self, a: *mut Self, clda: blasint, cldb: blasint) -> () { cblas_dimatcopy }
+    fn rotmg() -> unsafe extern fn( d1: *mut Self, d2: *mut Self, b1: *mut Self, b2: Self, P: *mut Self) { cblas_drotmg }
+
+    #[inline(always)]
+    fn syr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, A: *mut Self, lda: blasint) -> () { cblas_dsyr }
+    #[inline(always)]
+    fn syr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self, lda: blasint) -> () { cblas_dsyr2 }
+    #[inline(always)]
+    fn symv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dsymv }
+    #[inline(always)]
+    fn spr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Ap: *mut Self) -> () { cblas_dspr }
+    #[inline(always)]
+    fn spr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, X: *const Self, incX: blasint, Y: *const Self, incY: blasint, A: *mut Self) -> () { cblas_dspr2 }
+    #[inline(always)]
+    fn spmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: Self, Ap: *const Self, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dspmv }
+    #[inline(always)]
+    fn sbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dsbmv }
 }
 
 pub trait Vector {
@@ -533,6 +699,16 @@ pub fn rotmg<V, U>(diag: &mut V, coord: &mut U) -> [V::Element; 5] where V: Vect
 
     param
 }
+
+/// Hermitian inner product of the complex vectors
+#[inline(always)]
+pub fn dotc<V, U>(x: &V, y: &U) -> V::Element where V: Vector, U: Vector<Element = V::Element>, V::Element: Complex {
+    debug_assert!(x.len() == y.len());
+    let len = min(x.len(), y.len());
+
+    V::Element::from_retself(unsafe { V::Element::dotc()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) })
+}
+
 
 #[cfg(test)]
 mod benches {
