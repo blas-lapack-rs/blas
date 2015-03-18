@@ -9,7 +9,7 @@ documentation = "https://stainless-steel.github.io/blas"
 description = "The package provides an interface to the Basic Linear Algebra Subprograms."
 
 [dependencies]
-libblas-sys = "0.0.15"
+libblas-sys = "0.0.17"
 libc = "*"
 num = "*"
 
