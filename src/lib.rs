@@ -23,16 +23,35 @@ use raw::*;
 use libc::size_t;
 use std::mem::transmute;
 use std::cmp::min;
+use std::ops::{Deref, DerefMut};
 
+#[repr(C)]
+#[derive(Copy)]
 pub enum Layout {
     RowMajor = CblasRowMajor as isize,
     ColumnMajor = CblasColMajor as isize,
 }
 
+#[repr(C)]
+#[derive(Copy)]
 pub enum Transpose {
     None = CblasNoTrans as isize,
     Transpose = CblasTrans as isize,
     ConjugateTranspose = CblasConjTrans as isize,
+}
+
+#[repr(C)]
+#[derive(Copy)]
+pub enum Uplo {
+    Upper = CblasUpper as isize,
+    Lower = CblasLower as isize,
+}
+
+#[repr(C)]
+#[derive(Copy)]
+pub enum Diag {
+    NonUnit = CblasNonUnit as isize,
+    Unit = CblasUnit as isize,
 }
 
 #[inline]
@@ -563,16 +582,22 @@ unsafe impl Real for f64 {
     fn sbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: Self, A: *const Self, lda: blasint, X: *const Self, incX: blasint, beta: Self, Y: *mut Self, incY: blasint) -> () { cblas_dsbmv }
 }
 
-pub trait Vector {
+pub unsafe trait Vector {
     type Element: Num;
 
+    /// Number of elements in the vector.
     fn len(&self) -> blasint;
+
+    /// The number of elements between consecutive vector entries.
+    ///
+    /// This is *not* in bytes!
     fn stride(&self) -> blasint;
+
     fn as_ptr(&self) -> *const Self::Element;
     fn as_mut_ptr(&mut self) -> *mut Self::Element;
 }
 
-impl<T: Num> Vector for [T] {
+unsafe impl<T: Num> Vector for [T] {
     type Element = T;
 
     #[inline(always)]
@@ -596,6 +621,97 @@ impl<T: Num> Vector for [T] {
     }
 }
 
+pub unsafe trait Matrix {
+    type Element: Num;
+
+    /// (m, n) where the matrix has M rows and N columns.
+    fn dim(&self) -> (blasint, blasint);
+
+    /// The "stride" of the major ("leading") dimension.
+    ///
+    /// If the matrix is row-major, then this is the number of elements between entries in adjacent
+    /// rows with the same column index. This can be useful when "slicing" a portion of a matrix,
+    /// but is usually just going to be the number of rows/columns.
+    fn major_stride(&self) -> blasint {
+        let (m, n) = self.dim();
+        match self.layout() {
+            Layout::RowMajor => n,
+            Layout::ColumnMajor => m,
+        }
+    }
+
+    fn layout(&self) -> Layout { Layout::RowMajor }
+    fn transpose(&self) -> Transpose { Transpose::None }
+    fn uplo(&self) -> Uplo { Uplo::Upper }
+    fn diag(&self) -> Diag { Diag::NonUnit }
+
+    fn as_ptr(&self) -> *const Self::Element;
+    fn as_mut_ptr(&mut self) -> *mut Self::Element;
+}
+
+/// A Matrix whose data is stored in a Vec.
+///
+/// The size of the matrix is frozen for as long as this struct exists; getting the number of
+/// rows/cols wrong causes BLAS to read/write out-of-bounds.
+pub struct VecMatrix<T> {
+    rows: blasint,
+    cols: blasint,
+    data: Vec<T>,
+    pub tran: Transpose,
+    pub uplo: Uplo,
+    pub diag: Diag,
+}
+
+impl<T> VecMatrix<T> {
+    /// Create a non-transposed, upper, non-unit matrix.
+    pub fn from_parts(rows: blasint, cols: blasint, data: Vec<T>) -> VecMatrix<T> {
+        VecMatrix {
+            rows: rows,
+            cols: cols,
+            data: data,
+            tran: Transpose::None,
+            uplo: Uplo::Upper,
+            diag: Diag::NonUnit,
+        }
+    }
+
+    pub fn unwrap(self) -> Vec<T> {
+        self.data
+    }
+}
+
+unsafe impl<T: Num> Matrix for VecMatrix<T> {
+    type Element = T;
+
+    fn dim(&self) -> (blasint, blasint) {
+        (self.rows, self.cols)
+    }
+
+    fn transpose(&self) -> Transpose { self.tran }
+    fn uplo(&self) -> Uplo { self.uplo }
+    fn diag(&self) -> Diag { self.diag }
+
+    fn as_ptr(&self) -> *const T {
+        SliceExt::as_ptr(&self.data[..])
+    }
+
+    fn as_mut_ptr(&mut self) -> *mut T {
+        SliceExt::as_mut_ptr(&mut self.data[..])
+    }
+}
+
+impl<T> Deref for VecMatrix<T> {
+    type Target = [T];
+    fn deref(&self) -> &[T] {
+        &self.data
+    }
+}
+
+impl<T> DerefMut for VecMatrix<T> {
+    fn deref_mut(&mut self) -> &mut [T] {
+        &mut self.data[..]
+    }
+}
 
 /// x · y
 #[inline(always)]
