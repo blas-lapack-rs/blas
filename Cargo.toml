@@ -10,6 +10,8 @@ description = "The package provides an interface to the Basic Linear Algebra Sub
 
 [dependencies]
 libblas-sys = "0.0.15"
+libc = "*"
+num = "*"
 
 [dev-dependencies]
 assert = "0.1"
