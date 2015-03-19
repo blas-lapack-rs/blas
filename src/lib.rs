@@ -1,8 +1,12 @@
 //! An interface to the [Basic Linear Algebra Subprograms][1].
 //!
+//! Note: level 3 (matrix-matrix) functions are marked unsafe, as the matrix traits are not
+//! finalized, and I am suspect of their correctness.
+//!
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
 #![cfg_attr(test, feature(test))]
+#![allow(unused_unsafe)]
 
 #[cfg(test)]
 #[macro_use]
@@ -54,29 +58,11 @@ pub enum Diag {
     Unit = CblasUnit as isize,
 }
 
-#[inline]
-pub fn dgemv(layout: Layout, trans: Transpose, m: usize, n: usize, alpha: f64,
-             a: &[f64], lda: usize, x: &[f64], incx: usize, beta: f64,
-             y: &mut [f64], incy: usize) {
-
-    unsafe {
-        cblas_dgemv(layout as u32, trans as u32, m as i32, n as i32, alpha,
-                         SliceExt::as_ptr(a), lda as i32, SliceExt::as_ptr(x), incx as i32, beta,
-                         SliceExt::as_mut_ptr(y), incy as i32);
-    }
-}
-
-#[inline]
-pub fn dgemm(layout: Layout, transa: Transpose, transb: Transpose, m: usize,
-             n: usize, k: usize, alpha: f64, a: &[f64], lda: usize, b: &[f64],
-             ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
-
-    unsafe {
-        cblas_dgemm(layout as u32, transa as u32, transb as u32,
-                         m as i32, n as i32, k as i32, alpha, SliceExt::as_ptr(a),
-                         lda as i32, SliceExt::as_ptr(b), ldb as i32, beta,
-                         SliceExt::as_mut_ptr(c), ldc as i32);
-    }
+#[repr(C)]
+#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+pub enum Side {
+    Left = CblasLeft as isize,
+    Right = CblasRight as isize,
 }
 
 #[cfg(test)]
@@ -85,13 +71,11 @@ mod tests {
     fn dgemv() {
         let (m, n) = (2, 3);
 
-        let a = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
-        let x = vec![1.0, 2.0, 3.0];
-        let mut y = vec![6.0, 8.0];
+        let a = ::VecMatrix::from_parts(m, n, vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0]);
+        let x = [1.0, 2.0, 3.0];
+        let mut y = [6.0, 8.0];
 
-        ::dgemv(::Layout::ColumnMajor, ::Transpose::None,
-                m, n, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
-
+        ::gemv(1.0, &x[..], 1.0, &mut y[..], &a);
         let expected_y = vec![20.0, 40.0];
         assert_equal!(y, expected_y);
     }
@@ -104,8 +88,8 @@ mod tests {
         let b = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
         let mut c = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 
-        ::dgemm(::Layout::ColumnMajor, ::Transpose::None, ::Transpose::None,
-                m, n, k, 1.0, &a, m, &b, k, 1.0, &mut c, m);
+        //::dgemm(::Layout::ColumnMajor, ::Transpose::None, ::Transpose::None,
+         //       m, n, k, 1.0, &a, m, &b, k, 1.0, &mut c, m);
 
         let expected_c = vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0];
         assert_equal!(c, expected_c);
@@ -149,33 +133,12 @@ pub unsafe trait Num: Copy {
     fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> ();
     fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> ();
 
-    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB:
-                                  CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self
-                                  as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B:
-                                  *const <Self as Num>::Float, ldb: blasint, beta: <Self as
-                                  Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
-    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M:
-                                  blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self
-                                  as Num>::Float, lda: blasint, B: *const <Self as Num>::Float,
-                                  ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as
-                                  Num>::Float, ldc: blasint) -> ();
-    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N:
-                                  blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self
-                                  as Num>::Float, lda: blasint, beta: <Self as Num>::Weird, C: *mut
-                                  <Self as Num>::Float, ldc: blasint) -> ();
-    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N:
-                                   blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const
-                                   <Self as Num>::Float, lda: blasint, B: *const <Self as
-                                   Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut
-                                   <Self as Num>::Float, ldc: blasint) -> ();
-    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA:
-                                  CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha:
-                                  <Self as Num>::Weird, A: *const <Self as Num>::Float, lda:
-                                  blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
-    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA:
-                                  CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha:
-                                  <Self as Num>::Weird, A: *const <Self as Num>::Float, lda:
-                                  blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
+    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
+    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
 }
 
 /// A trait representing the various data types BLAS can operate on.
@@ -206,10 +169,10 @@ pub unsafe trait Complex: Num {
     fn hbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
     fn hpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Weird, Ap: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
 
-    fn gemm3m() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
-    fn hemm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn gemm3m() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn hemm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
     fn herk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
-    fn her2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn her2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
 }
 
 unsafe impl Num for f32 {
@@ -632,7 +595,7 @@ unsafe impl<T: Num> Vector for [T] {
 
     #[inline(always)]
     fn len(&self) -> blasint {
-        SliceExt::len(self) as blasint
+        <[T]>::len(self) as blasint
     }
 
     #[inline(always)]
@@ -642,12 +605,12 @@ unsafe impl<T: Num> Vector for [T] {
 
     #[inline(always)]
     fn as_ptr(&self) -> *const <[T] as Vector>::Element {
-        SliceExt::as_ptr(self)
+        <[T]>::as_ptr(self)
     }
 
     #[inline(always)]
     fn as_mut_ptr(&mut self) -> *mut <[T] as Vector>::Element {
-        SliceExt::as_mut_ptr(self)
+        <[T]>::as_mut_ptr(self)
     }
 }
 
@@ -746,11 +709,11 @@ unsafe impl<T: Num> Matrix for VecMatrix<T> {
     fn diag(&self) -> Diag { self.diag }
 
     fn as_ptr(&self) -> *const T {
-        SliceExt::as_ptr(&self.data[..])
+        <[T]>::as_ptr(&self.data[..])
     }
 
     fn as_mut_ptr(&mut self) -> *mut T {
-        SliceExt::as_mut_ptr(&mut self.data[..])
+        <[T]>::as_mut_ptr(&mut self.data[..])
     }
 }
 
@@ -769,24 +732,24 @@ impl<T> DerefMut for VecMatrix<T> {
 
 /// x · y
 #[inline(always)]
-pub fn dot<V>(x: V, y: V) -> <V::Element as Num>::RetSelf where V: Vector {
-    debug_assert!(x.len() == y.len());
+pub fn dot<V: ?Sized>(x: &V, y: &V) -> <V::Element as Num>::RetSelf where V: Vector {
+    debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
     unsafe { V::Element::dot()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) }
 }
 
 /// y += a * x
 #[inline(always)]
-pub fn axpy<V, U>(alpha: V::Element, x: &mut V, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
-    debug_assert!(x.len() == y.len());
+pub fn axpy<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &mut V, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
+    debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
     unsafe { V::Element::axpy()(len, alpha, x.as_ptr(), x.stride(), y.as_mut_ptr(), y.stride()) }
 }
 
 /// Linear combination: y = a * x + b * y
 #[inline(always)]
-pub fn axpby<V, U>(alpha: V::Element, x: &mut V, beta: U::Element, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
-    debug_assert!(x.len() == y.len());
+pub fn axpby<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &mut V, beta: U::Element, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
+    debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
     unsafe { V::Element::axpby()(len, alpha, x.as_ptr(), x.stride(), beta, y.as_mut_ptr(), y.stride()) }
 }
@@ -794,18 +757,18 @@ pub fn axpby<V, U>(alpha: V::Element, x: &mut V, beta: U::Element, y: &mut U) wh
 /// Do something to x and y involving a Givens rotation where s = sinθ and c = cosθ?
 
 #[inline(always)]
-pub fn rot<V>(x: &mut V, y: &mut V, s: <V::Element as Num>::Float, c: V::Element) where V: Vector{
-    debug_assert!(x.len() == y.len());
+pub fn rot<V: ?Sized>(x: &mut V, y: &mut V, s: <V::Element as Num>::Float, c: V::Element) where V: Vector{
+    debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
     unsafe { V::Element::rot()(len, x.as_mut_ptr(), x.stride(), y.as_mut_ptr(), y.stride(), s, c) }
 }
 
 /// Setup a Givens rotation in the passed vector <a, b>, and returning new elements (c, s).
 #[inline(always)]
-pub fn rotg<V>(x: &mut V) -> (<V::Element as Num>::Float, V::Element) where V: Vector {
+pub fn rotg<V: ?Sized>(x: &mut V) -> (<V::Element as Num>::Float, V::Element) where V: Vector {
     // a, b, s COMPLEX, c REAL
     assert!(x.len() >= 2);
-    debug_assert!(x.len() == 2);
+    debug_assert_eq!(x.len(), 2);
 
     let mut s: V::Element = unsafe { std::mem::zeroed() };
     let mut c: <V::Element as Num>::Float = unsafe { std::mem::zeroed() };
@@ -818,7 +781,7 @@ pub fn rotg<V>(x: &mut V) -> (<V::Element as Num>::Float, V::Element) where V: V
 /// *Note:* This crate does not expose zdscal or csscal because they are not actually implemented
 /// specially in OpenBLAS.
 #[inline(always)]
-pub fn scal<V>(alpha: V::Element, x: &mut V) where V: Vector {
+pub fn scal<V: ?Sized>(alpha: V::Element, x: &mut V) where V: Vector {
     unsafe { V::Element::scal()(x.len(), alpha, x.as_mut_ptr(), x.stride()) }
 }
 
@@ -826,25 +789,25 @@ pub fn scal<V>(alpha: V::Element, x: &mut V) where V: Vector {
 ///
 /// For a complex vector, the "absolute value" is `abs(real) + abs(imag)`
 #[inline(always)]
-pub fn asum<V>(x: &V) -> <V::Element as Num>::Float where V: Vector {
+pub fn asum<V: ?Sized>(x: &V) -> <V::Element as Num>::Float where V: Vector {
     unsafe { V::Element::asum()(x.len(), x.as_ptr() as *const _, x.stride()) }
 }
 
 /// Index of the first value in the vector with the largest absolute value.
 #[inline(always)]
-pub fn iamax<V>(x: &V) -> size_t where V: Vector {
+pub fn iamax<V: ?Sized>(x: &V) -> size_t where V: Vector {
     unsafe { V::Element::iamax()(x.len(), x.as_ptr() as *const _, x.stride()) }
 }
 
 /// L2 norm of the vector `(sqrt(sum(|x_i|^2)))`, where |x_i| is the complex modulus for a complex number, absolute value otherwise.
 #[inline(always)]
-pub fn nrm2<V>(x: &V) -> <V::Element as Num>::Float where V: Vector {
+pub fn nrm2<V: ?Sized>(x: &V) -> <V::Element as Num>::Float where V: Vector {
     unsafe { V::Element::nrm2()(x.len(), x.as_ptr() as *const _, x.stride()) }
 }
 
 /// Do something *really* strange involving a "modified Givens rotation"
-pub fn rotm<V, U>(x: &mut V, y: &mut U, param: &[V::Element; 5]) where V: Vector, U: Vector<Element = V::Element>, V::Element: Real {
-    debug_assert!(x.len() == y.len());
+pub fn rotm<V: ?Sized, U: ?Sized>(x: &mut V, y: &mut U, param: &[V::Element; 5]) where V: Vector, U: Vector<Element = V::Element>, V::Element: Real {
+    debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
     unsafe { V::Element::rotm()(len, x.as_mut_ptr(), x.stride(), y.as_mut_ptr(), y.stride(), param as *const _ as *const _) }
 }
@@ -854,12 +817,12 @@ pub fn rotm<V, U>(x: &mut V, y: &mut U, param: &[V::Element; 5]) where V: Vector
 /// I think this won't modify the `coord` vector, but I can't really tell from the CBLAS interface
 /// whether it does things beyond the Fortran definition.
 #[inline(always)]
-pub fn rotmg<V, U>(diag: &mut V, coord: &mut U) -> [V::Element; 5] where V: Vector, U: Vector<Element = V::Element>, V::Element: Real {
+pub fn rotmg<V: ?Sized, U: ?Sized>(diag: &mut V, coord: &mut U) -> [V::Element; 5] where V: Vector, U: Vector<Element = V::Element>, V::Element: Real {
     // a, b, s COMPLEX, c REAL
     assert!(diag.len() >= 2);
     assert!(coord.len() >= 2);
-    debug_assert!(diag.len() == 2);
-    debug_assert!(coord.len() == 2);
+    debug_assert_eq!(diag.len(), 2);
+    debug_assert_eq!(coord.len(), 2);
 
     let mut param: [V::Element; 5] = unsafe { std::mem::zeroed() };
 
@@ -872,8 +835,8 @@ pub fn rotmg<V, U>(diag: &mut V, coord: &mut U) -> [V::Element; 5] where V: Vect
 
 /// Hermitian inner product of the complex vectors x and y
 #[inline(always)]
-pub fn dotc<V, U>(x: &V, y: &U) -> V::Element where V: Vector, U: Vector<Element = V::Element>, V::Element: Complex {
-    debug_assert!(x.len() == y.len());
+pub fn dotc<V: ?Sized, U: ?Sized>(x: &V, y: &U) -> V::Element where V: Vector, U: Vector<Element = V::Element>, V::Element: Complex {
+    debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
 
     V::Element::from_retself(unsafe { V::Element::dotc()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) })
@@ -881,8 +844,8 @@ pub fn dotc<V, U>(x: &V, y: &U) -> V::Element where V: Vector, U: Vector<Element
 
 /// General Matrix-vector multiply, y = alpha * A * x + beta * y.
 #[inline(always)]
-pub fn gemv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
-    debug_assert!(x.len() == y.len() && x.len() == a.dim().0);
+pub fn gemv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
+    debug_assert_eq!(x.len(), a.dim().1);
     let (m, n) = a.dim();
     let len = min(min(x.len(), y.len()), m);
 
@@ -891,10 +854,10 @@ pub fn gemv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
 
 /// A = A + alpha * x * y'
 #[inline(always)]
-pub fn ger<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
+pub fn ger<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
     let (m, n) = a.dim();
-    debug_assert!(m == x.len());
-    debug_assert!(n == y.len());
+    debug_assert_eq!(m, x.len());
+    debug_assert_eq!(n, y.len());
     let m = min(m, x.len());
     let n = min(n, y.len());
 
@@ -905,10 +868,10 @@ pub fn ger<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector,
 ///
 /// A is assumed to be triangular.
 #[inline(always)]
-pub fn trsv<V, M>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
+pub fn trsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     unsafe { V::Element::trsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
@@ -916,10 +879,10 @@ pub fn trsv<V, M>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Elem
 
 /// Triangular Matrix-vector multiply, x = A * x
 #[inline(always)]
-pub fn trmv<V, M>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
+pub fn trmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     unsafe { V::Element::trmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
@@ -927,8 +890,9 @@ pub fn trmv<V, M>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Elem
 
 /// General Band Matrix-vector multiply, y = alpha * A * x + beta * y
 #[inline(always)]
-pub fn gbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element> {
-    debug_assert!(x.len() == y.len() && x.len() == a.dim().0);
+pub fn gbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element> {
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert_eq!(x.len(), a.dim().0);
     let (m, n) = a.dim();
     let len = min(min(x.len(), y.len()), m);
 
@@ -937,10 +901,10 @@ pub fn gbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
 
 /// Triangular Band Matrix-vector multiply, x = A * x
 #[inline(always)]
-pub fn tbmv<V, M>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
+pub fn tbmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     let k = match a.uplo() {
@@ -953,10 +917,10 @@ pub fn tbmv<V, M>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::
 
 /// Triangular Packed matrix-vector multiply, x = A * x
 #[inline(always)]
-pub fn tpmv<V, M>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
+pub fn tpmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     unsafe { V::Element::tpmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
@@ -965,10 +929,10 @@ pub fn tpmv<V, M>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V
 /// Solve the equation A * x = b, storing the result in x.
 ///
 /// A is assumed to be triangular and band.
-pub fn tbsv<V, M>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
+pub fn tbsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     let k = match a.uplo() {
@@ -983,10 +947,10 @@ pub fn tbsv<V, M>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::
 ///
 /// A is assumed to be triangular and packed.
 #[inline(always)]
-pub fn tpsv<V, M>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
+pub fn tpsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     unsafe { V::Element::tpsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
@@ -994,10 +958,10 @@ pub fn tpsv<V, M>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V
 
 /// A = A + alpha * x * x'
 #[inline(always)]
-pub fn syr<V, M>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Real {
+pub fn syr<V: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Real {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::syr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
@@ -1005,11 +969,11 @@ pub fn syr<V, M>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: Matrix
 
 /// A = A + alpha * x * y'
 #[inline(always)]
-pub fn syr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Real {
+pub fn syr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Real {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
-    debug_assert!(m == y.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
+    debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::syr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
@@ -1017,11 +981,11 @@ pub fn syr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector
 
 /// Symmetric Matrix-vector multiply, y = alpha * A * x + beta * y
 #[inline(always)]
-pub fn symv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
+pub fn symv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(x.len() == y.len());
-    debug_assert!(x.len() == m);
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
     unsafe { V::Element::symv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
@@ -1029,10 +993,10 @@ pub fn symv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
 
 /// A = A + alpha * x * x'
 #[inline(always)]
-pub fn spr<V, M>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Real {
+pub fn spr<V: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Real {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::spr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
@@ -1040,11 +1004,11 @@ pub fn spr<V, M>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: Packed
 
 /// A = A + alpha * x * y'
 #[inline(always)]
-pub fn spr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
+pub fn spr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
-    debug_assert!(m == y.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
+    debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::spr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
@@ -1052,11 +1016,11 @@ pub fn spr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector
 
 /// Symmetric Packed matrix-vector multiply, y = alpha * A * x + beta * y
 #[inline(always)]
-pub fn spmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
+pub fn spmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(x.len() == y.len());
-    debug_assert!(x.len() == m);
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
     unsafe { V::Element::spmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
@@ -1064,10 +1028,10 @@ pub fn spmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
 
 /// Symetric Band Matrix-vector multiply, y = alpha * A * x + beta * y
 #[inline(always)]
-pub fn sbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
+pub fn sbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     let k = match a.uplo() {
@@ -1080,10 +1044,10 @@ pub fn sbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
 
 /// A = A + alpha * x * x'
 #[inline(always)]
-pub fn her<V, M>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Complex {
+pub fn her<V: ?Sized, M: ?Sized>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Complex {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::her()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
@@ -1091,11 +1055,11 @@ pub fn her<V, M>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: V
 
 /// A = A + alpha * x * y'
 #[inline(always)]
-pub fn her2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Complex {
+pub fn her2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Complex {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
-    debug_assert!(m == y.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
+    debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::her2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
@@ -1103,11 +1067,11 @@ pub fn her2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector
 
 /// Hermitian Matrix-vector multiply, y = alpha * A * x + beta * y
 #[inline(always)]
-pub fn hemv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
+pub fn hemv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(x.len() == y.len());
-    debug_assert!(x.len() == m);
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
     unsafe { V::Element::hemv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
@@ -1115,10 +1079,10 @@ pub fn hemv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
 
 /// A = A + alpha * x * x'
 #[inline(always)]
-pub fn hpr<V, M>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
+pub fn hpr<V: ?Sized, M: ?Sized>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::hpr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
@@ -1126,11 +1090,11 @@ pub fn hpr<V, M>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: V
 
 /// A = A + alpha * x * y'
 #[inline(always)]
-pub fn hpr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
+pub fn hpr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
-    debug_assert!(m == y.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
+    debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
     unsafe { V::Element::hpr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
@@ -1138,11 +1102,11 @@ pub fn hpr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector
 
 /// Hermitian Packed matrix-vector multiply, y = alpha * A * x + beta * y
 #[inline(always)]
-pub fn hpmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
+pub fn hpmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(x.len() == y.len());
-    debug_assert!(x.len() == m);
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(x.len(), y.len());
+    debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
     unsafe { V::Element::hpmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
@@ -1150,10 +1114,10 @@ pub fn hpmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
 
 /// Hermitian Band Matrix-vector multiply, y = alpha * A * x + beta * y
 #[inline(always)]
-pub fn hbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
+pub fn hbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
     let (m, n) = a.dim();
-    debug_assert!(m == n);
-    debug_assert!(m == x.len());
+    debug_assert_eq!(m, n);
+    debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
     let k = match a.uplo() {
@@ -1164,10 +1128,143 @@ pub fn hbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &
     unsafe { V::Element::hbmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
+/// General Matrix-matrix multiply, C = alpha * A * B + beta * C
+#[inline(always)]
+pub unsafe fn gemm<A: ?Sized, B: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element> {
+    let (am, an) = a.dim();
+    let (bm, bn) = b.dim();
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(am, cm);
+    debug_assert_eq!(an, bm);
+    debug_assert_eq!(bn, cn);
+
+    let m = min(am, cm);
+    let n = min(bn, cn);
+    let k = min(an, bm);
+
+    unsafe { A::Element::gemm()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
+/// Symetric Matrix-matrix multiply, C = alpha * A * B + beta * C (or, B * A)
+///
+/// The position of A (to the left or right of B) is controlled by `side`.
+#[inline(always)]
+pub unsafe fn symm<A: ?Sized, B: ?Sized, C: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element> {
+    let (bm, bn) = b.dim();
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(bm, cm);
+    debug_assert_eq!(bn, cn);
+
+    let m = min(bm, cm);
+    let n = min(bn, cn);
+
+    unsafe { A::Element::symm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
+/// Symetric rank-k operation, C = alpha * A * A' + beta * C,
+#[inline(always)]
+pub unsafe fn syrk<A: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, beta: A::Element, c: &mut C) where A: Matrix, C: Matrix<Element = A::Element> {
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(cm, cn);
+
+    let n = cm;
+    let k = a.dim().1;
+
+    unsafe { A::Element::syrk()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
+/// Symetric rank-2k operation, C = alpha * A * B' + alpha * B * A' + beta * C
+#[inline(always)]
+pub unsafe fn syr2k<A: ?Sized, B: ?Sized, C: ?Sized>(tran: Transpose, alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element> {
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(cm, cn);
+
+    let n = cn;
+    let k = min(a.dim().1, b.dim().1);
+
+    unsafe { A::Element::syr2k()(a.layout() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
+/// Triangular Matrix-matrix multiply, B = alpha * A * B (or, B * A)
+///
+/// The position of A (to the left or right of B) is controlled by `side`.
+#[inline(always)]
+pub unsafe fn trmm<A: ?Sized, B: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &mut B) where A: Matrix, B: Matrix<Element = A::Element> {
+    let (m, n) = b.dim();
+
+    unsafe { A::Element::trmm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, b.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
+}
+
+/// Solve the matrix equation A * X = alpha * B (or, X * A)
+#[inline(always)]
+pub unsafe fn trsm<A: ?Sized, B: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &mut B) where A: Matrix, B: Matrix<Element = A::Element> {
+    let (m, n) = b.dim();
+
+    unsafe { A::Element::trsm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
+}
+
+/// General complex(?) Matrix-matrix multiply, C = alpha * A * B + beta * C
+#[inline(always)]
+pub unsafe fn gemm3m<A: ?Sized, B: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element>, A::Element: Complex {
+    let (am, an) = a.dim();
+    let (bm, bn) = b.dim();
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(am, cm);
+    debug_assert_eq!(an, bm);
+    debug_assert_eq!(bn, cn);
+
+    let m = min(am, cm);
+    let n = min(bn, cn);
+    let k = min(an, bm);
+
+    unsafe { A::Element::gemm3m()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
+/// Hermitian Matrix-matrix multiply, C = alpha * A * B + beta * C (or, B * A)
+///
+/// The position of A (to the left or right of B) is controlled by `side`.
+#[inline(always)]
+pub unsafe fn hemm<A: ?Sized, B: ?Sized, C: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element>, A::Element: Complex {
+    let (bm, bn) = b.dim();
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(bm, cm);
+    debug_assert_eq!(bn, cn);
+
+    let m = min(bm, cm);
+    let n = min(bn, cn);
+
+    unsafe { A::Element::hemm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
+/// Hermitian rank-k operation, C = alpha * A * A' + beta * C,
+#[inline(always)]
+pub unsafe fn herk<A: ?Sized, C: ?Sized>(alpha: <A::Element as Num>::Float, a: &A, beta: <A::Element as Num>::Float, c: &mut C) where A: Matrix, C: Matrix<Element = A::Element>, C::Element: Complex {
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(cm, cn);
+
+    let n = cm;
+    let k = a.dim().1;
+
+    unsafe { A::Element::herk()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha, a.as_ptr() as *const _, a.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
+/// Hermitian rank-2k operation, C = alpha * A * B' + alpha * B * A' + beta * C
+#[inline(always)]
+pub unsafe fn her2k<A: ?Sized, B: ?Sized, C: ?Sized>(tran: Transpose, alpha: A::Element, a: &A, b: &B, beta: <A::Element as Num>::Float, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element>, A::Element: Complex {
+    let (cm, cn) = c.dim();
+    debug_assert_eq!(cm, cn);
+
+    let n = cn;
+    let k = min(a.dim().1, b.dim().1);
+
+    unsafe { A::Element::her2k()(a.layout() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
+}
+
 #[cfg(test)]
 mod benches {
     use std::iter::repeat;
 
+    /*
     #[bench]
     fn dgemv_few_large(bench: &mut ::test::Bencher) {
         let m = 1000;
@@ -1197,4 +1294,5 @@ mod benches {
             }
         });
     }
+    */
 }
