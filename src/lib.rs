@@ -26,14 +26,14 @@ use std::cmp::min;
 use std::ops::{Deref, DerefMut};
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Layout {
     RowMajor = CblasRowMajor as isize,
     ColumnMajor = CblasColMajor as isize,
 }
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Transpose {
     None = CblasNoTrans as isize,
     Transpose = CblasTrans as isize,
@@ -41,14 +41,14 @@ pub enum Transpose {
 }
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Uplo {
     Upper = CblasUpper as isize,
     Lower = CblasLower as isize,
 }
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Diag {
     NonUnit = CblasNonUnit as isize,
     Unit = CblasUnit as isize,
@@ -128,6 +128,7 @@ pub unsafe trait Num: Copy {
     type RetSelf: Copy;
     type Weird: Copy;
 
+    fn as_weird(&self) -> Self::Weird;
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self::Float, incx: blasint, y: *const Self::Float, incy: blasint) -> Self::RetSelf;
     fn axpy() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, y: *mut Self, incy: blasint);
     fn axpby() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, beta: Self, y: *mut Self, incy: blasint);
@@ -148,12 +149,33 @@ pub unsafe trait Num: Copy {
     fn tbsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, K: blasint, A: *const <Self as Num>::Float, lda: blasint, X: *mut <Self as Num>::Float, incX: blasint) -> ();
     fn tpsv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, N: blasint, Ap: *const <Self as Num>::Float, X: *mut <Self as Num>::Float, incX: blasint) -> ();
 
-    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
-    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
-    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
-    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
-    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
-    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA: CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
+    fn gemm() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB:
+                                  CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: <Self
+                                  as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, B:
+                                  *const <Self as Num>::Float, ldb: blasint, beta: <Self as
+                                  Num>::Weird, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
+    fn symm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M:
+                                  blasint, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self
+                                  as Num>::Float, lda: blasint, B: *const <Self as Num>::Float,
+                                  ldb: blasint, beta: <Self as Num>::Weird, C: *mut <Self as
+                                  Num>::Float, ldc: blasint) -> ();
+    fn syrk() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N:
+                                  blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self
+                                  as Num>::Float, lda: blasint, beta: <Self as Num>::Weird, C: *mut
+                                  <Self as Num>::Float, ldc: blasint) -> ();
+    fn syr2k() -> unsafe extern fn(Order: CBLAS_ORDER, Uplo: CBLAS_UPLO, Trans: CBLAS_TRANSPOSE, N:
+                                   blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const
+                                   <Self as Num>::Float, lda: blasint, B: *const <Self as
+                                   Num>::Float, ldb: blasint, beta: <Self as Num>::Weird, C: *mut
+                                   <Self as Num>::Float, ldc: blasint) -> ();
+    fn trmm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA:
+                                  CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha:
+                                  <Self as Num>::Weird, A: *const <Self as Num>::Float, lda:
+                                  blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
+    fn trsm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, TransA:
+                                  CBLAS_TRANSPOSE, Diag: CBLAS_DIAG, M: blasint, N: blasint, alpha:
+                                  <Self as Num>::Weird, A: *const <Self as Num>::Float, lda:
+                                  blasint, B: *mut <Self as Num>::Float, ldb: blasint) -> ();
 }
 
 /// A trait representing the various data types BLAS can operate on.
@@ -177,12 +199,12 @@ pub unsafe trait Complex: Num {
     fn dotc_sub() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint, ret: *mut <Self as Num>::RetSelf);
 
     fn her() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> ();
-    fn her2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> ();
-    fn hemv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
+    fn her2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Weird, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, A: *mut <Self as Num>::Float, lda: blasint) -> ();
+    fn hemv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
     fn hpr() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, A: *mut <Self as Num>::Float) -> ();
-    fn hpr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, Ap: *mut <Self as Num>::Float) -> ();
-    fn hbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
-    fn hpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: *const <Self as Num>::Float, Ap: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, beta: *const <Self as Num>::Float, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
+    fn hpr2() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Weird, X: *const <Self as Num>::Float, incX: blasint, Y: *const <Self as Num>::Float, incY: blasint, Ap: *mut <Self as Num>::Float) -> ();
+    fn hbmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, K: blasint, alpha: <Self as Num>::Weird, A: *const <Self as Num>::Float, lda: blasint, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
+    fn hpmv() -> unsafe extern fn(order: CBLAS_ORDER, Uplo: CBLAS_UPLO, N: blasint, alpha: <Self as Num>::Weird, Ap: *const <Self as Num>::Float, X: *const <Self as Num>::Float, incX: blasint, beta: <Self as Num>::Weird, Y: *mut <Self as Num>::Float, incY: blasint) -> ();
 
     fn gemm3m() -> unsafe extern fn(Order: CBLAS_ORDER, TransA: CBLAS_TRANSPOSE, TransB: CBLAS_TRANSPOSE, M: blasint, N: blasint, K: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
     fn hemm() -> unsafe extern fn(Order: CBLAS_ORDER, Side: CBLAS_SIDE, Uplo: CBLAS_UPLO, M: blasint, N: blasint, alpha: *const <Self as Num>::Float, A: *const <Self as Num>::Float, lda: blasint, B: *const <Self as Num>::Float, ldb: blasint, beta: *const <Self as Num>::Float, C: *mut <Self as Num>::Float, ldc: blasint) -> ();
@@ -195,6 +217,8 @@ unsafe impl Num for f32 {
     type RetSelf = f32;
     type Weird = f32;
 
+    #[inline(always)]
+    fn as_weird(&self) -> f32 { *self }
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint, y: *const Self, incy: blasint) -> Self { cblas_sdot }
     #[inline(always)]
@@ -270,6 +294,8 @@ unsafe impl Num for C {
     type RetSelf = [f32; 2];
     type Weird = *const f32;
 
+    #[inline(always)]
+    fn as_weird(&self) -> *const f32 { self as *const _ as *const _ }
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf { cblas_cdotu }
     #[inline(always)]
@@ -389,6 +415,8 @@ unsafe impl Num for Z {
     type Weird = *const f64;
 
     #[inline(always)]
+    fn as_weird(&self) -> *const f64 { self as *const _ as *const _ }
+    #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf { cblas_zdotu }
     #[inline(always)]
     fn axpy() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, y: *mut Self, incy: blasint) { zaxpy_wrap }
@@ -507,6 +535,8 @@ unsafe impl Num for f64 {
     type RetSelf = f64;
     type Weird = f64;
 
+    #[inline(always)]
+    fn as_weird(&self) -> f64 { *self }
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint, y: *const Self, incy: blasint) -> Self { cblas_ddot }
     #[inline(always)]
@@ -649,6 +679,26 @@ pub unsafe trait Matrix {
     fn as_mut_ptr(&mut self) -> *mut Self::Element;
 }
 
+/// A band matrix is a special form of sparse matrix.
+///
+/// A band matrix is zero everywhere except maybe along the diagonal, on elements up to `kl` rows below
+/// the diagonal, and elements up to `ku` rows above the diagonal. Note that when kl = ku = 0, only
+/// the diagonal is stored, which can be useful.
+pub trait BandMatrix: Matrix {
+    /// Number of sub-diagonals.
+    fn kl(&self) -> blasint;
+    /// Number of super-diagonals.
+    fn ku(&self) -> blasint;
+}
+
+/// A packed matrix is a special form of sparse matrix.
+///
+/// A packed matrix is zero everywhere except maybe the triangular portion indicated by
+/// `Matrix::uplo`, which is stored column-by-column.
+pub trait PackedMatrix: Matrix {
+
+}
+
 /// A Matrix whose data is stored in a Vec.
 ///
 /// The size of the matrix is frozen for as long as this struct exists; getting the number of
@@ -684,7 +734,11 @@ unsafe impl<T: Num> Matrix for VecMatrix<T> {
     type Element = T;
 
     fn dim(&self) -> (blasint, blasint) {
-        (self.rows, self.cols)
+        if self.tran == Transpose::None {
+            (self.rows, self.cols)
+        } else {
+            (self.cols, self.rows)
+        }
     }
 
     fn transpose(&self) -> Transpose { self.tran }
@@ -816,7 +870,7 @@ pub fn rotmg<V, U>(diag: &mut V, coord: &mut U) -> [V::Element; 5] where V: Vect
     param
 }
 
-/// Hermitian inner product of the complex vectors
+/// Hermitian inner product of the complex vectors x and y
 #[inline(always)]
 pub fn dotc<V, U>(x: &V, y: &U) -> V::Element where V: Vector, U: Vector<Element = V::Element>, V::Element: Complex {
     debug_assert!(x.len() == y.len());
@@ -825,6 +879,290 @@ pub fn dotc<V, U>(x: &V, y: &U) -> V::Element where V: Vector, U: Vector<Element
     V::Element::from_retself(unsafe { V::Element::dotc()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) })
 }
 
+/// General Matrix-vector multiply, y = alpha * A * x + beta * y.
+#[inline(always)]
+pub fn gemv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
+    debug_assert!(x.len() == y.len() && x.len() == a.dim().0);
+    let (m, n) = a.dim();
+    let len = min(min(x.len(), y.len()), m);
+
+    unsafe { V::Element::gemv()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+}
+
+/// A = A + alpha * x * y'
+#[inline(always)]
+pub fn ger<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
+    let (m, n) = a.dim();
+    debug_assert!(m == x.len());
+    debug_assert!(n == y.len());
+    let m = min(m, x.len());
+    let n = min(n, y.len());
+
+    unsafe { V::Element::ger()(a.layout() as CBLAS_ORDER, m, n, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+}
+
+/// Solve the equation A * x = b, storing the result in x.
+///
+/// A is assumed to be triangular.
+#[inline(always)]
+pub fn trsv<V, M>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    unsafe { V::Element::trsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+}
+
+/// Triangular Matrix-vector multiply, x = A * x
+#[inline(always)]
+pub fn trmv<V, M>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    unsafe { V::Element::trmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+}
+
+/// General Band Matrix-vector multiply, y = alpha * A * x + beta * y
+#[inline(always)]
+pub fn gbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element> {
+    debug_assert!(x.len() == y.len() && x.len() == a.dim().0);
+    let (m, n) = a.dim();
+    let len = min(min(x.len(), y.len()), m);
+
+    unsafe { V::Element::gbmv()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, a.kl(), a.ku(), alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+}
+
+/// Triangular Band Matrix-vector multiply, x = A * x
+#[inline(always)]
+pub fn tbmv<V, M>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    let k = match a.uplo() {
+        Uplo::Lower => a.kl(),
+        Uplo::Upper => a.ku(),
+    };
+
+    unsafe { V::Element::tbmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+}
+
+/// Triangular Packed matrix-vector multiply, x = A * x
+#[inline(always)]
+pub fn tpmv<V, M>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    unsafe { V::Element::tpmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
+}
+
+/// Solve the equation A * x = b, storing the result in x.
+///
+/// A is assumed to be triangular and band.
+pub fn tbsv<V, M>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    let k = match a.uplo() {
+        Uplo::Lower => a.kl(),
+        Uplo::Upper => a.ku(),
+    };
+
+    unsafe { V::Element::tbsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+}
+
+/// Solve the equation A * x = b, storing the result in x.
+///
+/// A is assumed to be triangular and packed.
+#[inline(always)]
+pub fn tpsv<V, M>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    unsafe { V::Element::tpsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
+}
+
+/// A = A + alpha * x * x'
+#[inline(always)]
+pub fn syr<V, M>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Real {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::syr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+}
+
+/// A = A + alpha * x * y'
+#[inline(always)]
+pub fn syr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Real {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    debug_assert!(m == y.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::syr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+}
+
+/// Symmetric Matrix-vector multiply, y = alpha * A * x + beta * y
+#[inline(always)]
+pub fn symv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(x.len() == y.len());
+    debug_assert!(x.len() == m);
+    let len = min(min(x.len(), y.len()), m);
+
+    unsafe { V::Element::symv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+}
+
+/// A = A + alpha * x * x'
+#[inline(always)]
+pub fn spr<V, M>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Real {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::spr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
+}
+
+/// A = A + alpha * x * y'
+#[inline(always)]
+pub fn spr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    debug_assert!(m == y.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::spr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
+}
+
+/// Symmetric Packed matrix-vector multiply, y = alpha * A * x + beta * y
+#[inline(always)]
+pub fn spmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(x.len() == y.len());
+    debug_assert!(x.len() == m);
+    let len = min(min(x.len(), y.len()), m);
+
+    unsafe { V::Element::spmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+}
+
+/// Symetric Band Matrix-vector multiply, y = alpha * A * x + beta * y
+#[inline(always)]
+pub fn sbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    let k = match a.uplo() {
+        Uplo::Lower => a.kl(),
+        Uplo::Upper => a.ku(),
+    };
+
+    unsafe { V::Element::sbmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+}
+
+/// A = A + alpha * x * x'
+#[inline(always)]
+pub fn her<V, M>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Complex {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::her()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+}
+
+/// A = A + alpha * x * y'
+#[inline(always)]
+pub fn her2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Complex {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    debug_assert!(m == y.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::her2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+}
+
+/// Hermitian Matrix-vector multiply, y = alpha * A * x + beta * y
+#[inline(always)]
+pub fn hemv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(x.len() == y.len());
+    debug_assert!(x.len() == m);
+    let len = min(min(x.len(), y.len()), m);
+
+    unsafe { V::Element::hemv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+}
+
+/// A = A + alpha * x * x'
+#[inline(always)]
+pub fn hpr<V, M>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::hpr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
+}
+
+/// A = A + alpha * x * y'
+#[inline(always)]
+pub fn hpr2<V, U, M>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    debug_assert!(m == y.len());
+    let m = min(m, x.len());
+
+    unsafe { V::Element::hpr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
+}
+
+/// Hermitian Packed matrix-vector multiply, y = alpha * A * x + beta * y
+#[inline(always)]
+pub fn hpmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(x.len() == y.len());
+    debug_assert!(x.len() == m);
+    let len = min(min(x.len(), y.len()), m);
+
+    unsafe { V::Element::hpmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+}
+
+/// Hermitian Band Matrix-vector multiply, y = alpha * A * x + beta * y
+#[inline(always)]
+pub fn hbmv<V, U, M>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
+    let (m, n) = a.dim();
+    debug_assert!(m == n);
+    debug_assert!(m == x.len());
+    let len = min(min(m, n), x.len());
+
+    let k = match a.uplo() {
+        Uplo::Lower => a.kl(),
+        Uplo::Upper => a.ku(),
+    };
+
+    unsafe { V::Element::hbmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+}
 
 #[cfg(test)]
 mod benches {
