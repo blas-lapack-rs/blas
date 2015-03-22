@@ -13,6 +13,10 @@
 extern crate assert;
 
 #[cfg(test)]
+#[macro_use]
+extern crate log;
+
+#[cfg(test)]
 extern crate test;
 
 extern crate num;
@@ -27,7 +31,7 @@ use raw::*;
 use libc::size_t;
 use std::mem::transmute;
 use std::cmp::min;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Add, Sub, Mul, Div};
 
 #[repr(C)]
 #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
@@ -67,7 +71,197 @@ pub enum Side {
 
 #[cfg(test)]
 mod tests {
+    extern crate quickcheck;
+
+    use self::quickcheck::quickcheck;
+    use std::cmp::Ordering;
+
+    const sfac: f64 = 9.765625e-4;
+
+    #[derive(PartialEq, PartialOrd)]
+    struct OrdWr<T>(T);
+
+    impl<T: PartialEq> ::std::cmp::Eq for OrdWr<T> { }
+
+    impl<T: ::Real> ::std::cmp::Ord for OrdWr<T> {
+        fn cmp(&self, other: &Self) -> Ordering {
+            if self.0 < other.0 {
+                Ordering::Less
+            } else if self > other {
+                Ordering::Greater
+            } else {
+                Ordering::Equal
+            }
+        }
+    }
+
+    fn approx_eq<T: ::std::fmt::Debug + Copy + ::num::Signed + PartialOrd + ::std::num::FromPrimitive>(a: T, b: T) -> bool {
+        let res = ::num::abs(a - b) < T::from_f64(sfac).unwrap();
+        if !res {
+            println!("{:?} ~/~ {:?}", a, b);
+        }
+        res
+    }
+
+    fn dot_prop<T: ::std::fmt::Debug + ::Num + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(x: Vec<T>, y: Vec<T>) -> bool {
+        let expected = x.iter().zip(y.iter()).map(|(&x, &y)| x * y).fold(T::zero(), |acc, item| acc + item);
+        let l = ::std::cmp::min(x.len(), y.len());
+        let actual = ::dot(&x[..l], &y[..l]);
+        approx_eq(actual, expected)
+    }
+
     #[test]
+    #[ignore] // FIXME: https://github.com/xianyi/OpenBLAS/issues/522
+    fn sdot() {
+        quickcheck(dot_prop::<f32> as fn(Vec<f32>, Vec<f32>) -> bool);
+    }
+
+    #[test]
+    fn ddot() {
+        quickcheck(dot_prop::<f64> as fn(Vec<f64>, Vec<f64>) -> bool);
+    }
+
+    fn axpy_prop<T: ::std::fmt::Debug + ::Num + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(a: T, x: Vec<T>, mut y: Vec<T>) -> bool {
+        let expected = x.iter().zip(y.iter()).map(|(&x, &y)| y + a * x).collect::<Vec<_>>();
+        let l = ::std::cmp::min(x.len(), y.len());
+        ::axpy(a, &x[..l], &mut y[..l]);
+        expected.into_iter().zip(y.into_iter()).all(|(ex, ac)| approx_eq(ex, ac))
+    }
+
+    #[test]
+    fn saxpy() {
+        quickcheck(axpy_prop::<f32> as fn(f32, Vec<f32>, Vec<f32>) -> bool);
+    }
+
+    #[test]
+    fn daxpy() {
+        quickcheck(axpy_prop::<f64> as fn(f64, Vec<f64>, Vec<f64>) -> bool);
+    }
+
+    fn axpby_prop<T: ::std::fmt::Debug + ::Num + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(a: T, x: Vec<T>, b: T, mut y: Vec<T>) -> bool {
+        let expected = x.iter().zip(y.iter()).map(|(&x, &y)| a * x + b * y).collect::<Vec<_>>();
+        let l = ::std::cmp::min(x.len(), y.len());
+        ::axpby(a, &x[..l], b, &mut y[..l]);
+        expected.into_iter().zip(y.into_iter()).all(|(ex, ac)| approx_eq(ex, ac))
+    }
+
+    #[test]
+    fn saxpby() {
+        quickcheck(axpby_prop::<f32> as fn(f32, Vec<f32>, f32, Vec<f32>) -> bool);
+    }
+
+    #[test]
+    fn daxpby() {
+        quickcheck(axpby_prop::<f64> as fn(f64, Vec<f64>, f64, Vec<f64>) -> bool);
+    }
+
+    fn rot_prop<T: ::std::fmt::Debug + ::Real + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(mut x: Vec<T>, mut y: Vec<T>, s: T, c: T) -> bool {
+        let s = s / T::from_i8(100).unwrap();
+        let c = c / T::from_i8(100).unwrap();
+        let expected = x.iter().zip(y.iter()).map(|(&x, &y)| (c * x + s * y, -s * x + c * y)).collect::<Vec<_>>();
+        let l = ::std::cmp::min(x.len(), y.len());
+        ::rot(&mut x[..l], &mut y[..l], c, s);
+        expected.into_iter().zip(x.into_iter().zip(y.into_iter())).all(|((exx, exy), (acx, acy))| approx_eq(exx, acx) && approx_eq(exy, acy))
+    }
+
+    #[test]
+    fn srot() {
+        quickcheck(rot_prop::<f32> as fn(Vec<f32>, Vec<f32>, f32, f32) -> bool);
+    }
+
+    #[test]
+    fn drot() {
+        quickcheck(rot_prop::<f64> as fn(Vec<f64>, Vec<f64>, f64, f64) -> bool);
+    }
+
+    // simple smoke test, not very good.
+    fn rotg_prop<T: ::std::fmt::Debug + ::Real + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(a: T, b: T) -> bool {
+        let (r, z, c, s) = ::rotg(a, b);
+        let mut x = [a]; let mut y = [b];
+        ::rot(&mut x[..], &mut y[..], c, s);
+        approx_eq(x[0], r) && approx_eq(y[0], T::from_i8(0).unwrap())
+    }
+
+    #[test]
+    fn srotg() {
+        quickcheck(rotg_prop::<f32> as fn(f32, f32) -> bool);
+    }
+
+    #[test]
+    fn drotg() {
+        quickcheck(rotg_prop::<f64> as fn(f64, f64) -> bool);
+    }
+
+    fn scal_prop<T: ::std::fmt::Debug + ::Real + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(mut a: Vec<T>, s: T) -> bool {
+        let expected = a.iter().map(|&a| a * s).collect::<Vec<_>>();
+        ::scal(s, &mut a[..]);
+        expected.into_iter().zip(a.into_iter()).all(|(ex, ac)| approx_eq(ex, ac))
+    }
+
+    #[test]
+    fn sscal() {
+        quickcheck(scal_prop::<f32> as fn(Vec<f32>, f32) -> bool);
+    }
+
+    #[test]
+    fn dscal() {
+        quickcheck(scal_prop::<f64> as fn(Vec<f64>, f64) -> bool);
+    }
+
+    fn asum_prop<T: ::std::fmt::Debug + ::Real + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(a: Vec<T>) -> bool {
+        let expected = a.iter().map(|&a| a.abs()).fold(T::from_i8(0).unwrap(), |acc, it| acc + it);
+        let actual = ::asum(&a[..]);
+        approx_eq(expected, actual)
+    }
+
+    #[test]
+    #[ignore] // FIXME - reliably fails
+    fn sasum() {
+        quickcheck(asum_prop::<f32> as fn(Vec<f32>) -> bool);
+    }
+
+    #[test]
+    fn dasum() {
+        quickcheck(asum_prop::<f64> as fn(Vec<f64>) -> bool);
+    }
+
+    fn iamax_prop<T: ::std::fmt::Debug + ::Real + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(a: Vec<T>) -> bool {
+        let expected = match a.iter().enumerate().max_by(|&(idx, elem)| OrdWr(elem.abs())) {
+            Some(e) => e.0,
+            None => return true
+        };
+        let actual = ::iamax(&a[..]);
+        expected as ::libc::size_t == actual
+    }
+
+    #[test]
+    fn siamax() {
+        quickcheck(iamax_prop::<f32> as fn(Vec<f32>) -> bool);
+    }
+
+    #[test]
+    fn diamax() {
+        quickcheck(iamax_prop::<f64> as fn(Vec<f64>) -> bool);
+    }
+
+    fn nrm2_prop<T: ::std::fmt::Debug + ::Real + PartialOrd + ::num::Signed + ::std::num::FromPrimitive>(a: Vec<T>) -> bool {
+        let expected = a.iter().fold(T::from_i8(0).unwrap(), |acc, it| acc + it.abs().powi(2)).sqrt();
+        let actual = ::nrm2(&a[..]);
+        approx_eq(expected, actual)
+    }
+
+    #[test]
+    fn snrm2() {
+        quickcheck(nrm2_prop::<f32> as fn(Vec<f32>) -> bool);
+    }
+
+    #[test]
+    fn dnrm2() {
+        quickcheck(nrm2_prop::<f64> as fn(Vec<f64>) -> bool);
+    }
+
+    #[test]
+    #[ignore]
     fn dgemv() {
         let (m, n) = (2, 3);
 
@@ -81,6 +275,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn dgemm() {
         let (m, n, k) = (2, 4, 3);
 
@@ -107,12 +302,14 @@ mod tests {
 /// inner float type representation for. `RetSelf` is used to paper over the difference between
 /// functions returning `_Complex` and `Self` being a Rust type. `Weird` is used similarly, but for
 /// scalar arguments that need a pointer to `Float` for Complex types.
-pub unsafe trait Num: Copy {
+pub unsafe trait Num: Copy + Add<Output=Self> + Sub<Output=Self> + Div<Output=Self> + Mul<Output=Self> + PartialEq + num::Zero {
     type Float: Copy;
     type RetSelf: Copy;
     type Weird: Copy;
 
     fn as_weird(&self) -> Self::Weird;
+    fn from_retself(Self::RetSelf) -> Self;
+
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self::Float, incx: blasint, y: *const Self::Float, incy: blasint) -> Self::RetSelf;
     fn axpy() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, y: *mut Self, incy: blasint);
     fn axpby() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, beta: Self, y: *mut Self, incy: blasint);
@@ -142,7 +339,7 @@ pub unsafe trait Num: Copy {
 }
 
 /// A trait representing the various data types BLAS can operate on.
-pub unsafe trait Real: Num {
+pub unsafe trait Real: Num<Float = Self, RetSelf = Self, Weird = Self> + std::num::Float {
     fn rotm() -> unsafe extern fn(N: blasint, X: *mut Self, incX: blasint, Y: *mut Self, incY: blasint, P: *const Self);
     fn rotmg() -> unsafe extern fn( d1: *mut Self, d2: *mut Self, b1: *mut Self, b2: Self, P: *mut Self);
 
@@ -156,7 +353,6 @@ pub unsafe trait Real: Num {
 }
 
 pub unsafe trait Complex: Num {
-    fn from_retself(val: <Self as Num>::RetSelf) -> Self;
     fn dotc() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf;
     fn dotu_sub() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint, ret: *mut <Self as Num>::RetSelf);
     fn dotc_sub() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint, ret: *mut <Self as Num>::RetSelf);
@@ -182,6 +378,9 @@ unsafe impl Num for f32 {
 
     #[inline(always)]
     fn as_weird(&self) -> f32 { *self }
+    #[inline(always)]
+    fn from_retself(x: f32) -> f32 { x }
+
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint, y: *const Self, incy: blasint) -> Self { cblas_sdot }
     #[inline(always)]
@@ -260,6 +459,9 @@ unsafe impl Num for C {
     #[inline(always)]
     fn as_weird(&self) -> *const f32 { self as *const _ as *const _ }
     #[inline(always)]
+    fn from_retself(x: [f32; 2]) -> C { num::Complex { re: x[0], im: x[1] } }
+
+    #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf { cblas_cdotu }
     #[inline(always)]
     fn axpy() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, y: *mut Self, incy: blasint) { caxpy_wrap }
@@ -312,14 +514,6 @@ unsafe impl Num for C {
 }
 
 unsafe impl Complex for C {
-    #[inline(always)]
-    fn from_retself(val: <Self as Num>::RetSelf) -> Self {
-        num::Complex {
-            re: val[0],
-            im: val[1],
-        }
-    }
-
     #[inline(always)]
     fn dotc() -> unsafe extern fn(n: blasint, x: *const <C as Num>::Float, incx: blasint, y: *const <C as Num>::Float, incy: blasint) -> <C as Num>::RetSelf { cblas_cdotc }
     #[inline(always)]
@@ -380,6 +574,9 @@ unsafe impl Num for Z {
     #[inline(always)]
     fn as_weird(&self) -> *const f64 { self as *const _ as *const _ }
     #[inline(always)]
+    fn from_retself(x: [f64; 2]) -> Z { num::Complex { re: x[0], im: x[1] } }
+
+    #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const <Self as Num>::Float, incx: blasint, y: *const <Self as Num>::Float, incy: blasint) -> <Self as Num>::RetSelf { cblas_zdotu }
     #[inline(always)]
     fn axpy() -> unsafe extern fn(n: blasint, alpha: Self, x: *const Self, incx: blasint, y: *mut Self, incy: blasint) { zaxpy_wrap }
@@ -432,13 +629,6 @@ unsafe impl Num for Z {
 }
 
 unsafe impl Complex for Z {
-    #[inline(always)]
-    fn from_retself(val: <Self as Num>::RetSelf) -> Self {
-        num::Complex {
-            re: val[0],
-            im: val[1],
-        }
-    }
     #[inline(always)]
     fn dotc() -> unsafe extern fn(n: blasint, x: *const <Z as Num>::Float, incx: blasint, y: *const <Z as Num>::Float, incy: blasint) -> <Z as Num>::RetSelf { cblas_zdotc }
     #[inline(always)]
@@ -500,6 +690,9 @@ unsafe impl Num for f64 {
 
     #[inline(always)]
     fn as_weird(&self) -> f64 { *self }
+    #[inline(always)]
+    fn from_retself(x: f64) -> f64 { x }
+
     #[inline(always)]
     fn dot() -> unsafe extern fn(n: blasint, x: *const Self, incx: blasint, y: *const Self, incy: blasint) -> Self { cblas_ddot }
     #[inline(always)]
@@ -732,15 +925,15 @@ impl<T> DerefMut for VecMatrix<T> {
 
 /// x · y
 #[inline(always)]
-pub fn dot<V: ?Sized>(x: &V, y: &V) -> <V::Element as Num>::RetSelf where V: Vector {
+pub fn dot<V: ?Sized>(x: &V, y: &V) -> V::Element where V: Vector {
     debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
-    unsafe { V::Element::dot()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) }
+    V::Element::from_retself(unsafe { V::Element::dot()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) })
 }
 
 /// y += a * x
 #[inline(always)]
-pub fn axpy<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &mut V, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
+pub fn axpy<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &V, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
     debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
     unsafe { V::Element::axpy()(len, alpha, x.as_ptr(), x.stride(), y.as_mut_ptr(), y.stride()) }
@@ -748,38 +941,35 @@ pub fn axpy<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &mut V, y: &mut U) where
 
 /// Linear combination: y = a * x + b * y
 #[inline(always)]
-pub fn axpby<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &mut V, beta: U::Element, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
+pub fn axpby<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &V, beta: U::Element, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
     debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
     unsafe { V::Element::axpby()(len, alpha, x.as_ptr(), x.stride(), beta, y.as_mut_ptr(), y.stride()) }
 }
 
-/// Do something to x and y involving a Givens rotation where s = sinθ and c = cosθ?
-
+/// Rotate each (x, y) pair pulling coordinates from `x` and `y`, overwriting them, by doing a
+/// matrix multiplication: `[x, y] = [[c, s], [-s, c]] * [x, y]`
 #[inline(always)]
-pub fn rot<V: ?Sized>(x: &mut V, y: &mut V, s: <V::Element as Num>::Float, c: V::Element) where V: Vector{
+pub fn rot<V: ?Sized>(x: &mut V, y: &mut V, c: <V::Element as Num>::Float, s: V::Element) where V: Vector{
     debug_assert_eq!(x.len(), y.len());
     let len = min(x.len(), y.len());
-    unsafe { V::Element::rot()(len, x.as_mut_ptr(), x.stride(), y.as_mut_ptr(), y.stride(), s, c) }
+    unsafe { V::Element::rot()(len, x.as_mut_ptr(), x.stride(), y.as_mut_ptr(), y.stride(), c, s) }
 }
 
-/// Setup a Givens rotation in the passed vector <a, b>, and returning new elements (c, s).
+/// Setup a Givens rotation with the passed vector `[a, b]`, and returning new elements `(r, z, c, s)`,
+/// such that `[[c, s], [-s, c]] * [a, b] = [r, 0]`
 #[inline(always)]
-pub fn rotg<V: ?Sized>(x: &mut V) -> (<V::Element as Num>::Float, V::Element) where V: Vector {
-    // a, b, s COMPLEX, c REAL
-    assert!(x.len() >= 2);
-    debug_assert_eq!(x.len(), 2);
-
-    let mut s: V::Element = unsafe { std::mem::zeroed() };
-    let mut c: <V::Element as Num>::Float = unsafe { std::mem::zeroed() };
-    unsafe { V::Element::rotg()(x.as_mut_ptr() as *mut _, x.as_mut_ptr().offset(1) as *mut _, &mut c, &mut s) }
-    (c, s)
+pub fn rotg<N>(mut a: N, mut b: N) -> (N, N, N::Float, N) where N: Num {
+    let mut s: N = unsafe { std::mem::zeroed() };
+    let mut c: N::Float = unsafe { std::mem::zeroed() };
+    unsafe { N::rotg()(&mut a as *mut _ as *mut _, &mut b as *mut _ as *mut _, &mut c, &mut s) }
+    (a, b, c, s)
 }
 
 /// array *= alpha
 ///
 /// *Note:* This crate does not expose zdscal or csscal because they are not actually implemented
-/// specially in OpenBLAS.
+/// specially in OpenBLAS (and thus are unlikely to be worthwhile to use).
 #[inline(always)]
 pub fn scal<V: ?Sized>(alpha: V::Element, x: &mut V) where V: Vector {
     unsafe { V::Element::scal()(x.len(), alpha, x.as_mut_ptr(), x.stride()) }
