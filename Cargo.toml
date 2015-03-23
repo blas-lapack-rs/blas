@@ -20,4 +20,3 @@ version = "*"
 [dev-dependencies]
 assert = "0.1"
 quickcheck = "*"
-log = "*"
