@@ -31,9 +31,9 @@ pub enum Layout {
 #[repr(C)]
 #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Transpose {
-    None = CblasNoTrans as isize,
-    Transpose = CblasTrans as isize,
-    ConjugateTranspose = CblasConjTrans as isize,
+    NoTrans = CblasNoTrans as isize,
+    Trans = CblasTrans as isize,
+    ConjTrans = CblasConjTrans as isize,
 }
 
 #[repr(C)]
@@ -593,7 +593,7 @@ pub unsafe trait Matrix {
     }
 
     fn layout(&self) -> Layout { Layout::RowMajor }
-    fn transpose(&self) -> Transpose { Transpose::None }
+    fn transpose(&self) -> Transpose { Transpose::NoTrans }
     fn uplo(&self) -> Uplo { Uplo::Upper }
     fn diag(&self) -> Diag { Diag::NonUnit }
 
@@ -641,7 +641,7 @@ impl<T> VecMatrix<T> {
             rows: rows,
             cols: cols,
             data: data,
-            tran: Transpose::None,
+            tran: Transpose::NoTrans,
             uplo: Uplo::Upper,
             diag: Diag::NonUnit,
         }
@@ -656,7 +656,7 @@ unsafe impl<T: Num> Matrix for VecMatrix<T> {
     type Element = T;
 
     fn dim(&self) -> (blasint, blasint) {
-        if self.tran == Transpose::None {
+        if self.tran == Transpose::NoTrans {
             (self.rows, self.cols)
         } else {
             (self.cols, self.rows)
