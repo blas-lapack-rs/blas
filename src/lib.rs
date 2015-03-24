@@ -23,7 +23,7 @@ use std::ops::{Deref, DerefMut, Add, Sub, Mul, Div};
 
 #[repr(C)]
 #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum Layout {
+pub enum Order {
     RowMajor = CblasRowMajor as isize,
     ColMajor = CblasColMajor as isize,
 }
@@ -586,13 +586,13 @@ pub unsafe trait Matrix {
     /// but is usually just going to be the number of rows/columns.
     fn major_stride(&self) -> blasint {
         let (m, n) = self.dim();
-        match self.layout() {
-            Layout::RowMajor => n,
-            Layout::ColMajor => m,
+        match self.order() {
+            Order::RowMajor => n,
+            Order::ColMajor => m,
         }
     }
 
-    fn layout(&self) -> Layout { Layout::RowMajor }
+    fn order(&self) -> Order { Order::RowMajor }
     fn transpose(&self) -> Transpose { Transpose::NoTrans }
     fn uplo(&self) -> Uplo { Uplo::Upper }
     fn diag(&self) -> Diag { Diag::NonUnit }
@@ -805,7 +805,7 @@ pub fn gemv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
     let (m, n) = a.dim();
     let len = min(min(x.len(), y.len()), m);
 
-    unsafe { V::Element::gemv()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::gemv()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// A = A + alpha * x * y'
@@ -817,7 +817,7 @@ pub fn ger<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V,
     let m = min(m, x.len());
     let n = min(n, y.len());
 
-    unsafe { V::Element::ger()(a.layout() as CBLAS_ORDER, m, n, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+    unsafe { V::Element::ger()(a.order() as CBLAS_ORDER, m, n, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
 }
 
 /// Solve the equation A * x = b, storing the result in x.
@@ -830,7 +830,7 @@ pub fn trsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: Matrix<E
     debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
-    unsafe { V::Element::trsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+    unsafe { V::Element::trsv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
 }
 
 /// Triangular Matrix-vector multiply, x = A * x
@@ -841,7 +841,7 @@ pub fn trmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: Matrix<E
     debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
-    unsafe { V::Element::trmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+    unsafe { V::Element::trmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
 }
 
 /// General Band Matrix-vector multiply, y = alpha * A * x + beta * y
@@ -852,7 +852,7 @@ pub fn gbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
     let (m, n) = a.dim();
     let len = min(min(x.len(), y.len()), m);
 
-    unsafe { V::Element::gbmv()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, a.kl(), a.ku(), alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::gbmv()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, a.kl(), a.ku(), alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// Triangular Band Matrix-vector multiply, x = A * x
@@ -868,7 +868,7 @@ pub fn tbmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: BandMatr
         Uplo::Upper => a.ku(),
     };
 
-    unsafe { V::Element::tbmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+    unsafe { V::Element::tbmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
 }
 
 /// Triangular Packed matrix-vector multiply, x = A * x
@@ -879,7 +879,7 @@ pub fn tpmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: PackedMa
     debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
-    unsafe { V::Element::tpmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
+    unsafe { V::Element::tpmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
 }
 
 /// Solve the equation A * x = b, storing the result in x.
@@ -896,7 +896,7 @@ pub fn tbsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: BandMatr
         Uplo::Upper => a.ku(),
     };
 
-    unsafe { V::Element::tbsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+    unsafe { V::Element::tbsv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
 }
 
 /// Solve the equation A * x = b, storing the result in x.
@@ -909,7 +909,7 @@ pub fn tpsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: PackedMa
     debug_assert_eq!(m, x.len());
     let len = min(min(m, n), x.len());
 
-    unsafe { V::Element::tpsv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
+    unsafe { V::Element::tpsv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
 }
 
 /// A = A + alpha * x * x'
@@ -920,7 +920,7 @@ pub fn syr<V: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V) where V: V
     debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::syr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+    unsafe { V::Element::syr()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
 }
 
 /// A = A + alpha * x * y'
@@ -932,7 +932,7 @@ pub fn syr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V
     debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::syr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+    unsafe { V::Element::syr2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
 }
 
 /// Symmetric Matrix-vector multiply, y = alpha * A * x + beta * y
@@ -944,7 +944,7 @@ pub fn symv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
     debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
-    unsafe { V::Element::symv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::symv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// A = A + alpha * x * x'
@@ -955,7 +955,7 @@ pub fn spr<V: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V) where V: V
     debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::spr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
+    unsafe { V::Element::spr()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
 }
 
 /// A = A + alpha * x * y'
@@ -967,7 +967,7 @@ pub fn spr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V
     debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::spr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
+    unsafe { V::Element::spr2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
 }
 
 /// Symmetric Packed matrix-vector multiply, y = alpha * A * x + beta * y
@@ -979,7 +979,7 @@ pub fn spmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
     debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
-    unsafe { V::Element::spmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::spmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// Symetric Band Matrix-vector multiply, y = alpha * A * x + beta * y
@@ -995,7 +995,7 @@ pub fn sbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
         Uplo::Upper => a.ku(),
     };
 
-    unsafe { V::Element::sbmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::sbmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// A = A + alpha * x * x'
@@ -1006,7 +1006,7 @@ pub fn her<V: ?Sized, M: ?Sized>(alpha: <V::Element as Num>::Float, a: &mut M, x
     debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::her()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+    unsafe { V::Element::her()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
 }
 
 /// A = A + alpha * x * y'
@@ -1018,7 +1018,7 @@ pub fn her2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V
     debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::her2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+    unsafe { V::Element::her2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
 }
 
 /// Hermitian Matrix-vector multiply, y = alpha * A * x + beta * y
@@ -1030,7 +1030,7 @@ pub fn hemv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
     debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
-    unsafe { V::Element::hemv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::hemv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// A = A + alpha * x * x'
@@ -1041,7 +1041,7 @@ pub fn hpr<V: ?Sized, M: ?Sized>(alpha: <V::Element as Num>::Float, a: &mut M, x
     debug_assert_eq!(m, x.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::hpr()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
+    unsafe { V::Element::hpr()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
 }
 
 /// A = A + alpha * x * y'
@@ -1053,7 +1053,7 @@ pub fn hpr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V
     debug_assert_eq!(m, y.len());
     let m = min(m, x.len());
 
-    unsafe { V::Element::hpr2()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
+    unsafe { V::Element::hpr2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
 }
 
 /// Hermitian Packed matrix-vector multiply, y = alpha * A * x + beta * y
@@ -1065,7 +1065,7 @@ pub fn hpmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
     debug_assert_eq!(x.len(), m);
     let len = min(min(x.len(), y.len()), m);
 
-    unsafe { V::Element::hpmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::hpmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// Hermitian Band Matrix-vector multiply, y = alpha * A * x + beta * y
@@ -1081,7 +1081,7 @@ pub fn hbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::
         Uplo::Upper => a.ku(),
     };
 
-    unsafe { V::Element::hbmv()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe { V::Element::hbmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
 }
 
 /// General Matrix-matrix multiply, C = alpha * A * B + beta * C
@@ -1098,7 +1098,7 @@ pub unsafe fn gemm<A: ?Sized, B: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, b:
     let n = min(bn, cn);
     let k = min(an, bm);
 
-    unsafe { A::Element::gemm()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::gemm()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
 
 /// Symetric Matrix-matrix multiply, C = alpha * A * B + beta * C (or, B * A)
@@ -1114,7 +1114,7 @@ pub unsafe fn symm<A: ?Sized, B: ?Sized, C: ?Sized>(side: Side, alpha: A::Elemen
     let m = min(bm, cm);
     let n = min(bn, cn);
 
-    unsafe { A::Element::symm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::symm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
 
 /// Symetric rank-k operation, C = alpha * A * A' + beta * C,
@@ -1126,7 +1126,7 @@ pub unsafe fn syrk<A: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, beta: A::Elem
     let n = cm;
     let k = a.dim().1;
 
-    unsafe { A::Element::syrk()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::syrk()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
 
 /// Symetric rank-2k operation, C = alpha * A * B' + alpha * B * A' + beta * C
@@ -1138,7 +1138,7 @@ pub unsafe fn syr2k<A: ?Sized, B: ?Sized, C: ?Sized>(tran: Transpose, alpha: A::
     let n = cn;
     let k = min(a.dim().1, b.dim().1);
 
-    unsafe { A::Element::syr2k()(a.layout() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::syr2k()(a.order() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
 
 /// Triangular Matrix-matrix multiply, B = alpha * A * B (or, B * A)
@@ -1148,7 +1148,7 @@ pub unsafe fn syr2k<A: ?Sized, B: ?Sized, C: ?Sized>(tran: Transpose, alpha: A::
 pub unsafe fn trmm<A: ?Sized, B: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &mut B) where A: Matrix, B: Matrix<Element = A::Element> {
     let (m, n) = b.dim();
 
-    unsafe { A::Element::trmm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, b.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
+    unsafe { A::Element::trmm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, b.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
 }
 
 /// Solve the matrix equation A * X = alpha * B (or, X * A)
@@ -1156,7 +1156,7 @@ pub unsafe fn trmm<A: ?Sized, B: ?Sized>(side: Side, alpha: A::Element, a: &A, b
 pub unsafe fn trsm<A: ?Sized, B: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &mut B) where A: Matrix, B: Matrix<Element = A::Element> {
     let (m, n) = b.dim();
 
-    unsafe { A::Element::trsm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
+    unsafe { A::Element::trsm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
 }
 
 /// General complex(?) Matrix-matrix multiply, C = alpha * A * B + beta * C
@@ -1173,7 +1173,7 @@ pub unsafe fn gemm3m<A: ?Sized, B: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, 
     let n = min(bn, cn);
     let k = min(an, bm);
 
-    unsafe { A::Element::gemm3m()(a.layout() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::gemm3m()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
 
 /// Hermitian Matrix-matrix multiply, C = alpha * A * B + beta * C (or, B * A)
@@ -1189,7 +1189,7 @@ pub unsafe fn hemm<A: ?Sized, B: ?Sized, C: ?Sized>(side: Side, alpha: A::Elemen
     let m = min(bm, cm);
     let n = min(bn, cn);
 
-    unsafe { A::Element::hemm()(a.layout() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::hemm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
 
 /// Hermitian rank-k operation, C = alpha * A * A' + beta * C,
@@ -1201,7 +1201,7 @@ pub unsafe fn herk<A: ?Sized, C: ?Sized>(alpha: <A::Element as Num>::Float, a: &
     let n = cm;
     let k = a.dim().1;
 
-    unsafe { A::Element::herk()(a.layout() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha, a.as_ptr() as *const _, a.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::herk()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha, a.as_ptr() as *const _, a.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
 
 /// Hermitian rank-2k operation, C = alpha * A * B' + alpha * B * A' + beta * C
@@ -1213,5 +1213,5 @@ pub unsafe fn her2k<A: ?Sized, B: ?Sized, C: ?Sized>(tran: Transpose, alpha: A::
     let n = cn;
     let k = min(a.dim().1, b.dim().1);
 
-    unsafe { A::Element::her2k()(a.layout() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe { A::Element::her2k()(a.order() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
 }
