@@ -25,7 +25,7 @@ use std::ops::{Deref, DerefMut, Add, Sub, Mul, Div};
 #[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Layout {
     RowMajor = CblasRowMajor as isize,
-    ColumnMajor = CblasColMajor as isize,
+    ColMajor = CblasColMajor as isize,
 }
 
 #[repr(C)]
@@ -588,7 +588,7 @@ pub unsafe trait Matrix {
         let (m, n) = self.dim();
         match self.layout() {
             Layout::RowMajor => n,
-            Layout::ColumnMajor => m,
+            Layout::ColMajor => m,
         }
     }
 
