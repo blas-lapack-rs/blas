@@ -10,7 +10,7 @@
 extern crate num;
 extern crate libc;
 
-extern crate "libblas-sys" as raw;
+extern crate libblas_sys as raw;
 
 type C = num::Complex<f32>;
 type Z = num::Complex<f64>;
