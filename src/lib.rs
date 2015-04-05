@@ -106,11 +106,7 @@ pub unsafe trait Num: Copy + Add<Output=Self> + Sub<Output=Self> + Div<Output=Se
 
 /// A trait representing the various data types BLAS can operate on.
 pub unsafe trait Real: Num<Float = Self, RetSelf = Self, Weird = Self> + num::Float {
-<<<<<<< HEAD
-    fn rotm() -> unsafe extern fn(blasint, *mut Self, blasint, *mut Self, blasint, *const Self);
-=======
     fn rotm() -> unsafe extern fn(c_int, *mut Self, c_int, *mut Self, c_int, *const Self);
->>>>>>> Update to libblas-sys’s master
     fn rotmg() -> unsafe extern fn(*mut Self, *mut Self, *mut Self, Self, *mut Self);
 
     fn syr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, c_int, Self, *const Self, c_int, *mut Self, c_int) -> ();
