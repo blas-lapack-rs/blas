@@ -14,8 +14,6 @@ num = "*"
 
 [dependencies.libblas-sys]
 version = "*"
-#default-features = false
-#features = ["netlib"]
 
 [dev-dependencies]
 quickcheck = "*"
