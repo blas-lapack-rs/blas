@@ -1,8 +1,5 @@
 #![feature(core)]
 
-#[macro_use]
-extern crate assert;
-
 extern crate blas;
 extern crate libc;
 extern crate num;
@@ -33,7 +30,7 @@ impl<T: Real> cmp::Ord for OrdWr<T> {
     }
 }
 
-fn approx_eq<T: fmt::Debug + Copy + num::Signed + PartialOrd + std::num::FromPrimitive>(a: T, b: T) -> bool {
+fn approx_eq<T: fmt::Debug + Copy + num::Signed + PartialOrd + num::FromPrimitive>(a: T, b: T) -> bool {
     let res = num::abs(a - b) < T::from_f64(EPSILON).unwrap();
     if !res {
         println!("{:?} ~/~ {:?}", a, b);
@@ -41,7 +38,7 @@ fn approx_eq<T: fmt::Debug + Copy + num::Signed + PartialOrd + std::num::FromPri
     res
 }
 
-fn dot_prop<T: fmt::Debug + Num + PartialOrd + num::Signed + std::num::FromPrimitive>(x: Vec<T>, y: Vec<T>) -> bool {
+fn dot_prop<T: fmt::Debug + Num + PartialOrd + num::Signed + num::FromPrimitive>(x: Vec<T>, y: Vec<T>) -> bool {
     let expected = x.iter().zip(y.iter()).map(|(&x, &y)| x * y).fold(T::zero(), |acc, item| acc + item);
     let l = cmp::min(x.len(), y.len());
     let actual = blas::dot(&x[..l], &y[..l]);
@@ -59,7 +56,7 @@ fn ddot() {
     quickcheck(dot_prop::<f64> as fn(Vec<f64>, Vec<f64>) -> bool);
 }
 
-fn axpy_prop<T: fmt::Debug + Num + PartialOrd + num::Signed + std::num::FromPrimitive>(a: T, x: Vec<T>, mut y: Vec<T>) -> bool {
+fn axpy_prop<T: fmt::Debug + Num + PartialOrd + num::Signed + num::FromPrimitive>(a: T, x: Vec<T>, mut y: Vec<T>) -> bool {
     let expected = x.iter().zip(y.iter()).map(|(&x, &y)| y + a * x).collect::<Vec<_>>();
     let l = cmp::min(x.len(), y.len());
     blas::axpy(a, &x[..l], &mut y[..l]);
@@ -76,7 +73,7 @@ fn daxpy() {
     quickcheck(axpy_prop::<f64> as fn(f64, Vec<f64>, Vec<f64>) -> bool);
 }
 
-fn axpby_prop<T: fmt::Debug + Num + PartialOrd + num::Signed + std::num::FromPrimitive>(a: T, x: Vec<T>, b: T, mut y: Vec<T>) -> bool {
+fn axpby_prop<T: fmt::Debug + Num + PartialOrd + num::Signed + num::FromPrimitive>(a: T, x: Vec<T>, b: T, mut y: Vec<T>) -> bool {
     let expected = x.iter().zip(y.iter()).map(|(&x, &y)| a * x + b * y).collect::<Vec<_>>();
     let l = cmp::min(x.len(), y.len());
     blas::axpby(a, &x[..l], b, &mut y[..l]);
@@ -93,7 +90,7 @@ fn daxpby() {
     quickcheck(axpby_prop::<f64> as fn(f64, Vec<f64>, f64, Vec<f64>) -> bool);
 }
 
-fn rot_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + std::num::FromPrimitive>(mut x: Vec<T>, mut y: Vec<T>, s: T, c: T) -> bool {
+fn rot_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + num::FromPrimitive>(mut x: Vec<T>, mut y: Vec<T>, s: T, c: T) -> bool {
     let s = s / T::from_i8(100).unwrap();
     let c = c / T::from_i8(100).unwrap();
     let expected = x.iter().zip(y.iter()).map(|(&x, &y)| (c * x + s * y, -s * x + c * y)).collect::<Vec<_>>();
@@ -113,7 +110,7 @@ fn drot() {
 }
 
 // simple smoke test, not very good.
-fn rotg_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + std::num::FromPrimitive>(a: T, b: T) -> bool {
+fn rotg_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + num::FromPrimitive>(a: T, b: T) -> bool {
     let (r, _, c, s) = blas::rotg(a, b);
     let mut x = [a]; let mut y = [b];
     blas::rot(&mut x[..], &mut y[..], c, s);
@@ -130,7 +127,7 @@ fn drotg() {
     quickcheck(rotg_prop::<f64> as fn(f64, f64) -> bool);
 }
 
-fn scal_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + std::num::FromPrimitive>(mut a: Vec<T>, s: T) -> bool {
+fn scal_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + num::FromPrimitive>(mut a: Vec<T>, s: T) -> bool {
     let expected = a.iter().map(|&a| a * s).collect::<Vec<_>>();
     blas::scal(s, &mut a[..]);
     expected.into_iter().zip(a.into_iter()).all(|(ex, ac)| approx_eq(ex, ac))
@@ -146,7 +143,7 @@ fn dscal() {
     quickcheck(scal_prop::<f64> as fn(Vec<f64>, f64) -> bool);
 }
 
-fn asum_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + std::num::FromPrimitive>(a: Vec<T>) -> bool {
+fn asum_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + num::FromPrimitive>(a: Vec<T>) -> bool {
     let expected = a.iter().map(|&a| a.abs()).fold(T::from_i8(0).unwrap(), |acc, it| acc + it);
     let actual = blas::asum(&a[..]);
     approx_eq(expected, actual)
@@ -163,7 +160,7 @@ fn dasum() {
     quickcheck(asum_prop::<f64> as fn(Vec<f64>) -> bool);
 }
 
-fn iamax_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + std::num::FromPrimitive>(a: Vec<T>) -> bool {
+fn iamax_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + num::FromPrimitive>(a: Vec<T>) -> bool {
     let expected = match a.iter().enumerate().max_by(|&(_, elem)| OrdWr(elem.abs())) {
         Some(e) => e.0,
         None => return true
@@ -182,7 +179,7 @@ fn diamax() {
     quickcheck(iamax_prop::<f64> as fn(Vec<f64>) -> bool);
 }
 
-fn nrm2_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + std::num::FromPrimitive>(a: Vec<T>) -> bool {
+fn nrm2_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + num::FromPrimitive>(a: Vec<T>) -> bool {
     let expected = a.iter().fold(T::from_i8(0).unwrap(), |acc, it| acc + it.abs().powi(2)).sqrt();
     let actual = blas::nrm2(&a[..]);
     approx_eq(expected, actual)

@@ -22,14 +22,14 @@ use std::cmp::min;
 use std::ops::{Deref, DerefMut, Add, Sub, Mul, Div};
 
 #[repr(C)]
-#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Order {
     RowMajor = CblasRowMajor as isize,
     ColMajor = CblasColMajor as isize,
 }
 
 #[repr(C)]
-#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Transpose {
     NoTrans = CblasNoTrans as isize,
     Trans = CblasTrans as isize,
@@ -37,21 +37,21 @@ pub enum Transpose {
 }
 
 #[repr(C)]
-#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Uplo {
     Upper = CblasUpper as isize,
     Lower = CblasLower as isize,
 }
 
 #[repr(C)]
-#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Diag {
     NonUnit = CblasNonUnit as isize,
     Unit = CblasUnit as isize,
 }
 
 #[repr(C)]
-#[derive(Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Side {
     Left = CblasLeft as isize,
     Right = CblasRight as isize,
@@ -105,7 +105,7 @@ pub unsafe trait Num: Copy + Add<Output=Self> + Sub<Output=Self> + Div<Output=Se
 }
 
 /// A trait representing the various data types BLAS can operate on.
-pub unsafe trait Real: Num<Float = Self, RetSelf = Self, Weird = Self> + std::num::Float {
+pub unsafe trait Real: Num<Float = Self, RetSelf = Self, Weird = Self> + num::Float {
     fn rotm() -> unsafe extern fn(blasint, *mut Self, blasint, *mut Self, blasint, *const Self);
     fn rotmg() -> unsafe extern fn(*mut Self, *mut Self, *mut Self, Self, *mut Self);
 

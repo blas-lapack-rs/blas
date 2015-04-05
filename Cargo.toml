@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.0.16"
+version = "0.0.17"
 authors = ["Corey Richardson <corey@octayn.net>", "Ivan Ukhov <ivan.ukhov@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/stainless-steel/blas"
@@ -18,5 +18,4 @@ version = "*"
 #features = ["netlib"]
 
 [dev-dependencies]
-assert = "0.1"
 quickcheck = "*"
