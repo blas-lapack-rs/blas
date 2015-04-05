@@ -1,7 +1,6 @@
 #![feature(core)]
 
 extern crate blas;
-extern crate libc;
 extern crate num;
 extern crate quickcheck;
 
@@ -166,7 +165,7 @@ fn iamax_prop<T: fmt::Debug + Real + PartialOrd + num::Signed + num::FromPrimiti
         None => return true
     };
     let actual = blas::iamax(&a[..]);
-    expected as libc::size_t == actual
+    expected == actual
 }
 
 #[test]

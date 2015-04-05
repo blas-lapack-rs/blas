@@ -748,8 +748,8 @@ pub fn asum<V: ?Sized>(x: &V) -> <V::Element as Num>::Float where V: Vector {
 
 /// Index of the first value in the vector with the largest absolute value.
 #[inline(always)]
-pub fn iamax<V: ?Sized>(x: &V) -> CBLAS_INDEX where V: Vector {
-    unsafe { V::Element::iamax()(x.len(), x.as_ptr() as *const _, x.stride()) }
+pub fn iamax<V: ?Sized>(x: &V) -> usize where V: Vector {
+    unsafe { V::Element::iamax()(x.len(), x.as_ptr() as *const _, x.stride()) as usize }
 }
 
 /// L2 norm of the vector `(sqrt(sum(|x_i|^2)))`, where |x_i| is the complex modulus for a complex number, absolute value otherwise.
