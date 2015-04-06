@@ -223,7 +223,7 @@ unsafe impl Num for C {
     #[inline(always)]
     fn as_weird(&self) -> *const f32 { self as *const _ as *const _ }
     #[inline(always)]
-    fn from_retself(x: complex_float) -> C { num::Complex { re: x.re, im: x.im } }
+    fn from_retself(x: complex_float) -> C { num::Complex { re: x[0], im: x[1] } }
 
     #[inline(always)]
     fn dot() -> unsafe extern fn(int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int) -> <Self as Num>::RetSelf { cblas_cdotu }
@@ -338,7 +338,7 @@ unsafe impl Num for Z {
     #[inline(always)]
     fn as_weird(&self) -> *const f64 { self as *const _ as *const _ }
     #[inline(always)]
-    fn from_retself(x: complex_double) -> Z { num::Complex { re: x.re, im: x.im } }
+    fn from_retself(x: complex_double) -> Z { num::Complex { re: x[0], im: x[1] } }
 
     #[inline(always)]
     fn dot() -> unsafe extern fn(int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int) -> <Self as Num>::RetSelf { cblas_zdotu }
