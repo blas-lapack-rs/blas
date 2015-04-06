@@ -7,9 +7,11 @@
 
 #![allow(unused_unsafe)]
 
+extern crate libblas_sys as raw;
+extern crate libc;
 extern crate num;
 
-extern crate libblas_sys as raw;
+pub mod metal;
 
 type C = num::Complex<f32>;
 type Z = num::Complex<f64>;
