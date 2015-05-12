@@ -4,31 +4,34 @@ use libc::c_char;
 use num::Complex;
 use raw::{self, int};
 
-pub enum Trans {
-    /// Do not transponse.
-    N = b'N' as isize,
-    /// Transpose.
-    T = b'T' as isize,
-    /// Conjugate transpose.
-    C = b'C' as isize,
-}
-pub enum Uplo {
-    /// Upper triangular
-    U = b'U' as isize,
-    /// Lower triangular
-    L = b'L' as isize,
-}
 pub enum Diag {
     /// Unit triangular
     N = b'N' as isize,
     /// Non-unit triangular
     U = b'U' as isize,
 }
+
 pub enum Side {
     /// Do the operation on the left
     L = b'L' as isize,
-    /// Do the operation on the right.
+    /// Do the operation on the right
     R = b'R' as isize,
+}
+
+pub enum Trans {
+    /// Do not transponse
+    N = b'N' as isize,
+    /// Transpose.
+    T = b'T' as isize,
+    /// Conjugate transpose
+    C = b'C' as isize,
+}
+
+pub enum Uplo {
+    /// Upper triangular
+    U = b'U' as isize,
+    /// Lower triangular
+    L = b'L' as isize,
 }
 
 #[inline]
