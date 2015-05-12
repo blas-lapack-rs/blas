@@ -1,7 +1,7 @@
 //! An interface to the [Basic Linear Algebra Subprograms][1].
 //!
-//! Note: level 3 (matrix-matrix) functions are marked unsafe, as the matrix traits are not
-//! finalized, and I am suspect of their correctness.
+//! The high-level interface is in progress. The low-level interface is compele and can be found in
+//! the `metal` module.
 //!
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
