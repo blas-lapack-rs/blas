@@ -5,9 +5,9 @@ use num::Complex;
 use raw::{self, int};
 
 pub enum Diag {
-    /// Unit triangular
-    N = b'N' as isize,
     /// Non-unit triangular
+    N = b'N' as isize,
+    /// Unit triangular
     U = b'U' as isize,
 }
 
