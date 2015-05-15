@@ -11,32 +11,23 @@ pub use num::Complex;
 use libc::{c_char, c_int};
 
 pub enum Diag {
-    /// Do not assume unit triangular.
     N = b'N' as isize,
-    /// Assume unit triangular.
     U = b'U' as isize,
 }
 
 pub enum Side {
-    /// Do the operation on the left.
     L = b'L' as isize,
-    /// Do the operation on the right.
     R = b'R' as isize,
 }
 
 pub enum Trans {
-    /// Assume no transponse.
     N = b'N' as isize,
-    /// Assume non-conjugate transpose.
     T = b'T' as isize,
-    /// Assume conjugate transpose.
     C = b'C' as isize,
 }
 
 pub enum Uplo {
-    /// Upper triangles are stored.
     U = b'U' as isize,
-    /// Lower triangles are stored.
     L = b'L' as isize,
 }
 
