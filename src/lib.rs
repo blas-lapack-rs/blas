@@ -25,9 +25,9 @@ pub enum Side {
 }
 
 pub enum Trans {
-    /// Do not transponse
+    /// No transponse
     N = b'N' as isize,
-    /// Transpose.
+    /// Non-conjugate transpose
     T = b'T' as isize,
     /// Conjugate transpose
     C = b'C' as isize,
