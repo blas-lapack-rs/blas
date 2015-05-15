@@ -10,22 +10,26 @@ pub use num::Complex;
 
 use libc::{c_char, c_int};
 
+#[derive(Clone, Copy)]
 pub enum Diag {
     N = b'N' as isize,
     U = b'U' as isize,
 }
 
+#[derive(Clone, Copy)]
 pub enum Side {
     L = b'L' as isize,
     R = b'R' as isize,
 }
 
+#[derive(Clone, Copy)]
 pub enum Trans {
     N = b'N' as isize,
     T = b'T' as isize,
     C = b'C' as isize,
 }
 
+#[derive(Clone, Copy)]
 pub enum Uplo {
     U = b'U' as isize,
     L = b'L' as isize,
