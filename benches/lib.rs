@@ -5,8 +5,6 @@ extern crate test;
 
 use std::iter::repeat;
 
-use blas::metal;
-
 #[bench]
 fn dgemv_few_large(bench: &mut test::Bencher) {
     let m = 1000;
@@ -16,7 +14,7 @@ fn dgemv_few_large(bench: &mut test::Bencher) {
     let mut y = repeat(1.0).take(m * 1).collect::<Vec<_>>();
 
     bench.iter(|| {
-        metal::dgemv(metal::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1)
+        blas::dgemv(blas::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1)
     });
 }
 
@@ -30,7 +28,7 @@ fn dgemv_many_small(bench: &mut test::Bencher) {
 
     bench.iter(|| {
         for _ in 0..20000 {
-            metal::dgemv(metal::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
+            blas::dgemv(blas::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
         }
     });
 }
