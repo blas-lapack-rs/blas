@@ -17,4 +17,3 @@ version = "*"
 
 [dev-dependencies]
 assert = "*"
-quickcheck = "*"

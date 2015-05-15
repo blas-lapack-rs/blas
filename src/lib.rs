@@ -1,1216 +1,2455 @@
 //! An interface to the [Basic Linear Algebra Subprograms][1].
 //!
-//! The high-level interface is in progress. The low-level interface is compele and can be found in
-//! the `metal` module.
-//!
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
-
-#![allow(unused_unsafe)]
 
 extern crate libblas_sys as raw;
 extern crate libc;
 extern crate num;
 
-pub mod metal;
+pub use num::Complex;
 
-type C = num::Complex<f32>;
-type Z = num::Complex<f64>;
+use libc::c_char;
+use raw::int;
 
-use raw::*;
-use std::mem::transmute;
-use std::cmp::min;
-use std::ops::{Deref, DerefMut, Add, Sub, Mul, Div};
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum Order {
-    RowMajor = CblasRowMajor as isize,
-    ColMajor = CblasColMajor as isize,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum Transpose {
-    NoTrans = CblasNoTrans as isize,
-    Trans = CblasTrans as isize,
-    ConjTrans = CblasConjTrans as isize,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
-pub enum Uplo {
-    Upper = CblasUpper as isize,
-    Lower = CblasLower as isize,
-}
-
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Diag {
-    NonUnit = CblasNonUnit as isize,
-    Unit = CblasUnit as isize,
+    /// Non-unit triangular
+    N = b'N' as isize,
+    /// Unit triangular
+    U = b'U' as isize,
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, PartialEq, PartialOrd, Eq, Ord, Hash)]
 pub enum Side {
-    Left = CblasLeft as isize,
-    Right = CblasRight as isize,
+    /// Do the operation on the left
+    L = b'L' as isize,
+    /// Do the operation on the right
+    R = b'R' as isize,
 }
 
-/// Trait for all types that BLAS supports: Float, double, float complex, double complex.
-///
-/// You may be wondering, "What is that mysterious Float type, and why don't you just use Self?"
-/// Well, consider what happens if you want to implement this trait for `Complex<f32>`. Returning
-/// Self isn't always the right thing, sometimes you want to return the f32 directly. There's no
-/// other good way to handle that.
-///
-/// So, in many cases, `Self` is used. `Float` is used when the function directly references the
-/// inner float type representation for. `RetSelf` is used to paper over the difference between
-/// functions returning `_Complex` and `Self` being a Rust type. `Weird` is used similarly, but for
-/// scalar arguments that need a pointer to `Float` for Complex types.
-pub unsafe trait Num: Copy + Add<Output=Self> + Sub<Output=Self> + Div<Output=Self> + Mul<Output=Self> + PartialEq + num::Zero {
-    type Float: Copy;
-    type RetSelf: Copy;
-    type Weird: Copy;
-
-    fn as_weird(&self) -> Self::Weird;
-    fn from_retself(Self::RetSelf) -> Self;
-
-    fn dot() -> unsafe extern fn(int, *const Self::Float, int, *const Self::Float, int) -> Self::RetSelf;
-    fn axpy() -> unsafe extern fn(int, Self, *const Self, int, *mut Self, int);
-    fn axpby() -> unsafe extern fn(int, Self, *const Self, int, Self, *mut Self, int);
-    fn rot() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, Self::Float, Self);
-    fn rotg() -> unsafe extern fn(*mut Self::Float, *mut Self::Float, *mut Self::Float, *mut Self);
-    fn scal() -> unsafe extern fn(int, Self, *mut Self, int);
-    fn asum() -> unsafe extern fn(int, *const Self::Float, int) -> Self::Float;
-    fn iamax() -> unsafe extern fn(int, *const Self::Float, int) -> CBLAS_INDEX;
-    fn nrm2() -> unsafe extern fn(int, *const Self::Float, int) -> Self::Float;
-
-    fn gemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn ger() -> unsafe extern fn(CBLAS_ORDER, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn trsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn trmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn gbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn tbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn tpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> ();
-    fn tbsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn tpsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> ();
-
-    fn gemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn symm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn syrk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn syr2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn trmm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn trsm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
+pub enum Trans {
+    /// Do not transponse
+    N = b'N' as isize,
+    /// Transpose.
+    T = b'T' as isize,
+    /// Conjugate transpose
+    C = b'C' as isize,
 }
 
-/// A trait representing the various data types BLAS can operate on.
-pub unsafe trait Real: Num<Float = Self, RetSelf = Self, Weird = Self> + num::Float {
-    fn rotm() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, *const Self);
-    fn rotmg() -> unsafe extern fn(*mut Self, *mut Self, *mut Self, Self, *mut Self);
-
-    fn syr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *mut Self, int) -> ();
-    fn syr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, *mut Self, int) -> ();
-    fn symv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> ();
-    fn spr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *mut Self) -> ();
-    fn spr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, *mut Self) -> ();
-    fn spmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, *const Self, int, Self, *mut Self, int) -> ();
-    fn sbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> ();
+pub enum Uplo {
+    /// Upper triangular
+    U = b'U' as isize,
+    /// Lower triangular
+    L = b'L' as isize,
 }
 
-pub unsafe trait Complex: Num {
-    fn dotc() -> unsafe extern fn(int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int) -> <Self as Num>::RetSelf;
-    fn dotu_sub() -> unsafe extern fn(int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::RetSelf);
-    fn dotc_sub() -> unsafe extern fn(int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::RetSelf);
-
-    fn her() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Float, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn her2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> ();
-    fn hemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn hpr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Float, *const <Self as Num>::Float, int, *mut <Self as Num>::Float) -> ();
-    fn hpr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float) -> ();
-    fn hbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn hpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Weird, *const <Self as Num>::Float, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-
-    fn gemm3m() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn hemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> ();
-    fn herk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Float, *const <Self as Num>::Float, int, <Self as Num>::Float, *mut <Self as Num>::Float, int) -> ();
-    fn her2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Float, *mut <Self as Num>::Float, int) -> ();
-}
-
-unsafe impl Num for f32 {
-    type Float = f32;
-    type RetSelf = f32;
-    type Weird = f32;
-
-    #[inline(always)]
-    fn as_weird(&self) -> f32 { *self }
-    #[inline(always)]
-    fn from_retself(x: f32) -> f32 { x }
-
-    #[inline(always)]
-    fn dot() -> unsafe extern fn(int, *const Self, int, *const Self, int) -> Self { cblas_sdot }
-    #[inline(always)]
-    fn axpy() -> unsafe extern fn(int, Self, *const Self, int, *mut Self, int) { cblas_saxpy }
-    #[inline(always)]
-    fn axpby() -> unsafe extern fn(int, Self, *const Self, int, Self, *mut Self, int) { cblas_saxpby }
-    #[inline(always)]
-    fn rot() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, Self, Self) { cblas_srot }
-    #[inline(always)]
-    fn rotg() -> unsafe extern fn(*mut Self, *mut Self, *mut Self, *mut Self) { cblas_srotg }
-    #[inline(always)]
-    fn scal() -> unsafe extern fn(int, Self, *mut Self, int) { cblas_sscal }
-    #[inline(always)]
-    fn asum() -> unsafe extern fn(int, *const Self, int) -> Self { cblas_sasum }
-    #[inline(always)]
-    fn iamax() -> unsafe extern fn(int, *const Self, int) -> CBLAS_INDEX { cblas_isamax }
-    #[inline(always)]
-    fn nrm2() -> unsafe extern fn(int, *const <Self as Num>::Float, int) -> Self { cblas_snrm2 }
-
-    #[inline(always)]
-    fn gemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_sgemv }
-    #[inline(always)]
-    fn ger() -> unsafe extern fn(CBLAS_ORDER, int, int, Self, *const Self, int, *const Self, int, *mut Self, int) -> () { cblas_sger }
-    #[inline(always)]
-    fn trsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, int, *mut Self, int) -> () { cblas_strsv }
-    #[inline(always)]
-    fn trmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, int, *mut Self, int) -> () { cblas_strmv }
-    #[inline(always)]
-    fn tbsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const Self, int, *mut Self, int) -> () { cblas_stbsv }
-    #[inline(always)]
-    fn tpsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, *mut Self, int) -> () { cblas_stpsv }
-    #[inline(always)]
-    fn tpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, *mut Self, int) -> () { cblas_stpmv }
-    #[inline(always)]
-    fn gbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_sgbmv }
-    #[inline(always)]
-    fn tbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const Self, int, *mut Self, int) -> () { cblas_stbmv }
-
-    #[inline(always)]
-    fn gemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_sgemm }
-    #[inline(always)]
-    fn symm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_ssymm }
-    #[inline(always)]
-    fn syrk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, Self, *const Self, int, Self, *mut Self, int) -> () { cblas_ssyrk }
-    #[inline(always)]
-    fn syr2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_ssyr2k }
-    #[inline(always)]
-    fn trmm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, Self, *const Self, int, *mut Self, int) -> () { cblas_strmm }
-    #[inline(always)]
-    fn trsm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, Self, *const Self, int, *mut Self, int) -> () { cblas_strsm }
-}
-
-fn c2f(a: &C) -> *const f32 {
-    a as *const C as *const f32
-}
-
-unsafe extern fn caxpy_wrap(a: i32, b: num::complex::Complex<f32>, c: *const num::complex::Complex<f32>, d: i32, e: *mut num::complex::Complex<f32>, f: i32) {
-    cblas_caxpy(a, c2f(&b), c as *const _, d, e as *mut f32, f);
-}
-
-unsafe extern fn caxpby_wrap(n: int, alpha: C, x: *const C, incx: int, beta: C, y: *mut C, incy: int) {
-    cblas_caxpby(n, c2f(&alpha), x as *const f32, incx, c2f(&beta), y as *mut f32, incy)
-}
-unsafe extern fn crot_wrap(n: int, x: *mut C, incx: int, y: *mut C, incy: int, c: f32, s: C) {
-    cblas_crot(n, x as *mut f32, incx, y as *mut f32, incy, c, c2f(&s));
-}
-unsafe extern fn cscal_wrap(n: int, alpha: C, x: *mut C, incx: int) {
-    cblas_cscal(n, c2f(&alpha), x as *mut f32, incx)
-}
-
-unsafe impl Num for C {
-    type Float = f32;
-    type RetSelf = complex_float;
-    type Weird = *const f32;
-
-    #[inline(always)]
-    fn as_weird(&self) -> *const f32 { self as *const _ as *const _ }
-    #[inline(always)]
-    fn from_retself(x: complex_float) -> C { num::Complex { re: x[0], im: x[1] } }
-
-    #[inline(always)]
-    fn dot() -> unsafe extern fn(int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int) -> <Self as Num>::RetSelf { cblas_cdotu }
-    #[inline(always)]
-    fn axpy() -> unsafe extern fn(int, Self, *const Self, int, *mut Self, int) { caxpy_wrap }
-    #[inline(always)]
-    fn axpby() -> unsafe extern fn(int, Self, *const Self, int, Self, *mut Self, int) { caxpby_wrap }
-    #[inline(always)]
-    fn rot() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, <Self as Num>::Float, Self) { crot_wrap }
-    #[inline(always)]
-    fn rotg() -> unsafe extern fn(*mut <Self as Num>::Float, *mut <Self as Num>::Float, *mut <Self as Num>::Float, *mut Self) { unsafe { transmute(cblas_crotg) } }
-    #[inline(always)]
-    fn scal() -> unsafe extern fn(int, Self, *mut Self, int) { cscal_wrap }
-    #[inline(always)]
-    fn asum() -> unsafe extern fn(int, *const <Self as Num>::Float, int) -> <Self as Num>::Float { cblas_scasum }
-    #[inline(always)]
-    fn iamax() -> unsafe extern fn(int, *const <Self as Num>::Float, int) -> CBLAS_INDEX { cblas_icamax }
-    #[inline(always)]
-    fn nrm2() -> unsafe extern fn(int, *const <Self as Num>::Float, int) -> <Self as Num>::Float { cblas_scnrm2 }
-
-    #[inline(always)]
-    fn gemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_cgemv }
-    #[inline(always)]
-    fn ger() -> unsafe extern fn(CBLAS_ORDER, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_cgeru }
-    #[inline(always)]
-    fn trsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ctrsv }
-    #[inline(always)]
-    fn trmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ctrmv }
-    #[inline(always)]
-    fn tbsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ctbsv }
-    #[inline(always)]
-    fn tpsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_ctpsv }
-    #[inline(always)]
-    fn tpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_ctpmv }
-    #[inline(always)]
-    fn gbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_cgbmv }
-    #[inline(always)]
-    fn tbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ctbmv }
-
-    #[inline(always)]
-    fn gemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_cgemm }
-    #[inline(always)]
-    fn symm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_csymm }
-    #[inline(always)]
-    fn syrk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_csyrk }
-    #[inline(always)]
-    fn syr2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_csyr2k }
-    #[inline(always)]
-    fn trmm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ctrmm }
-    #[inline(always)]
-    fn trsm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ctrsm }
-}
-
-unsafe impl Complex for C {
-    #[inline(always)]
-    fn dotc() -> unsafe extern fn(int, *const <C as Num>::Float, int, *const <C as Num>::Float, int) -> <C as Num>::RetSelf { cblas_cdotc }
-    #[inline(always)]
-    fn dotu_sub() -> unsafe extern fn(int, *const <C as Num>::Float, int, *const <C as Num>::Float, int, *mut <C as Num>::RetSelf) -> () { cblas_cdotu_sub }
-    #[inline(always)]
-    fn dotc_sub() -> unsafe extern fn(int, *const <C as Num>::Float, int, *const <C as Num>::Float, int, *mut <C as Num>::RetSelf) -> () { cblas_cdotc_sub }
-
-    #[inline(always)]
-    fn her() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Float, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_cher }
-    #[inline(always)]
-    fn her2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_cher2 }
-    #[inline(always)]
-    fn hemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_chemv }
-    #[inline(always)]
-    fn hpr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Float, *const <Self as Num>::Float, int, *mut <Self as Num>::Float) -> () { cblas_chpr }
-    #[inline(always)]
-    fn hpr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float) -> () { cblas_chpr2 }
-    #[inline(always)]
-    fn hbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_chbmv }
-    #[inline(always)]
-    fn hpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_chpmv }
-
-    #[inline(always)]
-    fn gemm3m() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_cgemm3m }
-    #[inline(always)]
-    fn hemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_chemm }
-    #[inline(always)]
-    fn herk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Float, *const <Self as Num>::Float, int, <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_cherk }
-    #[inline(always)]
-    fn her2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_cher2k }
-}
-
-fn z2f(a: &Z) -> *const f64 {
-    a as *const Z as *const f64
-}
-
-unsafe extern fn zaxpy_wrap(a: i32, b: Z, c: *const Z, d: i32, e: *mut Z, f: i32) {
-    cblas_zaxpy(a, z2f(&b), c as *const f64, d, e as *mut f64, f);
-}
-
-unsafe extern fn zaxpby_wrap(n: int, alpha: Z, x: *const Z, incx: int, beta: Z, y: *mut Z, incy: int) {
-    cblas_zaxpby(n, z2f(&alpha), x as *const f64, incx, z2f(&beta), y as *mut f64, incy)
-}
-
-unsafe extern fn zrot_wrap(n: int, x: *mut Z, incx: int, y: *mut Z, incy: int, c: f64, s: Z) {
-    cblas_zrot(n, x as *mut f64, incx, y as *mut f64, incy, c, z2f(&s));
-}
-
-unsafe extern fn zscal_wrap(n: int, alpha: Z, x: *mut Z, incx: int) {
-    cblas_zscal(n, z2f(&alpha), x as *mut f64, incx)
-}
-
-unsafe impl Num for Z {
-    type Float = f64;
-    type RetSelf = complex_double;
-    type Weird = *const f64;
-
-    #[inline(always)]
-    fn as_weird(&self) -> *const f64 { self as *const _ as *const _ }
-    #[inline(always)]
-    fn from_retself(x: complex_double) -> Z { num::Complex { re: x[0], im: x[1] } }
-
-    #[inline(always)]
-    fn dot() -> unsafe extern fn(int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int) -> <Self as Num>::RetSelf { cblas_zdotu }
-    #[inline(always)]
-    fn axpy() -> unsafe extern fn(int, Self, *const Self, int, *mut Self, int) { zaxpy_wrap }
-    #[inline(always)]
-    fn axpby() -> unsafe extern fn(int, Self, *const Self, int, Self, *mut Self, int) { zaxpby_wrap }
-    #[inline(always)]
-    fn rot() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, <Self as Num>::Float, Self) { zrot_wrap }
-    #[inline(always)]
-    fn rotg() -> unsafe extern fn(*mut <Self as Num>::Float, *mut <Self as Num>::Float, *mut <Self as Num>::Float, *mut Self) { unsafe { transmute(cblas_zrotg) } }
-    #[inline(always)]
-    fn scal() -> unsafe extern fn(int, Self, *mut Self, int) { zscal_wrap }
-    #[inline(always)]
-    fn asum() -> unsafe extern fn(int, *const <Self as Num>::Float, int) -> <Self as Num>::Float { cblas_dzasum }
-    #[inline(always)]
-    fn iamax() -> unsafe extern fn(int, *const <Self as Num>::Float, int) -> CBLAS_INDEX { cblas_izamax }
-    #[inline(always)]
-    fn nrm2() -> unsafe extern fn(int, *const <Self as Num>::Float, int) -> <Self as Num>::Float { cblas_dznrm2 }
-
-    #[inline(always)]
-    fn gemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_zgemv }
-    #[inline(always)]
-    fn ger() -> unsafe extern fn(CBLAS_ORDER, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_zgeru }
-    #[inline(always)]
-    fn trsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ztrsv }
-    #[inline(always)]
-    fn trmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ztrmv }
-    #[inline(always)]
-    fn tbsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ztbsv }
-    #[inline(always)]
-    fn tpsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_ztpsv }
-    #[inline(always)]
-    fn tpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_ztpmv }
-    #[inline(always)]
-    fn gbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_zgbmv }
-    #[inline(always)]
-    fn tbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ztbmv }
-
-    #[inline(always)]
-    fn gemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_zgemm }
-    #[inline(always)]
-    fn symm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_zsymm }
-    #[inline(always)]
-    fn syrk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_zsyrk }
-    #[inline(always)]
-    fn syr2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Weird, *mut <Self as Num>::Float, int) -> () { cblas_zsyr2k }
-    #[inline(always)]
-    fn trmm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ztrmm }
-    #[inline(always)]
-    fn trsm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, <Self as Num>::Weird, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_ztrsm }
-}
-
-unsafe impl Complex for Z {
-    #[inline(always)]
-    fn dotc() -> unsafe extern fn(int, *const <Z as Num>::Float, int, *const <Z as Num>::Float, int) -> <Z as Num>::RetSelf { cblas_zdotc }
-    #[inline(always)]
-    fn dotu_sub() -> unsafe extern fn(int, *const <Z as Num>::Float, int, *const <Z as Num>::Float, int, *mut <Z as Num>::RetSelf) -> () { cblas_zdotu_sub }
-    #[inline(always)]
-    fn dotc_sub() -> unsafe extern fn(int, *const <Z as Num>::Float, int, *const <Z as Num>::Float, int, *mut <Z as Num>::RetSelf) -> () { cblas_zdotc_sub }
-
-    #[inline(always)]
-    fn her() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Float, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_zher }
-    #[inline(always)]
-    fn her2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float, int) -> () { cblas_zher2 }
-    #[inline(always)]
-    fn hemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_zhemv }
-    #[inline(always)]
-    fn hpr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, <Self as Num>::Float, *const <Self as Num>::Float, int, *mut <Self as Num>::Float) -> () { cblas_zhpr }
-    #[inline(always)]
-    fn hpr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *mut <Self as Num>::Float) -> () { cblas_zhpr2 }
-    #[inline(always)]
-    fn hbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_zhbmv }
-    #[inline(always)]
-    fn hpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, *const <Self as Num>::Float, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_zhpmv }
-
-    #[inline(always)]
-    fn gemm3m() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_zgemm3m }
-    #[inline(always)]
-    fn hemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, *const <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_zhemm }
-    #[inline(always)]
-    fn herk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, <Self as Num>::Float, *const <Self as Num>::Float, int, <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_zherk }
-    #[inline(always)]
-    fn her2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, *const <Self as Num>::Float, *const <Self as Num>::Float, int, *const <Self as Num>::Float, int, <Self as Num>::Float, *mut <Self as Num>::Float, int) -> () { cblas_zher2k }
-}
-
-unsafe impl Real for f32 {
-    #[inline(always)]
-    fn rotm() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, *const Self) { cblas_srotm }
-    #[inline(always)]
-    fn rotmg() -> unsafe extern fn( *mut Self, *mut Self, *mut Self, Self, *mut Self) { cblas_srotmg }
-
-    #[inline(always)]
-    fn syr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *mut Self, int) -> () { cblas_ssyr }
-    #[inline(always)]
-    fn syr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, *mut Self, int) -> () { cblas_ssyr2 }
-    #[inline(always)]
-    fn symv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_ssymv }
-    #[inline(always)]
-    fn spr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *mut Self) -> () { cblas_sspr }
-    #[inline(always)]
-    fn spr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, *mut Self) -> () { cblas_sspr2 }
-    #[inline(always)]
-    fn spmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, *const Self, int, Self, *mut Self, int) -> () { cblas_sspmv }
-    #[inline(always)]
-    fn sbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_ssbmv }
-}
-
-unsafe impl Num for f64 {
-    type Float = f64;
-    type RetSelf = f64;
-    type Weird = f64;
-
-    #[inline(always)]
-    fn as_weird(&self) -> f64 { *self }
-    #[inline(always)]
-    fn from_retself(x: f64) -> f64 { x }
-
-    #[inline(always)]
-    fn dot() -> unsafe extern fn(int, *const Self, int, *const Self, int) -> Self { cblas_ddot }
-    #[inline(always)]
-    fn axpy() -> unsafe extern fn(int, Self, *const Self, int, *mut Self, int) { cblas_daxpy }
-    #[inline(always)]
-    fn axpby() -> unsafe extern fn(int, Self, *const Self, int, Self, *mut Self, int) { cblas_daxpby }
-    #[inline(always)]
-    fn rot() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, Self, Self) { cblas_drot }
-    #[inline(always)]
-    fn rotg() -> unsafe extern fn(*mut Self, *mut Self, *mut Self, *mut Self) { cblas_drotg }
-    #[inline(always)]
-    fn scal() -> unsafe extern fn(int, Self, *mut Self, int) { cblas_dscal }
-    #[inline(always)]
-    fn asum() -> unsafe extern fn(int, *const Self, int) -> Self { cblas_dasum }
-    #[inline(always)]
-    fn iamax() -> unsafe extern fn(int, *const Self, int) -> CBLAS_INDEX { cblas_idamax }
-    #[inline(always)]
-    fn nrm2() -> unsafe extern fn(int, *const Self, int) -> Self { cblas_dnrm2 }
-
-    #[inline(always)]
-    fn gemv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_dgemv }
-    #[inline(always)]
-    fn ger() -> unsafe extern fn(CBLAS_ORDER, int, int, Self, *const Self, int, *const Self, int, *mut Self, int) -> () { cblas_dger }
-    #[inline(always)]
-    fn trsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, int, *mut Self, int) -> () { cblas_dtrsv }
-    #[inline(always)]
-    fn trmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, int, *mut Self, int) -> () { cblas_dtrmv }
-    #[inline(always)]
-    fn tbsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const Self, int, *mut Self, int) -> () { cblas_dtbsv }
-    #[inline(always)]
-    fn tpsv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, *mut Self, int) -> () { cblas_dtpsv }
-    #[inline(always)]
-    fn tpmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, *const Self, *mut Self, int) -> () { cblas_dtpmv }
-    #[inline(always)]
-    fn gbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, int, int, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_dgbmv }
-    #[inline(always)]
-    fn tbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, *const Self, int, *mut Self, int) -> () { cblas_dtbmv }
-
-    #[inline(always)]
-    fn gemm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_TRANSPOSE, CBLAS_TRANSPOSE, int, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_dgemm }
-    #[inline(always)]
-    fn symm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_dsymm }
-    #[inline(always)]
-    fn syrk() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, Self, *const Self, int, Self, *mut Self, int) -> () { cblas_dsyrk }
-    #[inline(always)]
-    fn syr2k() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, CBLAS_TRANSPOSE, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_dsyr2k }
-    #[inline(always)]
-    fn trmm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, Self, *const Self, int, *mut Self, int) -> () { cblas_dtrmm }
-    #[inline(always)]
-    fn trsm() -> unsafe extern fn(CBLAS_ORDER, CBLAS_SIDE, CBLAS_UPLO, CBLAS_TRANSPOSE, CBLAS_DIAG, int, int, Self, *const Self, int, *mut Self, int) -> () { cblas_dtrsm }
-}
-
-unsafe impl Real for f64 {
-    #[inline(always)]
-    fn rotm() -> unsafe extern fn(int, *mut Self, int, *mut Self, int, *const Self) { cblas_drotm }
-    #[inline(always)]
-    fn rotmg() -> unsafe extern fn(*mut Self, *mut Self, *mut Self, Self, *mut Self) { cblas_drotmg }
-
-    #[inline(always)]
-    fn syr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *mut Self, int) -> () { cblas_dsyr }
-    #[inline(always)]
-    fn syr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, *mut Self, int) -> () { cblas_dsyr2 }
-    #[inline(always)]
-    fn symv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_dsymv }
-    #[inline(always)]
-    fn spr() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *mut Self) -> () { cblas_dspr }
-    #[inline(always)]
-    fn spr2() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, int, *const Self, int, *mut Self) -> () { cblas_dspr2 }
-    #[inline(always)]
-    fn spmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, Self, *const Self, *const Self, int, Self, *mut Self, int) -> () { cblas_dspmv }
-    #[inline(always)]
-    fn sbmv() -> unsafe extern fn(CBLAS_ORDER, CBLAS_UPLO, int, int, Self, *const Self, int, *const Self, int, Self, *mut Self, int) -> () { cblas_dsbmv }
-}
-
-pub unsafe trait Vector {
-    type Element: Num;
-
-    /// Number of elements in the vector.
-    fn len(&self) -> int;
-
-    /// The number of elements between consecutive vector entries.
-    ///
-    /// This is *not* in bytes!
-    fn stride(&self) -> int;
-
-    fn as_ptr(&self) -> *const Self::Element;
-    fn as_mut_ptr(&mut self) -> *mut Self::Element;
-}
-
-unsafe impl<T: Num> Vector for [T] {
-    type Element = T;
-
-    #[inline(always)]
-    fn len(&self) -> int {
-        <[T]>::len(self) as int
-    }
-
-    #[inline(always)]
-    fn stride(&self) -> int {
-        1
-    }
-
-    #[inline(always)]
-    fn as_ptr(&self) -> *const <[T] as Vector>::Element {
-        <[T]>::as_ptr(self)
-    }
-
-    #[inline(always)]
-    fn as_mut_ptr(&mut self) -> *mut <[T] as Vector>::Element {
-        <[T]>::as_mut_ptr(self)
+#[inline]
+pub fn srotg(a: &mut [f32], b: &mut [f32], c: &mut [f32], s: &mut [f32]) {
+    unsafe {
+        raw::srotg_(a.as_mut_ptr() as *mut _,
+                    b.as_mut_ptr() as *mut _,
+                    c.as_mut_ptr() as *mut _,
+                    s.as_mut_ptr() as *mut _,
+        )
     }
 }
 
-pub unsafe trait Matrix {
-    type Element: Num;
-
-    /// (m, n) where the matrix has M rows and N columns.
-    fn dim(&self) -> (int, int);
-
-    /// The "stride" of the major ("leading") dimension.
-    ///
-    /// If the matrix is row-major, then this is the number of elements between entries in adjacent
-    /// rows with the same column index. This can be useful when "slicing" a portion of a matrix,
-    /// but is usually just going to be the number of rows/columns.
-    fn major_stride(&self) -> int {
-        let (m, n) = self.dim();
-        match self.order() {
-            Order::RowMajor => n,
-            Order::ColMajor => m,
-        }
-    }
-
-    fn order(&self) -> Order { Order::RowMajor }
-    fn transpose(&self) -> Transpose { Transpose::NoTrans }
-    fn uplo(&self) -> Uplo { Uplo::Upper }
-    fn diag(&self) -> Diag { Diag::NonUnit }
-
-    fn as_ptr(&self) -> *const Self::Element;
-    fn as_mut_ptr(&mut self) -> *mut Self::Element;
-}
-
-/// A band matrix is a special form of sparse matrix.
-///
-/// A band matrix is zero everywhere except maybe along the diagonal, on elements up to `kl` rows below
-/// the diagonal, and elements up to `ku` rows above the diagonal. Note that when kl = ku = 0, only
-/// the diagonal is stored, which can be useful.
-pub trait BandMatrix: Matrix {
-    /// Number of sub-diagonals.
-    fn kl(&self) -> int;
-    /// Number of super-diagonals.
-    fn ku(&self) -> int;
-}
-
-/// A packed matrix is a special form of sparse matrix.
-///
-/// A packed matrix is zero everywhere except maybe the triangular portion indicated by
-/// `Matrix::uplo`, which is stored column-by-column.
-pub trait PackedMatrix: Matrix {
-
-}
-
-/// A Matrix whose data is stored in a Vec.
-///
-/// The size of the matrix is frozen for as long as this struct exists; getting the number of
-/// rows/cols wrong causes BLAS to read/write out-of-bounds.
-pub struct VecMatrix<T> {
-    rows: int,
-    cols: int,
-    data: Vec<T>,
-    pub tran: Transpose,
-    pub uplo: Uplo,
-    pub diag: Diag,
-}
-
-impl<T> VecMatrix<T> {
-    /// Create a non-transposed, upper, non-unit matrix.
-    pub fn from_parts(rows: int, cols: int, data: Vec<T>) -> VecMatrix<T> {
-        VecMatrix {
-            rows: rows,
-            cols: cols,
-            data: data,
-            tran: Transpose::NoTrans,
-            uplo: Uplo::Upper,
-            diag: Diag::NonUnit,
-        }
-    }
-
-    pub fn unwrap(self) -> Vec<T> {
-        self.data
+#[inline]
+pub fn srotmg(d1: &mut [f32], d2: &mut [f32], x1: &mut [f32], y1: &[f32], param: &mut [f32]) {
+    unsafe {
+        raw::srotmg_(d1.as_mut_ptr() as *mut _,
+                     d2.as_mut_ptr() as *mut _,
+                     x1.as_mut_ptr() as *mut _,
+                     y1.as_ptr() as *const _,
+                     param.as_mut_ptr() as *mut _,
+        )
     }
 }
 
-unsafe impl<T: Num> Matrix for VecMatrix<T> {
-    type Element = T;
+#[inline]
+pub fn srot(n: usize, x: &mut [f32], incx: usize, y: &mut [f32], incy: usize, c: &[f32],
+            s: &[f32]) {
 
-    fn dim(&self) -> (int, int) {
-        if self.tran == Transpose::NoTrans {
-            (self.rows, self.cols)
-        } else {
-            (self.cols, self.rows)
-        }
-    }
-
-    fn transpose(&self) -> Transpose { self.tran }
-    fn uplo(&self) -> Uplo { self.uplo }
-    fn diag(&self) -> Diag { self.diag }
-
-    fn as_ptr(&self) -> *const T {
-        <[T]>::as_ptr(&self.data[..])
-    }
-
-    fn as_mut_ptr(&mut self) -> *mut T {
-        <[T]>::as_mut_ptr(&mut self.data[..])
+    unsafe {
+        raw::srot_(&(n as int) as *const _,
+                   x.as_mut_ptr() as *mut _,
+                   &(incx as int) as *const _,
+                   y.as_mut_ptr() as *mut _,
+                   &(incy as int) as *const _,
+                   c.as_ptr() as *const _,
+                   s.as_ptr() as *const _,
+        )
     }
 }
 
-impl<T> Deref for VecMatrix<T> {
-    type Target = [T];
-    fn deref(&self) -> &[T] {
-        &self.data
+#[inline]
+pub fn srotm(n: usize, x: &mut [f32], incx: usize, y: &mut [f32], incy: usize, param: &[f32]) {
+    unsafe {
+        raw::srotm_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+                    param.as_ptr() as *const _,
+        )
     }
 }
 
-impl<T> DerefMut for VecMatrix<T> {
-    fn deref_mut(&mut self) -> &mut [T] {
-        &mut self.data[..]
+#[inline]
+pub fn sswap(n: usize, x: &mut [f32], incx: usize, y: &mut [f32], incy: usize) {
+    unsafe {
+        raw::sswap_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
     }
 }
 
-/// x · y
-#[inline(always)]
-pub fn dot<V: ?Sized>(x: &V, y: &V) -> V::Element where V: Vector {
-    debug_assert_eq!(x.len(), y.len());
-    let len = min(x.len(), y.len());
-    V::Element::from_retself(unsafe { V::Element::dot()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) })
+#[inline]
+pub fn sscal(n: usize, a: &[f32], x: &mut [f32], incx: usize) {
+    unsafe {
+        raw::sscal_(&(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
 }
 
-/// y += a * x
-#[inline(always)]
-pub fn axpy<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &V, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
-    debug_assert_eq!(x.len(), y.len());
-    let len = min(x.len(), y.len());
-    unsafe { V::Element::axpy()(len, alpha, x.as_ptr(), x.stride(), y.as_mut_ptr(), y.stride()) }
+#[inline]
+pub fn scopy(n: usize, x: &[f32], incx: usize, y: &mut [f32], incy: usize) {
+    unsafe {
+        raw::scopy_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Linear combination: y = a * x + b * y
-#[inline(always)]
-pub fn axpby<V: ?Sized, U: ?Sized>(alpha: V::Element, x: &V, beta: U::Element, y: &mut U) where V: Vector, U: Vector<Element = V::Element>  {
-    debug_assert_eq!(x.len(), y.len());
-    let len = min(x.len(), y.len());
-    unsafe { V::Element::axpby()(len, alpha, x.as_ptr(), x.stride(), beta, y.as_mut_ptr(), y.stride()) }
+#[inline]
+pub fn saxpy(n: usize, alpha: f32, x: &[f32], incx: usize, y: &mut [f32], incy: usize) {
+    unsafe {
+        raw::saxpy_(&(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Rotate each (x, y) pair pulling coordinates from `x` and `y`, overwriting them, by doing a
-/// matrix multiplication: `[x, y] = [[c, s], [-s, c]] * [x, y]`
-#[inline(always)]
-pub fn rot<V: ?Sized>(x: &mut V, y: &mut V, c: <V::Element as Num>::Float, s: V::Element) where V: Vector{
-    debug_assert_eq!(x.len(), y.len());
-    let len = min(x.len(), y.len());
-    unsafe { V::Element::rot()(len, x.as_mut_ptr(), x.stride(), y.as_mut_ptr(), y.stride(), c, s) }
+#[inline]
+pub fn sdot(n: usize, x: &[f32], incx: usize, y: &[f32], incy: usize) -> f32 {
+    unsafe {
+        raw::sdot_(&(n as int) as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   y.as_ptr() as *const _,
+                   &(incy as int) as *const _,
+        ) as f32
+    }
 }
 
-/// Setup a Givens rotation with the passed vector `[a, b]`, and returning new elements `(r, z, c, s)`,
-/// such that `[[c, s], [-s, c]] * [a, b] = [r, 0]`
-#[inline(always)]
-pub fn rotg<N>(mut a: N, mut b: N) -> (N, N, N::Float, N) where N: Num {
-    let mut s: N = unsafe { std::mem::zeroed() };
-    let mut c: N::Float = unsafe { std::mem::zeroed() };
-    unsafe { N::rotg()(&mut a as *mut _ as *mut _, &mut b as *mut _ as *mut _, &mut c, &mut s) }
-    (a, b, c, s)
+#[inline]
+pub fn sdsdot(n: usize, sb: &[f32], x: &[f32], incx: usize, y: &[f32], incy: usize) -> f32 {
+    unsafe {
+        raw::sdsdot_(&(n as int) as *const _,
+                     sb.as_ptr() as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+                     y.as_ptr() as *const _,
+                     &(incy as int) as *const _,
+        ) as f32
+    }
 }
 
-/// array *= alpha
-///
-/// *Note:* This crate does not expose zdscal or csscal because they are not actually implemented
-/// specially in OpenBLAS (and thus are unlikely to be worthwhile to use).
-#[inline(always)]
-pub fn scal<V: ?Sized>(alpha: V::Element, x: &mut V) where V: Vector {
-    unsafe { V::Element::scal()(x.len(), alpha, x.as_mut_ptr(), x.stride()) }
+#[inline]
+pub fn snrm2(n: usize, x: &[f32], incx: usize) -> f32 {
+    unsafe {
+        raw::snrm2_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+        ) as f32
+    }
 }
 
-/// Sum of the absolute values of the vector's elements.
-///
-/// For a complex vector, the "absolute value" is `abs(real) + abs(imag)`
-#[inline(always)]
-pub fn asum<V: ?Sized>(x: &V) -> <V::Element as Num>::Float where V: Vector {
-    unsafe { V::Element::asum()(x.len(), x.as_ptr() as *const _, x.stride()) }
+#[inline]
+pub fn scnrm2(n: usize, x: &[f32], incx: usize) -> f32 {
+    unsafe {
+        raw::scnrm2_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as f32
+    }
 }
 
-/// Index of the first value in the vector with the largest absolute value.
-#[inline(always)]
-pub fn iamax<V: ?Sized>(x: &V) -> usize where V: Vector {
-    unsafe { V::Element::iamax()(x.len(), x.as_ptr() as *const _, x.stride()) as usize }
+#[inline]
+pub fn sasum(n: usize, x: &[f32], incx: usize) -> f32 {
+    unsafe {
+        raw::sasum_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+        ) as f32
+    }
 }
 
-/// L2 norm of the vector `(sqrt(sum(|x_i|^2)))`, where |x_i| is the complex modulus for a complex number, absolute value otherwise.
-#[inline(always)]
-pub fn nrm2<V: ?Sized>(x: &V) -> <V::Element as Num>::Float where V: Vector {
-    unsafe { V::Element::nrm2()(x.len(), x.as_ptr() as *const _, x.stride()) }
+#[inline]
+pub fn isamax(n: usize, x: &[f32], incx: usize) -> isize {
+    unsafe {
+        raw::isamax_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as isize
+    }
 }
 
-/// Do something *really* strange involving a "modified Givens rotation"
-pub fn rotm<V: ?Sized, U: ?Sized>(x: &mut V, y: &mut U, param: &[V::Element; 5]) where V: Vector, U: Vector<Element = V::Element>, V::Element: Real {
-    debug_assert_eq!(x.len(), y.len());
-    let len = min(x.len(), y.len());
-    unsafe { V::Element::rotm()(len, x.as_mut_ptr(), x.stride(), y.as_mut_ptr(), y.stride(), param as *const _ as *const _) }
+#[inline]
+pub fn drotg(a: &mut [f64], b: &mut [f64], c: &mut [f64], s: &mut [f64]) {
+    unsafe {
+        raw::drotg_(a.as_mut_ptr() as *mut _,
+                    b.as_mut_ptr() as *mut _,
+                    c.as_mut_ptr() as *mut _,
+                    s.as_mut_ptr() as *mut _,
+        )
+    }
 }
 
-/// Setup a "modified Givens rotation", where the parameters and return value are beyond my understanding.
-///
-/// I think this won't modify the `coord` vector, but I can't really tell from the CBLAS interface
-/// whether it does things beyond the Fortran definition.
-#[inline(always)]
-pub fn rotmg<V: ?Sized, U: ?Sized>(diag: &mut V, coord: &mut U) -> [V::Element; 5] where V: Vector, U: Vector<Element = V::Element>, V::Element: Real {
-    // a, b, s COMPLEX, c REAL
-    assert!(diag.len() >= 2);
-    assert!(coord.len() >= 2);
-    debug_assert_eq!(diag.len(), 2);
-    debug_assert_eq!(coord.len(), 2);
-
-    let mut param: [V::Element; 5] = unsafe { std::mem::zeroed() };
-
-    unsafe { V::Element::rotmg()(diag.as_mut_ptr() as *mut _, diag.as_mut_ptr().offset(1) as *mut _,
-                                 coord.as_mut_ptr() as *mut _, *(coord.as_ptr().offset(1) as *const _),
-                                 &mut param as *mut _ as *mut _) }
-
-    param
+#[inline]
+pub fn drotmg(d1: &mut [f64], d2: &mut [f64], x1: &mut [f64], y1: &[f64], param: &mut [f64]) {
+    unsafe {
+        raw::drotmg_(d1.as_mut_ptr() as *mut _,
+                     d2.as_mut_ptr() as *mut _,
+                     x1.as_mut_ptr() as *mut _,
+                     y1.as_ptr() as *const _,
+                     param.as_mut_ptr() as *mut _,
+        )
+    }
 }
 
-/// Hermitian inner product of the complex vectors x and y
-#[inline(always)]
-pub fn dotc<V: ?Sized, U: ?Sized>(x: &V, y: &U) -> V::Element where V: Vector, U: Vector<Element = V::Element>, V::Element: Complex {
-    debug_assert_eq!(x.len(), y.len());
-    let len = min(x.len(), y.len());
+#[inline]
+pub fn drot(n: usize, x: &mut [f64], incx: usize, y: &mut [f64], incy: usize, c: &[f64],
+            s: &[f64]) {
 
-    V::Element::from_retself(unsafe { V::Element::dotc()(len, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride()) })
+    unsafe {
+        raw::drot_(&(n as int) as *const _,
+                   x.as_mut_ptr() as *mut _,
+                   &(incx as int) as *const _,
+                   y.as_mut_ptr() as *mut _,
+                   &(incy as int) as *const _,
+                   c.as_ptr() as *const _,
+                   s.as_ptr() as *const _,
+        )
+    }
 }
 
-/// General Matrix-vector multiply, y = alpha * A * x + beta * y.
-#[inline(always)]
-pub fn gemv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
-    debug_assert_eq!(x.len(), a.dim().1);
-    let (m, n) = a.dim();
-    let len = min(min(x.len(), y.len()), m);
-
-    unsafe { V::Element::gemv()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+#[inline]
+pub fn drotm(n: usize, x: &mut [f64], incx: usize, y: &mut [f64], incy: usize, param: &[f64]) {
+    unsafe {
+        raw::drotm_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+                    param.as_ptr() as *const _,
+        )
+    }
 }
 
-/// A = A + alpha * x * y'
-#[inline(always)]
-pub fn ger<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element> {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, x.len());
-    debug_assert_eq!(n, y.len());
-    let m = min(m, x.len());
-    let n = min(n, y.len());
-
-    unsafe { V::Element::ger()(a.order() as CBLAS_ORDER, m, n, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+#[inline]
+pub fn dswap(n: usize, x: &mut [f64], incx: usize, y: &mut [f64], incy: usize) {
+    unsafe {
+        raw::dswap_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Solve the equation A * x = b, storing the result in x.
-///
-/// A is assumed to be triangular.
-#[inline(always)]
-pub fn trsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
-
-    unsafe { V::Element::trsv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+#[inline]
+pub fn dscal(n: usize, a: &[f64], x: &mut [f64], incx: usize) {
+    unsafe {
+        raw::dscal_(&(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
 }
 
-/// Triangular Matrix-vector multiply, x = A * x
-#[inline(always)]
-pub fn trmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: Matrix<Element = V::Element> {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
-
-    unsafe { V::Element::trmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+#[inline]
+pub fn dcopy(n: usize, x: &[f64], incx: usize, y: &mut [f64], incy: usize) {
+    unsafe {
+        raw::dcopy_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// General Band Matrix-vector multiply, y = alpha * A * x + beta * y
-#[inline(always)]
-pub fn gbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element> {
-    debug_assert_eq!(x.len(), y.len());
-    debug_assert_eq!(x.len(), a.dim().0);
-    let (m, n) = a.dim();
-    let len = min(min(x.len(), y.len()), m);
-
-    unsafe { V::Element::gbmv()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, len, n, a.kl(), a.ku(), alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+#[inline]
+pub fn daxpy(n: usize, alpha: f64, x: &[f64], incx: usize, y: &mut [f64], incy: usize) {
+    unsafe {
+        raw::daxpy_(&(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Triangular Band Matrix-vector multiply, x = A * x
-#[inline(always)]
-pub fn tbmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
-
-    let k = match a.uplo() {
-        Uplo::Lower => a.kl(),
-        Uplo::Upper => a.ku(),
-    };
-
-    unsafe { V::Element::tbmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+#[inline]
+pub fn ddot(n: usize, x: &[f64], incx: usize, y: &[f64], incy: usize) -> f64 {
+    unsafe {
+        raw::ddot_(&(n as int) as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   y.as_ptr() as *const _,
+                   &(incy as int) as *const _,
+        ) as f64
+    }
 }
 
-/// Triangular Packed matrix-vector multiply, x = A * x
-#[inline(always)]
-pub fn tpmv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
-
-    unsafe { V::Element::tpmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
+#[inline]
+pub fn dsdot(n: usize, x: &[f64], incx: usize, y: &[f64], incy: usize) -> f64 {
+    unsafe {
+        raw::dsdot_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+        ) as f64
+    }
 }
 
-/// Solve the equation A * x = b, storing the result in x.
-///
-/// A is assumed to be triangular and band.
-pub fn tbsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: BandMatrix<Element = V::Element> {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
-
-    let k = match a.uplo() {
-        Uplo::Lower => a.kl(),
-        Uplo::Upper => a.ku(),
-    };
-
-    unsafe { V::Element::tbsv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, k, a.as_ptr() as *const _, a.major_stride(), x.as_mut_ptr() as *mut _, x.stride()) }
+#[inline]
+pub fn dnrm2(n: usize, x: &[f64], incx: usize) -> f64 {
+    unsafe {
+        raw::dnrm2_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+        ) as f64
+    }
 }
 
-/// Solve the equation A * x = b, storing the result in x.
-///
-/// A is assumed to be triangular and packed.
-#[inline(always)]
-pub fn tpsv<V: ?Sized, M: ?Sized>(x: &mut V, a: &M) where V: Vector, M: PackedMatrix<Element = V::Element> {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
-
-    unsafe { V::Element::tpsv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, len, a.as_ptr() as *const _, x.as_mut_ptr() as *mut _, x.stride()) }
+#[inline]
+pub fn dznrm2(n: usize, x: &[f64], incx: usize) -> f64 {
+    unsafe {
+        raw::dznrm2_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as f64
+    }
 }
 
-/// A = A + alpha * x * x'
-#[inline(always)]
-pub fn syr<V: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Real {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let m = min(m, x.len());
-
-    unsafe { V::Element::syr()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+#[inline]
+pub fn dasum(n: usize, x: &[f64], incx: usize) -> f64 {
+    unsafe {
+        raw::dasum_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+        ) as f64
+    }
 }
 
-/// A = A + alpha * x * y'
-#[inline(always)]
-pub fn syr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Real {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    debug_assert_eq!(m, y.len());
-    let m = min(m, x.len());
-
-    unsafe { V::Element::syr2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+#[inline]
+pub fn idamax(n: usize, x: &[f64], incx: usize) -> isize {
+    unsafe {
+        raw::idamax_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as isize
+    }
 }
 
-/// Symmetric Matrix-vector multiply, y = alpha * A * x + beta * y
-#[inline(always)]
-pub fn symv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(x.len(), y.len());
-    debug_assert_eq!(x.len(), m);
-    let len = min(min(x.len(), y.len()), m);
+#[inline]
+pub fn crotg(a: &mut [Complex<f32>], b: &[Complex<f32>], c: &mut [Complex<f32>],
+             s: &mut [Complex<f32>]) {
 
-    unsafe { V::Element::symv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe {
+        raw::crotg_(a.as_mut_ptr() as *mut _,
+                    b.as_ptr() as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    s.as_mut_ptr() as *mut _,
+        )
+    }
 }
 
-/// A = A + alpha * x * x'
-#[inline(always)]
-pub fn spr<V: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Real {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let m = min(m, x.len());
+#[inline]
+pub fn csrot(n: usize, x: &mut [Complex<f32>], incx: usize, y: &mut [Complex<f32>], incy: usize,
+             c: &[Complex<f32>], s: &[Complex<f32>]) {
 
-    unsafe { V::Element::spr()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
+    unsafe {
+        raw::csrot_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+                    c.as_ptr() as *const _,
+                    s.as_ptr() as *const _,
+        )
+    }
 }
 
-/// A = A + alpha * x * y'
-#[inline(always)]
-pub fn spr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    debug_assert_eq!(m, y.len());
-    let m = min(m, x.len());
-
-    unsafe { V::Element::spr2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
+#[inline]
+pub fn cswap(n: usize, x: &mut [Complex<f32>], incx: usize, y: &mut [Complex<f32>], incy: usize) {
+    unsafe {
+        raw::cswap_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Symmetric Packed matrix-vector multiply, y = alpha * A * x + beta * y
-#[inline(always)]
-pub fn spmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Real {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(x.len(), y.len());
-    debug_assert_eq!(x.len(), m);
-    let len = min(min(x.len(), y.len()), m);
-
-    unsafe { V::Element::spmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha, a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+#[inline]
+pub fn cscal(n: usize, a: &[Complex<f32>], x: &mut [Complex<f32>], incx: usize) {
+    unsafe {
+        raw::cscal_(&(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
 }
 
-/// Symetric Band Matrix-vector multiply, y = alpha * A * x + beta * y
-#[inline(always)]
-pub fn sbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Real {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
-
-    let k = match a.uplo() {
-        Uplo::Lower => a.kl(),
-        Uplo::Upper => a.ku(),
-    };
-
-    unsafe { V::Element::sbmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha, a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta, y.as_mut_ptr() as *mut _, y.stride()) }
+#[inline]
+pub fn csscal(n: usize, a: &[Complex<f32>], x: &mut [Complex<f32>], incx: usize) {
+    unsafe {
+        raw::csscal_(&(n as int) as *const _,
+                     a.as_ptr() as *const _,
+                     x.as_mut_ptr() as *mut _,
+                     &(incx as int) as *const _,
+        )
+    }
 }
 
-/// A = A + alpha * x * x'
-#[inline(always)]
-pub fn her<V: ?Sized, M: ?Sized>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: Matrix<Element = V::Element>, V::Element: Complex {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let m = min(m, x.len());
-
-    unsafe { V::Element::her()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+#[inline]
+pub fn ccopy(n: usize, x: &[Complex<f32>], incx: usize, y: &mut [Complex<f32>], incy: usize) {
+    unsafe {
+        raw::ccopy_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// A = A + alpha * x * y'
-#[inline(always)]
-pub fn her2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: Matrix<Element = V::Element>, V::Element: Complex {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    debug_assert_eq!(m, y.len());
-    let m = min(m, x.len());
+#[inline]
+pub fn caxpy(n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
+             y: &mut [Complex<f32>], incy: usize) {
 
-    unsafe { V::Element::her2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _, a.major_stride()) }
+    unsafe {
+        raw::caxpy_(&(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Hermitian Matrix-vector multiply, y = alpha * A * x + beta * y
-#[inline(always)]
-pub fn hemv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(x.len(), y.len());
-    debug_assert_eq!(x.len(), m);
-    let len = min(min(x.len(), y.len()), m);
+#[inline]
+pub fn cdotu(pres: &mut [Complex<f32>], n: usize, x: &[Complex<f32>], incx: usize,
+             y: &[Complex<f32>], incy: usize) {
 
-    unsafe { V::Element::hemv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe {
+        raw::cdotu_(pres.as_mut_ptr() as *mut _,
+                    &(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// A = A + alpha * x * x'
-#[inline(always)]
-pub fn hpr<V: ?Sized, M: ?Sized>(alpha: <V::Element as Num>::Float, a: &mut M, x: &V) where V: Vector, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let m = min(m, x.len());
+#[inline]
+pub fn cdotc(pres: &mut [Complex<f32>], n: usize, x: &[Complex<f32>], incx: usize,
+             y: &[Complex<f32>], incy: usize) {
 
-    unsafe { V::Element::hpr()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha, x.as_ptr() as *const _, x.stride(), a.as_mut_ptr() as *mut _) }
+    unsafe {
+        raw::cdotc_(pres.as_mut_ptr() as *mut _,
+                    &(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// A = A + alpha * x * y'
-#[inline(always)]
-pub fn hpr2<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, a: &mut M, x: &V, y: &U) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    debug_assert_eq!(m, y.len());
-    let m = min(m, x.len());
-
-    unsafe { V::Element::hpr2()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, m, alpha.as_weird(), x.as_ptr() as *const _, x.stride(), y.as_ptr() as *const _, y.stride(), a.as_mut_ptr() as *mut _) }
+#[inline]
+pub fn scasum(n: usize, x: &[Complex<f32>], incx: usize) -> f32 {
+    unsafe {
+        raw::scasum_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as f32
+    }
 }
 
-/// Hermitian Packed matrix-vector multiply, y = alpha * A * x + beta * y
-#[inline(always)]
-pub fn hpmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: PackedMatrix<Element = V::Element>, V::Element: Complex {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(x.len(), y.len());
-    debug_assert_eq!(x.len(), m);
-    let len = min(min(x.len(), y.len()), m);
-
-    unsafe { V::Element::hpmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, alpha.as_weird(), a.as_ptr() as *const _, x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+#[inline]
+pub fn icamax(n: usize, x: &[Complex<f32>], incx: usize) -> isize {
+    unsafe {
+        raw::icamax_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as isize
+    }
 }
 
-/// Hermitian Band Matrix-vector multiply, y = alpha * A * x + beta * y
-#[inline(always)]
-pub fn hbmv<V: ?Sized, U: ?Sized, M: ?Sized>(alpha: V::Element, x: &V, beta: V::Element, y: &mut U, a: &M) where V: Vector, U: Vector<Element = V::Element>, M: BandMatrix<Element = V::Element>, V::Element: Complex {
-    let (m, n) = a.dim();
-    debug_assert_eq!(m, n);
-    debug_assert_eq!(m, x.len());
-    let len = min(min(m, n), x.len());
+#[inline]
+pub fn zrotg(a: &mut [Complex<f64>], b: &[Complex<f64>], c: &mut [Complex<f64>],
+             s: &mut [Complex<f64>]) {
 
-    let k = match a.uplo() {
-        Uplo::Lower => a.kl(),
-        Uplo::Upper => a.ku(),
-    };
-
-    unsafe { V::Element::hbmv()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, len, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), x.as_ptr() as *const _, x.stride(), beta.as_weird(), y.as_mut_ptr() as *mut _, y.stride()) }
+    unsafe {
+        raw::zrotg_(a.as_mut_ptr() as *mut _,
+                    b.as_ptr() as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    s.as_mut_ptr() as *mut _,
+        )
+    }
 }
 
-/// General Matrix-matrix multiply, C = alpha * A * B + beta * C
-#[inline(always)]
-pub unsafe fn gemm<A: ?Sized, B: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element> {
-    let (am, an) = a.dim();
-    let (bm, bn) = b.dim();
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(am, cm);
-    debug_assert_eq!(an, bm);
-    debug_assert_eq!(bn, cn);
+#[inline]
+pub fn zdrot(n: usize, x: &mut [Complex<f64>], incx: usize, y: &mut [Complex<f64>], incy: usize,
+             c: &[Complex<f64>], s: &[Complex<f64>]) {
 
-    let m = min(am, cm);
-    let n = min(bn, cn);
-    let k = min(an, bm);
-
-    unsafe { A::Element::gemm()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe {
+        raw::zdrot_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+                    c.as_ptr() as *const _,
+                    s.as_ptr() as *const _,
+        )
+    }
 }
 
-/// Symetric Matrix-matrix multiply, C = alpha * A * B + beta * C (or, B * A)
-///
-/// The position of A (to the left or right of B) is controlled by `side`.
-#[inline(always)]
-pub unsafe fn symm<A: ?Sized, B: ?Sized, C: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element> {
-    let (bm, bn) = b.dim();
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(bm, cm);
-    debug_assert_eq!(bn, cn);
-
-    let m = min(bm, cm);
-    let n = min(bn, cn);
-
-    unsafe { A::Element::symm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+#[inline]
+pub fn zswap(n: usize, x: &mut [Complex<f64>], incx: usize, y: &mut [Complex<f64>], incy: usize) {
+    unsafe {
+        raw::zswap_(&(n as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Symetric rank-k operation, C = alpha * A * A' + beta * C,
-#[inline(always)]
-pub unsafe fn syrk<A: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, beta: A::Element, c: &mut C) where A: Matrix, C: Matrix<Element = A::Element> {
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(cm, cn);
-
-    let n = cm;
-    let k = a.dim().1;
-
-    unsafe { A::Element::syrk()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+#[inline]
+pub fn zscal(n: usize, a: &[Complex<f64>], x: &mut [Complex<f64>], incx: usize) {
+    unsafe {
+        raw::zscal_(&(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
 }
 
-/// Symetric rank-2k operation, C = alpha * A * B' + alpha * B * A' + beta * C
-#[inline(always)]
-pub unsafe fn syr2k<A: ?Sized, B: ?Sized, C: ?Sized>(tran: Transpose, alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element> {
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(cm, cn);
-
-    let n = cn;
-    let k = min(a.dim().1, b.dim().1);
-
-    unsafe { A::Element::syr2k()(a.order() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+#[inline]
+pub fn zdscal(n: usize, a: &[Complex<f64>], x: &mut [Complex<f64>], incx: usize) {
+    unsafe {
+        raw::zdscal_(&(n as int) as *const _,
+                     a.as_ptr() as *const _,
+                     x.as_mut_ptr() as *mut _,
+                     &(incx as int) as *const _,
+        )
+    }
 }
 
-/// Triangular Matrix-matrix multiply, B = alpha * A * B (or, B * A)
-///
-/// The position of A (to the left or right of B) is controlled by `side`.
-#[inline(always)]
-pub unsafe fn trmm<A: ?Sized, B: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &mut B) where A: Matrix, B: Matrix<Element = A::Element> {
-    let (m, n) = b.dim();
-
-    unsafe { A::Element::trmm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, b.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
+#[inline]
+pub fn zcopy(n: usize, x: &[Complex<f64>], incx: usize, y: &mut [Complex<f64>], incy: usize) {
+    unsafe {
+        raw::zcopy_(&(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Solve the matrix equation A * X = alpha * B (or, X * A)
-#[inline(always)]
-pub unsafe fn trsm<A: ?Sized, B: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &mut B) where A: Matrix, B: Matrix<Element = A::Element> {
-    let (m, n) = b.dim();
+#[inline]
+pub fn zaxpy(n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
+             y: &mut [Complex<f64>], incy: usize) {
 
-    unsafe { A::Element::trsm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, a.diag() as CBLAS_DIAG, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_mut_ptr() as *mut _, b.major_stride()) }
+    unsafe {
+        raw::zaxpy_(&(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// General complex(?) Matrix-matrix multiply, C = alpha * A * B + beta * C
-#[inline(always)]
-pub unsafe fn gemm3m<A: ?Sized, B: ?Sized, C: ?Sized>(alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element>, A::Element: Complex {
-    let (am, an) = a.dim();
-    let (bm, bn) = b.dim();
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(am, cm);
-    debug_assert_eq!(an, bm);
-    debug_assert_eq!(bn, cn);
+#[inline]
+pub fn zdotu(pres: &mut [Complex<f64>], n: usize, x: &[Complex<f64>], incx: usize,
+             y: &[Complex<f64>], incy: usize) {
 
-    let m = min(am, cm);
-    let n = min(bn, cn);
-    let k = min(an, bm);
-
-    unsafe { A::Element::gemm3m()(a.order() as CBLAS_ORDER, a.transpose() as CBLAS_TRANSPOSE, b.transpose() as CBLAS_TRANSPOSE, m, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe {
+        raw::zdotu_(pres.as_mut_ptr() as *mut _,
+                    &(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Hermitian Matrix-matrix multiply, C = alpha * A * B + beta * C (or, B * A)
-///
-/// The position of A (to the left or right of B) is controlled by `side`.
-#[inline(always)]
-pub unsafe fn hemm<A: ?Sized, B: ?Sized, C: ?Sized>(side: Side, alpha: A::Element, a: &A, b: &B, beta: A::Element, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element>, A::Element: Complex {
-    let (bm, bn) = b.dim();
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(bm, cm);
-    debug_assert_eq!(bn, cn);
+#[inline]
+pub fn zdotc(pres: &mut [Complex<f64>], n: usize, x: &[Complex<f64>], incx: usize,
+             y: &[Complex<f64>], incy: usize) {
 
-    let m = min(bm, cm);
-    let n = min(bn, cn);
-
-    unsafe { A::Element::hemm()(a.order() as CBLAS_ORDER, side as CBLAS_SIDE, c.uplo() as CBLAS_UPLO, m, n, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta.as_weird(), c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe {
+        raw::zdotc_(pres.as_mut_ptr() as *mut _,
+                    &(n as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+        )
+    }
 }
 
-/// Hermitian rank-k operation, C = alpha * A * A' + beta * C,
-#[inline(always)]
-pub unsafe fn herk<A: ?Sized, C: ?Sized>(alpha: <A::Element as Num>::Float, a: &A, beta: <A::Element as Num>::Float, c: &mut C) where A: Matrix, C: Matrix<Element = A::Element>, C::Element: Complex {
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(cm, cn);
-
-    let n = cm;
-    let k = a.dim().1;
-
-    unsafe { A::Element::herk()(a.order() as CBLAS_ORDER, a.uplo() as CBLAS_UPLO, a.transpose() as CBLAS_TRANSPOSE, n, k, alpha, a.as_ptr() as *const _, a.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
+#[inline]
+pub fn dzasum(n: usize, x: &[Complex<f64>], incx: usize) -> f64 {
+    unsafe {
+        raw::dzasum_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as f64
+    }
 }
 
-/// Hermitian rank-2k operation, C = alpha * A * B' + alpha * B * A' + beta * C
-#[inline(always)]
-pub unsafe fn her2k<A: ?Sized, B: ?Sized, C: ?Sized>(tran: Transpose, alpha: A::Element, a: &A, b: &B, beta: <A::Element as Num>::Float, c: &mut C) where A: Matrix, B: Matrix<Element = A::Element>, C: Matrix<Element = A::Element>, A::Element: Complex {
-    let (cm, cn) = c.dim();
-    debug_assert_eq!(cm, cn);
+#[inline]
+pub fn izamax(n: usize, x: &[Complex<f64>], incx: usize) -> isize {
+    unsafe {
+        raw::izamax_(&(n as int) as *const _,
+                     x.as_ptr() as *const _,
+                     &(incx as int) as *const _,
+        ) as isize
+    }
+}
 
-    let n = cn;
-    let k = min(a.dim().1, b.dim().1);
+#[inline]
+pub fn sgemv(trans: Trans, m: usize, n: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32],
+             incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
-    unsafe { A::Element::her2k()(a.order() as CBLAS_ORDER, c.uplo() as CBLAS_UPLO, tran as CBLAS_TRANSPOSE, n, k, alpha.as_weird(), a.as_ptr() as *const _, a.major_stride(), b.as_ptr() as *const _, b.major_stride(), beta, c.as_mut_ptr() as *mut _, c.major_stride()) }
+    unsafe {
+        raw::sgemv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn sgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: f32, a: &[f32],
+             lda: usize, x: &[f32], incx: usize, beta: f32, y: &mut [f32], incy: usize) {
+
+    unsafe {
+        raw::sgbmv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(kl as int) as *const _,
+                    &(ku as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ssymv(uplo: Uplo, n: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32], incx: usize,
+             beta: f32, y: &mut [f32], incy: usize) {
+
+    unsafe {
+        raw::ssymv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ssbmv(uplo: Uplo, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32],
+             incx: usize, beta: f32, y: &mut [f32], incy: usize) {
+
+    unsafe {
+        raw::ssbmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn sspmv(uplo: Uplo, n: usize, alpha: f32, ap: &[f32], x: &[f32], incx: usize, beta: f32,
+             y: &mut [f32], incy: usize) {
+
+    unsafe {
+        raw::sspmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn strmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[f32], lda: usize, b: &mut [f32],
+             incx: usize) {
+
+    unsafe {
+        raw::strmv_(&(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn stbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f32], lda: usize,
+             x: &mut [f32], incx: usize) {
+
+    unsafe {
+        raw::stbmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn stpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f32], x: &mut [f32],
+             incx: usize) {
+
+    unsafe {
+        raw::stpmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn strsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[f32], lda: usize, x: &mut [f32],
+             incx: usize) {
+
+    unsafe {
+        raw::strsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn stbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f32], lda: usize,
+             x: &mut [f32], incx: usize) {
+
+    unsafe {
+        raw::stbsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn stpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f32], x: &mut [f32],
+             incx: usize) {
+
+    unsafe {
+        raw::stpsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn sger(m: usize, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], incy: usize,
+            a: &mut [f32], lda: usize) {
+
+    unsafe {
+        raw::sger_(&(m as int) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   y.as_ptr() as *const _,
+                   &(incy as int) as *const _,
+                   a.as_mut_ptr() as *mut _,
+                   &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ssyr(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, a: &mut [f32], lda: usize) {
+    unsafe {
+        raw::ssyr_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   a.as_mut_ptr() as *mut _,
+                   &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn sspr(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, ap: &mut [f32]) {
+    unsafe {
+        raw::sspr_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn ssyr2(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], incy: usize,
+             a: &mut [f32], lda: usize) {
+
+    unsafe {
+        raw::ssyr2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn sspr2(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], incy: usize,
+             ap: &mut [f32]) {
+
+    unsafe {
+        raw::sspr2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn dgemv(trans: Trans, m: usize, n: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64],
+             incx: usize, beta: f64, y: &mut [f64], incy: usize) {
+
+    unsafe {
+        raw::dgemv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: f64, a: &[f64],
+             lda: usize, x: &[f64], incx: usize, beta: f64, y: &mut [f64], incy: usize) {
+
+    unsafe {
+        raw::dgbmv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(kl as int) as *const _,
+                    &(ku as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dsymv(uplo: Uplo, n: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64], incx: usize,
+             beta: f64, y: &mut [f64], incy: usize) {
+
+    unsafe {
+        raw::dsymv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dsbmv(uplo: Uplo, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64],
+             incx: usize, beta: f64, y: &mut [f64], incy: usize) {
+
+    unsafe {
+        raw::dsbmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dspmv(uplo: Uplo, n: usize, alpha: f64, ap: &[f64], x: &[f64], incx: usize, beta: f64,
+             y: &mut [f64], incy: usize) {
+
+    unsafe {
+        raw::dspmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[f64], lda: usize, b: &mut [f64],
+             incx: usize) {
+
+    unsafe {
+        raw::dtrmv_(&(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f64], lda: usize,
+             x: &mut [f64], incx: usize) {
+
+    unsafe {
+        raw::dtbmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f64], x: &mut [f64],
+             incx: usize) {
+
+    unsafe {
+        raw::dtpmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[f64], lda: usize, x: &mut [f64],
+             incx: usize) {
+
+    unsafe {
+        raw::dtrsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f64], lda: usize,
+             x: &mut [f64], incx: usize) {
+
+    unsafe {
+        raw::dtbsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f64], x: &mut [f64],
+             incx: usize) {
+
+    unsafe {
+        raw::dtpsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dger(m: usize, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], incy: usize,
+            a: &mut [f64], lda: usize) {
+
+    unsafe {
+        raw::dger_(&(m as int) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   y.as_ptr() as *const _,
+                   &(incy as int) as *const _,
+                   a.as_mut_ptr() as *mut _,
+                   &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dsyr(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, a: &mut [f64], lda: usize) {
+    unsafe {
+        raw::dsyr_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   a.as_mut_ptr() as *mut _,
+                   &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dspr(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, ap: &mut [f64]) {
+    unsafe {
+        raw::dspr_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn dsyr2(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], incy: usize,
+             a: &mut [f64], lda: usize) {
+
+    unsafe {
+        raw::dsyr2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dspr2(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], incy: usize,
+             ap: &mut [f64]) {
+
+    unsafe {
+        raw::dspr2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn cgemv(trans: Trans, m: usize, n: usize, alpha: Complex<f32>, a: &[Complex<f32>], lda: usize,
+             x: &[Complex<f32>], incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>],
+             incy: usize) {
+
+    unsafe {
+        raw::cgemv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn cgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: Complex<f32>,
+             a: &[Complex<f32>], lda: usize, x: &[Complex<f32>], incx: usize, beta: Complex<f32>,
+             y: &mut [Complex<f32>], incy: usize) {
+
+    unsafe {
+        raw::cgbmv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(kl as int) as *const _,
+                    &(ku as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn chemv(uplo: Uplo, n: usize, alpha: Complex<f32>, a: &[Complex<f32>], lda: usize,
+             x: &[Complex<f32>], incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>],
+             incy: usize) {
+
+    unsafe {
+        raw::chemv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn chbmv(uplo: Uplo, n: usize, k: usize, alpha: Complex<f32>, a: &[Complex<f32>], lda: usize,
+             x: &[Complex<f32>], incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>],
+             incy: usize) {
+
+    unsafe {
+        raw::chbmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn chpmv(uplo: Uplo, n: usize, alpha: Complex<f32>, ap: &[Complex<f32>], x: &[Complex<f32>],
+             incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>], incy: usize) {
+
+    unsafe {
+        raw::chpmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[Complex<f32>], lda: usize,
+             b: &mut [Complex<f32>], incx: usize) {
+
+    unsafe {
+        raw::ctrmv_(&(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f32>],
+             lda: usize, x: &mut [Complex<f32>], incx: usize) {
+
+    unsafe {
+        raw::ctbmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f32>],
+             x: &mut [Complex<f32>], incx: usize) {
+
+    unsafe {
+        raw::ctpmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[Complex<f32>], lda: usize,
+             x: &mut [Complex<f32>], incx: usize) {
+
+    unsafe {
+        raw::ctrsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f32>],
+             lda: usize, x: &mut [Complex<f32>], incx: usize) {
+
+    unsafe {
+        raw::ctbsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f32>],
+             x: &mut [Complex<f32>], incx: usize) {
+
+    unsafe {
+        raw::ctpsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn cgeru(m: usize, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
+             y: &[Complex<f32>], incy: usize, a: &mut [Complex<f32>], lda: usize) {
+
+    unsafe {
+        raw::cgeru_(&(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn cgerc(m: usize, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
+             y: &[Complex<f32>], incy: usize, a: &mut [Complex<f32>], lda: usize) {
+
+    unsafe {
+        raw::cgerc_(&(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn cher(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
+            a: &mut [Complex<f32>], lda: usize) {
+
+    unsafe {
+        raw::cher_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   a.as_mut_ptr() as *mut _,
+                   &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn chpr(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
+            ap: &mut [Complex<f32>]) {
+
+    unsafe {
+        raw::chpr_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn chpr2(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
+             y: &[Complex<f32>], incy: usize, ap: &mut [Complex<f32>]) {
+
+    unsafe {
+        raw::chpr2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn cher2(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
+             y: &[Complex<f32>], incy: usize, a: &mut [Complex<f32>], lda: usize) {
+
+    unsafe {
+        raw::cher2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zgemv(trans: Trans, m: usize, n: usize, alpha: Complex<f64>, a: &[Complex<f64>], lda: usize,
+             x: &[Complex<f64>], incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>],
+             incy: usize) {
+
+    unsafe {
+        raw::zgemv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: Complex<f64>,
+             a: &[Complex<f64>], lda: usize, x: &[Complex<f64>], incx: usize, beta: Complex<f64>,
+             y: &mut [Complex<f64>], incy: usize) {
+
+    unsafe {
+        raw::zgbmv_(&(trans as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(kl as int) as *const _,
+                    &(ku as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zhemv(uplo: Uplo, n: usize, alpha: Complex<f64>, a: &[Complex<f64>], lda: usize,
+             x: &[Complex<f64>], incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>],
+             incy: usize) {
+
+    unsafe {
+        raw::zhemv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zhbmv(uplo: Uplo, n: usize, k: usize, alpha: Complex<f64>, a: &[Complex<f64>], lda: usize,
+             x: &[Complex<f64>], incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>],
+             incy: usize) {
+
+    unsafe {
+        raw::zhbmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zhpmv(uplo: Uplo, n: usize, alpha: Complex<f64>, ap: &[Complex<f64>], x: &[Complex<f64>],
+             incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>], incy: usize) {
+
+    unsafe {
+        raw::zhpmv_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _,
+                    &(incy as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[Complex<f64>], lda: usize,
+             b: &mut [Complex<f64>], incx: usize) {
+
+    unsafe {
+        raw::ztrmv_(&(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f64>],
+             lda: usize, x: &mut [Complex<f64>], incx: usize) {
+
+    unsafe {
+        raw::ztbmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f64>],
+             x: &mut [Complex<f64>], incx: usize) {
+
+    unsafe {
+        raw::ztpmv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[Complex<f64>], lda: usize,
+             x: &mut [Complex<f64>], incx: usize) {
+
+    unsafe {
+        raw::ztrsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f64>],
+             lda: usize, x: &mut [Complex<f64>], incx: usize) {
+
+    unsafe {
+        raw::ztbsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f64>],
+             x: &mut [Complex<f64>], incx: usize) {
+
+    unsafe {
+        raw::ztpsv_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(n as int) as *const _,
+                    ap.as_ptr() as *const _,
+                    x.as_mut_ptr() as *mut _,
+                    &(incx as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zgeru(m: usize, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
+             y: &[Complex<f64>], incy: usize, a: &mut [Complex<f64>], lda: usize) {
+
+    unsafe {
+        raw::zgeru_(&(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zgerc(m: usize, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
+             y: &[Complex<f64>], incy: usize, a: &mut [Complex<f64>], lda: usize) {
+
+    unsafe {
+        raw::zgerc_(&(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zher(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
+            a: &mut [Complex<f64>], lda: usize) {
+
+    unsafe {
+        raw::zher_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   a.as_mut_ptr() as *mut _,
+                   &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zhpr(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
+            ap: &mut [Complex<f64>]) {
+
+    unsafe {
+        raw::zhpr_(&(uplo as c_char) as *const _,
+                   &(n as int) as *const _,
+                   &alpha as *const _ as *const _,
+                   x.as_ptr() as *const _,
+                   &(incx as int) as *const _,
+                   ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn zher2(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
+             y: &[Complex<f64>], incy: usize, a: &mut [Complex<f64>], lda: usize) {
+
+    unsafe {
+        raw::zher2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    a.as_mut_ptr() as *mut _,
+                    &(lda as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zhpr2(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
+             y: &[Complex<f64>], incy: usize, ap: &mut [Complex<f64>]) {
+
+    unsafe {
+        raw::zhpr2_(&(uplo as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _,
+                    &(incx as int) as *const _,
+                    y.as_ptr() as *const _,
+                    &(incy as int) as *const _,
+                    ap.as_mut_ptr() as *mut _,
+        )
+    }
+}
+
+#[inline]
+pub fn sgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: f32, a: &[f32],
+             lda: usize, b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
+
+    unsafe {
+        raw::sgemm_(&(transa as c_char) as *const _,
+                    &(transb as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ssymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: f32, a: &[f32], lda: usize,
+             b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
+
+    unsafe {
+        raw::ssymm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ssyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize,
+             beta: f32, c: &mut [f32], ldc: usize) {
+
+    unsafe {
+        raw::ssyrk_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ssyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize,
+              b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
+
+    unsafe {
+        raw::ssyr2k_(&(uplo as c_char) as *const _,
+                     &(trans as c_char) as *const _,
+                     &(n as int) as *const _,
+                     &(k as int) as *const _,
+                     &alpha as *const _ as *const _,
+                     a.as_ptr() as *const _,
+                     &(lda as int) as *const _,
+                     b.as_ptr() as *const _,
+                     &(ldb as int) as *const _,
+                     &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _,
+                     &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn strmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f32,
+             a: &[f32], lda: usize, b: &mut [f32], ldb: usize) {
+
+    unsafe {
+        raw::strmm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn strsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f32,
+             a: &[f32], lda: usize, b: &mut [f32], ldb: usize) {
+
+    unsafe {
+        raw::strsm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: f64, a: &[f64],
+             lda: usize, b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
+
+    unsafe {
+        raw::dgemm_(&(transa as c_char) as *const _,
+                    &(transb as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: f64, a: &[f64], lda: usize,
+             b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
+
+    unsafe {
+        raw::dsymm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize,
+             beta: f64, c: &mut [f64], ldc: usize) {
+
+    unsafe {
+        raw::dsyrk_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize,
+              b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
+
+    unsafe {
+        raw::dsyr2k_(&(uplo as c_char) as *const _,
+                     &(trans as c_char) as *const _,
+                     &(n as int) as *const _,
+                     &(k as int) as *const _,
+                     &alpha as *const _ as *const _,
+                     a.as_ptr() as *const _,
+                     &(lda as int) as *const _,
+                     b.as_ptr() as *const _,
+                     &(ldb as int) as *const _,
+                     &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _,
+                     &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f64,
+             a: &[f64], lda: usize, b: &mut [f64], ldb: usize) {
+
+    unsafe {
+        raw::dtrmm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn dtrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f64,
+             a: &[f64], lda: usize, b: &mut [f64], ldb: usize) {
+
+    unsafe {
+        raw::dtrsm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn cgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: Complex<f32>,
+             a: &[Complex<f32>], lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
+             c: &mut [Complex<f32>], ldc: usize) {
+
+    unsafe {
+        raw::cgemm_(&(transa as c_char) as *const _,
+                    &(transb as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn csymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f32>, a: &[Complex<f32>],
+             lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
+             c: &mut [Complex<f32>], ldc: usize) {
+
+    unsafe {
+        raw::csymm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn chemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f32>, a: &[Complex<f32>],
+             lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
+             c: &mut [Complex<f32>], ldc: usize) {
+
+    unsafe {
+        raw::chemm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>, a: &[Complex<f32>],
+             lda: usize, beta: Complex<f32>, c: &mut [Complex<f32>], ldc: usize) {
+
+    unsafe {
+        raw::csyrk_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>, a: &[Complex<f32>],
+             lda: usize, beta: Complex<f32>, c: &mut [Complex<f32>], ldc: usize) {
+
+    unsafe {
+        raw::cherk_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>,
+              a: &[Complex<f32>], lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
+              c: &mut [Complex<f32>], ldc: usize) {
+
+    unsafe {
+        raw::csyr2k_(&(uplo as c_char) as *const _,
+                     &(trans as c_char) as *const _,
+                     &(n as int) as *const _,
+                     &(k as int) as *const _,
+                     &alpha as *const _ as *const _,
+                     a.as_ptr() as *const _,
+                     &(lda as int) as *const _,
+                     b.as_ptr() as *const _,
+                     &(ldb as int) as *const _,
+                     &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _,
+                     &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>,
+              a: &[Complex<f32>], lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
+              c: &mut [Complex<f32>], ldc: usize) {
+
+    unsafe {
+        raw::cher2k_(&(uplo as c_char) as *const _,
+                     &(trans as c_char) as *const _,
+                     &(n as int) as *const _,
+                     &(k as int) as *const _,
+                     &alpha as *const _ as *const _,
+                     a.as_ptr() as *const _,
+                     &(lda as int) as *const _,
+                     b.as_ptr() as *const _,
+                     &(ldb as int) as *const _,
+                     &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _,
+                     &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
+             alpha: Complex<f32>, a: &[Complex<f32>], lda: usize, b: &mut [Complex<f32>],
+             ldb: usize) {
+
+    unsafe {
+        raw::ctrmm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ctrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
+             alpha: Complex<f32>, a: &[Complex<f32>], lda: usize, b: &mut [Complex<f32>],
+             ldb: usize) {
+
+    unsafe {
+        raw::ctrsm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: Complex<f64>,
+             a: &[Complex<f64>], lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
+             c: &mut [Complex<f64>], ldc: usize) {
+
+    unsafe {
+        raw::zgemm_(&(transa as c_char) as *const _,
+                    &(transb as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f64>, a: &[Complex<f64>],
+             lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
+             c: &mut [Complex<f64>], ldc: usize) {
+
+    unsafe {
+        raw::zsymm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zhemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f64>, a: &[Complex<f64>],
+             lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
+             c: &mut [Complex<f64>], ldc: usize) {
+
+    unsafe {
+        raw::zhemm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_ptr() as *const _,
+                    &(ldb as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>, a: &[Complex<f64>],
+             lda: usize, beta: Complex<f64>, c: &mut [Complex<f64>], ldc: usize) {
+
+    unsafe {
+        raw::zsyrk_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>, a: &[Complex<f64>],
+             lda: usize, beta: Complex<f64>, c: &mut [Complex<f64>], ldc: usize) {
+
+    unsafe {
+        raw::zherk_(&(uplo as c_char) as *const _,
+                    &(trans as c_char) as *const _,
+                    &(n as int) as *const _,
+                    &(k as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _,
+                    &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>,
+              a: &[Complex<f64>], lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
+              c: &mut [Complex<f64>], ldc: usize) {
+
+    unsafe {
+        raw::zsyr2k_(&(uplo as c_char) as *const _,
+                     &(trans as c_char) as *const _,
+                     &(n as int) as *const _,
+                     &(k as int) as *const _,
+                     &alpha as *const _ as *const _,
+                     a.as_ptr() as *const _,
+                     &(lda as int) as *const _,
+                     b.as_ptr() as *const _,
+                     &(ldb as int) as *const _,
+                     &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _,
+                     &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>,
+              a: &[Complex<f64>], lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
+              c: &mut [Complex<f64>], ldc: usize) {
+
+    unsafe {
+        raw::zher2k_(&(uplo as c_char) as *const _,
+                     &(trans as c_char) as *const _,
+                     &(n as int) as *const _,
+                     &(k as int) as *const _,
+                     &alpha as *const _ as *const _,
+                     a.as_ptr() as *const _,
+                     &(lda as int) as *const _,
+                     b.as_ptr() as *const _,
+                     &(ldb as int) as *const _,
+                     &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _,
+                     &(ldc as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
+             alpha: Complex<f64>, a: &[Complex<f64>], lda: usize, b: &mut [Complex<f64>],
+             ldb: usize) {
+
+    unsafe {
+        raw::ztrmm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
+}
+
+#[inline]
+pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
+             alpha: Complex<f64>, a: &[Complex<f64>], lda: usize, b: &mut [Complex<f64>],
+             ldb: usize) {
+
+    unsafe {
+        raw::ztrsm_(&(side as c_char) as *const _,
+                    &(uplo as c_char) as *const _,
+                    &(transa as c_char) as *const _,
+                    &(diag as c_char) as *const _,
+                    &(m as int) as *const _,
+                    &(n as int) as *const _,
+                    &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _,
+                    &(lda as int) as *const _,
+                    b.as_mut_ptr() as *mut _,
+                    &(ldb as int) as *const _,
+        )
+    }
 }
