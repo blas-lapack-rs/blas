@@ -1,8 +1,8 @@
-//! An interface to the [Basic Linear Algebra Subprograms][1].
+//! Interface to the [Basic Linear Algebra Subprograms][1].
 //!
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
-extern crate libblas_sys as raw;
+extern crate blas_sys as raw;
 extern crate libc;
 extern crate num;
 
