@@ -6,7 +6,11 @@ extern crate blas_sys as raw;
 extern crate libc;
 extern crate num;
 
-pub use num::Complex;
+#[allow(non_camel_case_types)]
+pub type c32 = num::Complex<f32>;
+
+#[allow(non_camel_case_types)]
+pub type c64 = num::Complex<f64>;
 
 use libc::{c_char, c_int};
 
@@ -365,9 +369,7 @@ pub fn idamax(n: usize, x: &[f64], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn crotg(a: &mut [Complex<f32>], b: &[Complex<f32>], c: &mut [Complex<f32>],
-             s: &mut [Complex<f32>]) {
-
+pub fn crotg(a: &mut [c32], b: &[c32], c: &mut [c32], s: &mut [c32]) {
     unsafe {
         raw::crotg_(a.as_mut_ptr() as *mut _,
                     b.as_ptr() as *const _,
@@ -378,8 +380,8 @@ pub fn crotg(a: &mut [Complex<f32>], b: &[Complex<f32>], c: &mut [Complex<f32>],
 }
 
 #[inline]
-pub fn csrot(n: usize, x: &mut [Complex<f32>], incx: usize, y: &mut [Complex<f32>], incy: usize,
-             c: &[Complex<f32>], s: &[Complex<f32>]) {
+pub fn csrot(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize, c: &[c32],
+             s: &[c32]) {
 
     unsafe {
         raw::csrot_(&(n as c_int) as *const _,
@@ -394,7 +396,7 @@ pub fn csrot(n: usize, x: &mut [Complex<f32>], incx: usize, y: &mut [Complex<f32
 }
 
 #[inline]
-pub fn cswap(n: usize, x: &mut [Complex<f32>], incx: usize, y: &mut [Complex<f32>], incy: usize) {
+pub fn cswap(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize) {
     unsafe {
         raw::cswap_(&(n as c_int) as *const _,
                     x.as_mut_ptr() as *mut _,
@@ -406,7 +408,7 @@ pub fn cswap(n: usize, x: &mut [Complex<f32>], incx: usize, y: &mut [Complex<f32
 }
 
 #[inline]
-pub fn cscal(n: usize, a: &[Complex<f32>], x: &mut [Complex<f32>], incx: usize) {
+pub fn cscal(n: usize, a: &[c32], x: &mut [c32], incx: usize) {
     unsafe {
         raw::cscal_(&(n as c_int) as *const _,
                     a.as_ptr() as *const _,
@@ -417,7 +419,7 @@ pub fn cscal(n: usize, a: &[Complex<f32>], x: &mut [Complex<f32>], incx: usize) 
 }
 
 #[inline]
-pub fn csscal(n: usize, a: &[Complex<f32>], x: &mut [Complex<f32>], incx: usize) {
+pub fn csscal(n: usize, a: &[c32], x: &mut [c32], incx: usize) {
     unsafe {
         raw::csscal_(&(n as c_int) as *const _,
                      a.as_ptr() as *const _,
@@ -428,7 +430,7 @@ pub fn csscal(n: usize, a: &[Complex<f32>], x: &mut [Complex<f32>], incx: usize)
 }
 
 #[inline]
-pub fn ccopy(n: usize, x: &[Complex<f32>], incx: usize, y: &mut [Complex<f32>], incy: usize) {
+pub fn ccopy(n: usize, x: &[c32], incx: usize, y: &mut [c32], incy: usize) {
     unsafe {
         raw::ccopy_(&(n as c_int) as *const _,
                     x.as_ptr() as *const _,
@@ -440,9 +442,7 @@ pub fn ccopy(n: usize, x: &[Complex<f32>], incx: usize, y: &mut [Complex<f32>], 
 }
 
 #[inline]
-pub fn caxpy(n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
-             y: &mut [Complex<f32>], incy: usize) {
-
+pub fn caxpy(n: usize, alpha: c32, x: &[c32], incx: usize, y: &mut [c32], incy: usize) {
     unsafe {
         raw::caxpy_(&(n as c_int) as *const _,
                     &alpha as *const _ as *const _,
@@ -455,9 +455,7 @@ pub fn caxpy(n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
 }
 
 #[inline]
-pub fn cdotu(pres: &mut [Complex<f32>], n: usize, x: &[Complex<f32>], incx: usize,
-             y: &[Complex<f32>], incy: usize) {
-
+pub fn cdotu(pres: &mut [c32], n: usize, x: &[c32], incx: usize, y: &[c32], incy: usize) {
     unsafe {
         raw::cdotu_(pres.as_mut_ptr() as *mut _,
                     &(n as c_int) as *const _,
@@ -470,9 +468,7 @@ pub fn cdotu(pres: &mut [Complex<f32>], n: usize, x: &[Complex<f32>], incx: usiz
 }
 
 #[inline]
-pub fn cdotc(pres: &mut [Complex<f32>], n: usize, x: &[Complex<f32>], incx: usize,
-             y: &[Complex<f32>], incy: usize) {
-
+pub fn cdotc(pres: &mut [c32], n: usize, x: &[c32], incx: usize, y: &[c32], incy: usize) {
     unsafe {
         raw::cdotc_(pres.as_mut_ptr() as *mut _,
                     &(n as c_int) as *const _,
@@ -485,7 +481,7 @@ pub fn cdotc(pres: &mut [Complex<f32>], n: usize, x: &[Complex<f32>], incx: usiz
 }
 
 #[inline]
-pub fn scasum(n: usize, x: &[Complex<f32>], incx: usize) -> f32 {
+pub fn scasum(n: usize, x: &[c32], incx: usize) -> f32 {
     unsafe {
         raw::scasum_(&(n as c_int) as *const _,
                      x.as_ptr() as *const _,
@@ -495,7 +491,7 @@ pub fn scasum(n: usize, x: &[Complex<f32>], incx: usize) -> f32 {
 }
 
 #[inline]
-pub fn icamax(n: usize, x: &[Complex<f32>], incx: usize) -> isize {
+pub fn icamax(n: usize, x: &[c32], incx: usize) -> isize {
     unsafe {
         raw::icamax_(&(n as c_int) as *const _,
                      x.as_ptr() as *const _,
@@ -505,9 +501,7 @@ pub fn icamax(n: usize, x: &[Complex<f32>], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn zrotg(a: &mut [Complex<f64>], b: &[Complex<f64>], c: &mut [Complex<f64>],
-             s: &mut [Complex<f64>]) {
-
+pub fn zrotg(a: &mut [c64], b: &[c64], c: &mut [c64], s: &mut [c64]) {
     unsafe {
         raw::zrotg_(a.as_mut_ptr() as *mut _,
                     b.as_ptr() as *const _,
@@ -518,8 +512,8 @@ pub fn zrotg(a: &mut [Complex<f64>], b: &[Complex<f64>], c: &mut [Complex<f64>],
 }
 
 #[inline]
-pub fn zdrot(n: usize, x: &mut [Complex<f64>], incx: usize, y: &mut [Complex<f64>], incy: usize,
-             c: &[Complex<f64>], s: &[Complex<f64>]) {
+pub fn zdrot(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize, c: &[c64],
+             s: &[c64]) {
 
     unsafe {
         raw::zdrot_(&(n as c_int) as *const _,
@@ -534,7 +528,7 @@ pub fn zdrot(n: usize, x: &mut [Complex<f64>], incx: usize, y: &mut [Complex<f64
 }
 
 #[inline]
-pub fn zswap(n: usize, x: &mut [Complex<f64>], incx: usize, y: &mut [Complex<f64>], incy: usize) {
+pub fn zswap(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize) {
     unsafe {
         raw::zswap_(&(n as c_int) as *const _,
                     x.as_mut_ptr() as *mut _,
@@ -546,7 +540,7 @@ pub fn zswap(n: usize, x: &mut [Complex<f64>], incx: usize, y: &mut [Complex<f64
 }
 
 #[inline]
-pub fn zscal(n: usize, a: &[Complex<f64>], x: &mut [Complex<f64>], incx: usize) {
+pub fn zscal(n: usize, a: &[c64], x: &mut [c64], incx: usize) {
     unsafe {
         raw::zscal_(&(n as c_int) as *const _,
                     a.as_ptr() as *const _,
@@ -557,7 +551,7 @@ pub fn zscal(n: usize, a: &[Complex<f64>], x: &mut [Complex<f64>], incx: usize) 
 }
 
 #[inline]
-pub fn zdscal(n: usize, a: &[Complex<f64>], x: &mut [Complex<f64>], incx: usize) {
+pub fn zdscal(n: usize, a: &[c64], x: &mut [c64], incx: usize) {
     unsafe {
         raw::zdscal_(&(n as c_int) as *const _,
                      a.as_ptr() as *const _,
@@ -568,7 +562,7 @@ pub fn zdscal(n: usize, a: &[Complex<f64>], x: &mut [Complex<f64>], incx: usize)
 }
 
 #[inline]
-pub fn zcopy(n: usize, x: &[Complex<f64>], incx: usize, y: &mut [Complex<f64>], incy: usize) {
+pub fn zcopy(n: usize, x: &[c64], incx: usize, y: &mut [c64], incy: usize) {
     unsafe {
         raw::zcopy_(&(n as c_int) as *const _,
                     x.as_ptr() as *const _,
@@ -580,9 +574,7 @@ pub fn zcopy(n: usize, x: &[Complex<f64>], incx: usize, y: &mut [Complex<f64>], 
 }
 
 #[inline]
-pub fn zaxpy(n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
-             y: &mut [Complex<f64>], incy: usize) {
-
+pub fn zaxpy(n: usize, alpha: c64, x: &[c64], incx: usize, y: &mut [c64], incy: usize) {
     unsafe {
         raw::zaxpy_(&(n as c_int) as *const _,
                     &alpha as *const _ as *const _,
@@ -595,9 +587,7 @@ pub fn zaxpy(n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
 }
 
 #[inline]
-pub fn zdotu(pres: &mut [Complex<f64>], n: usize, x: &[Complex<f64>], incx: usize,
-             y: &[Complex<f64>], incy: usize) {
-
+pub fn zdotu(pres: &mut [c64], n: usize, x: &[c64], incx: usize, y: &[c64], incy: usize) {
     unsafe {
         raw::zdotu_(pres.as_mut_ptr() as *mut _,
                     &(n as c_int) as *const _,
@@ -610,9 +600,7 @@ pub fn zdotu(pres: &mut [Complex<f64>], n: usize, x: &[Complex<f64>], incx: usiz
 }
 
 #[inline]
-pub fn zdotc(pres: &mut [Complex<f64>], n: usize, x: &[Complex<f64>], incx: usize,
-             y: &[Complex<f64>], incy: usize) {
-
+pub fn zdotc(pres: &mut [c64], n: usize, x: &[c64], incx: usize, y: &[c64], incy: usize) {
     unsafe {
         raw::zdotc_(pres.as_mut_ptr() as *mut _,
                     &(n as c_int) as *const _,
@@ -625,7 +613,7 @@ pub fn zdotc(pres: &mut [Complex<f64>], n: usize, x: &[Complex<f64>], incx: usiz
 }
 
 #[inline]
-pub fn dzasum(n: usize, x: &[Complex<f64>], incx: usize) -> f64 {
+pub fn dzasum(n: usize, x: &[c64], incx: usize) -> f64 {
     unsafe {
         raw::dzasum_(&(n as c_int) as *const _,
                      x.as_ptr() as *const _,
@@ -635,7 +623,7 @@ pub fn dzasum(n: usize, x: &[Complex<f64>], incx: usize) -> f64 {
 }
 
 #[inline]
-pub fn izamax(n: usize, x: &[Complex<f64>], incx: usize) -> isize {
+pub fn izamax(n: usize, x: &[c64], incx: usize) -> isize {
     unsafe {
         raw::izamax_(&(n as c_int) as *const _,
                      x.as_ptr() as *const _,
@@ -1207,9 +1195,8 @@ pub fn dspr2(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64]
 }
 
 #[inline]
-pub fn cgemv(trans: Trans, m: usize, n: usize, alpha: Complex<f32>, a: &[Complex<f32>], lda: usize,
-             x: &[Complex<f32>], incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>],
-             incy: usize) {
+pub fn cgemv(trans: Trans, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
+             incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
         raw::cgemv_(&(trans as c_char) as *const _,
@@ -1228,9 +1215,8 @@ pub fn cgemv(trans: Trans, m: usize, n: usize, alpha: Complex<f32>, a: &[Complex
 }
 
 #[inline]
-pub fn cgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: Complex<f32>,
-             a: &[Complex<f32>], lda: usize, x: &[Complex<f32>], incx: usize, beta: Complex<f32>,
-             y: &mut [Complex<f32>], incy: usize) {
+pub fn cgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c32, a: &[c32],
+             lda: usize, x: &[c32], incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
         raw::cgbmv_(&(trans as c_char) as *const _,
@@ -1251,9 +1237,8 @@ pub fn cgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: Comp
 }
 
 #[inline]
-pub fn chemv(uplo: Uplo, n: usize, alpha: Complex<f32>, a: &[Complex<f32>], lda: usize,
-             x: &[Complex<f32>], incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>],
-             incy: usize) {
+pub fn chemv(uplo: Uplo, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32], incx: usize,
+             beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
         raw::chemv_(&(uplo as c_char) as *const _,
@@ -1271,9 +1256,8 @@ pub fn chemv(uplo: Uplo, n: usize, alpha: Complex<f32>, a: &[Complex<f32>], lda:
 }
 
 #[inline]
-pub fn chbmv(uplo: Uplo, n: usize, k: usize, alpha: Complex<f32>, a: &[Complex<f32>], lda: usize,
-             x: &[Complex<f32>], incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>],
-             incy: usize) {
+pub fn chbmv(uplo: Uplo, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
+             incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
         raw::chbmv_(&(uplo as c_char) as *const _,
@@ -1292,8 +1276,8 @@ pub fn chbmv(uplo: Uplo, n: usize, k: usize, alpha: Complex<f32>, a: &[Complex<f
 }
 
 #[inline]
-pub fn chpmv(uplo: Uplo, n: usize, alpha: Complex<f32>, ap: &[Complex<f32>], x: &[Complex<f32>],
-             incx: usize, beta: Complex<f32>, y: &mut [Complex<f32>], incy: usize) {
+pub fn chpmv(uplo: Uplo, n: usize, alpha: c32, ap: &[c32], x: &[c32], incx: usize, beta: c32,
+             y: &mut [c32], incy: usize) {
 
     unsafe {
         raw::chpmv_(&(uplo as c_char) as *const _,
@@ -1310,8 +1294,8 @@ pub fn chpmv(uplo: Uplo, n: usize, alpha: Complex<f32>, ap: &[Complex<f32>], x: 
 }
 
 #[inline]
-pub fn ctrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[Complex<f32>], lda: usize,
-             b: &mut [Complex<f32>], incx: usize) {
+pub fn ctrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c32], lda: usize, b: &mut [c32],
+             incx: usize) {
 
     unsafe {
         raw::ctrmv_(&(uplo as c_char) as *const _,
@@ -1327,8 +1311,8 @@ pub fn ctrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[Complex<f32>]
 }
 
 #[inline]
-pub fn ctbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f32>],
-             lda: usize, x: &mut [Complex<f32>], incx: usize) {
+pub fn ctbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32], lda: usize,
+             x: &mut [c32], incx: usize) {
 
     unsafe {
         raw::ctbmv_(&(uplo as c_char) as *const _,
@@ -1345,8 +1329,8 @@ pub fn ctbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Comp
 }
 
 #[inline]
-pub fn ctpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f32>],
-             x: &mut [Complex<f32>], incx: usize) {
+pub fn ctpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c32], x: &mut [c32],
+             incx: usize) {
 
     unsafe {
         raw::ctpmv_(&(uplo as c_char) as *const _,
@@ -1361,8 +1345,8 @@ pub fn ctpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f32>]
 }
 
 #[inline]
-pub fn ctrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[Complex<f32>], lda: usize,
-             x: &mut [Complex<f32>], incx: usize) {
+pub fn ctrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c32], lda: usize, x: &mut [c32],
+             incx: usize) {
 
     unsafe {
         raw::ctrsv_(&(uplo as c_char) as *const _,
@@ -1378,8 +1362,8 @@ pub fn ctrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[Complex<f32>],
 }
 
 #[inline]
-pub fn ctbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f32>],
-             lda: usize, x: &mut [Complex<f32>], incx: usize) {
+pub fn ctbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32], lda: usize,
+             x: &mut [c32], incx: usize) {
 
     unsafe {
         raw::ctbsv_(&(uplo as c_char) as *const _,
@@ -1396,8 +1380,8 @@ pub fn ctbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Comp
 }
 
 #[inline]
-pub fn ctpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f32>],
-             x: &mut [Complex<f32>], incx: usize) {
+pub fn ctpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c32], x: &mut [c32],
+             incx: usize) {
 
     unsafe {
         raw::ctpsv_(&(uplo as c_char) as *const _,
@@ -1412,8 +1396,8 @@ pub fn ctpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f32>]
 }
 
 #[inline]
-pub fn cgeru(m: usize, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
-             y: &[Complex<f32>], incy: usize, a: &mut [Complex<f32>], lda: usize) {
+pub fn cgeru(m: usize, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
+             a: &mut [c32], lda: usize) {
 
     unsafe {
         raw::cgeru_(&(m as c_int) as *const _,
@@ -1430,8 +1414,8 @@ pub fn cgeru(m: usize, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: 
 }
 
 #[inline]
-pub fn cgerc(m: usize, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
-             y: &[Complex<f32>], incy: usize, a: &mut [Complex<f32>], lda: usize) {
+pub fn cgerc(m: usize, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
+             a: &mut [c32], lda: usize) {
 
     unsafe {
         raw::cgerc_(&(m as c_int) as *const _,
@@ -1448,9 +1432,7 @@ pub fn cgerc(m: usize, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: 
 }
 
 #[inline]
-pub fn cher(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
-            a: &mut [Complex<f32>], lda: usize) {
-
+pub fn cher(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, a: &mut [c32], lda: usize) {
     unsafe {
         raw::cher_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -1464,9 +1446,7 @@ pub fn cher(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx:
 }
 
 #[inline]
-pub fn chpr(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
-            ap: &mut [Complex<f32>]) {
-
+pub fn chpr(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, ap: &mut [c32]) {
     unsafe {
         raw::chpr_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -1479,8 +1459,8 @@ pub fn chpr(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx:
 }
 
 #[inline]
-pub fn chpr2(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
-             y: &[Complex<f32>], incy: usize, ap: &mut [Complex<f32>]) {
+pub fn chpr2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
+             ap: &mut [c32]) {
 
     unsafe {
         raw::chpr2_(&(uplo as c_char) as *const _,
@@ -1496,8 +1476,8 @@ pub fn chpr2(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx
 }
 
 #[inline]
-pub fn cher2(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx: usize,
-             y: &[Complex<f32>], incy: usize, a: &mut [Complex<f32>], lda: usize) {
+pub fn cher2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
+             a: &mut [c32], lda: usize) {
 
     unsafe {
         raw::cher2_(&(uplo as c_char) as *const _,
@@ -1514,9 +1494,8 @@ pub fn cher2(uplo: Uplo, n: usize, alpha: Complex<f32>, x: &[Complex<f32>], incx
 }
 
 #[inline]
-pub fn zgemv(trans: Trans, m: usize, n: usize, alpha: Complex<f64>, a: &[Complex<f64>], lda: usize,
-             x: &[Complex<f64>], incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>],
-             incy: usize) {
+pub fn zgemv(trans: Trans, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
+             incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
         raw::zgemv_(&(trans as c_char) as *const _,
@@ -1535,9 +1514,8 @@ pub fn zgemv(trans: Trans, m: usize, n: usize, alpha: Complex<f64>, a: &[Complex
 }
 
 #[inline]
-pub fn zgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: Complex<f64>,
-             a: &[Complex<f64>], lda: usize, x: &[Complex<f64>], incx: usize, beta: Complex<f64>,
-             y: &mut [Complex<f64>], incy: usize) {
+pub fn zgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c64, a: &[c64],
+             lda: usize, x: &[c64], incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
         raw::zgbmv_(&(trans as c_char) as *const _,
@@ -1558,9 +1536,8 @@ pub fn zgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: Comp
 }
 
 #[inline]
-pub fn zhemv(uplo: Uplo, n: usize, alpha: Complex<f64>, a: &[Complex<f64>], lda: usize,
-             x: &[Complex<f64>], incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>],
-             incy: usize) {
+pub fn zhemv(uplo: Uplo, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64], incx: usize,
+             beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
         raw::zhemv_(&(uplo as c_char) as *const _,
@@ -1578,9 +1555,8 @@ pub fn zhemv(uplo: Uplo, n: usize, alpha: Complex<f64>, a: &[Complex<f64>], lda:
 }
 
 #[inline]
-pub fn zhbmv(uplo: Uplo, n: usize, k: usize, alpha: Complex<f64>, a: &[Complex<f64>], lda: usize,
-             x: &[Complex<f64>], incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>],
-             incy: usize) {
+pub fn zhbmv(uplo: Uplo, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
+             incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
         raw::zhbmv_(&(uplo as c_char) as *const _,
@@ -1599,8 +1575,8 @@ pub fn zhbmv(uplo: Uplo, n: usize, k: usize, alpha: Complex<f64>, a: &[Complex<f
 }
 
 #[inline]
-pub fn zhpmv(uplo: Uplo, n: usize, alpha: Complex<f64>, ap: &[Complex<f64>], x: &[Complex<f64>],
-             incx: usize, beta: Complex<f64>, y: &mut [Complex<f64>], incy: usize) {
+pub fn zhpmv(uplo: Uplo, n: usize, alpha: c64, ap: &[c64], x: &[c64], incx: usize, beta: c64,
+             y: &mut [c64], incy: usize) {
 
     unsafe {
         raw::zhpmv_(&(uplo as c_char) as *const _,
@@ -1617,8 +1593,8 @@ pub fn zhpmv(uplo: Uplo, n: usize, alpha: Complex<f64>, ap: &[Complex<f64>], x: 
 }
 
 #[inline]
-pub fn ztrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[Complex<f64>], lda: usize,
-             b: &mut [Complex<f64>], incx: usize) {
+pub fn ztrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c64], lda: usize, b: &mut [c64],
+             incx: usize) {
 
     unsafe {
         raw::ztrmv_(&(uplo as c_char) as *const _,
@@ -1634,8 +1610,8 @@ pub fn ztrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[Complex<f64>]
 }
 
 #[inline]
-pub fn ztbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f64>],
-             lda: usize, x: &mut [Complex<f64>], incx: usize) {
+pub fn ztbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64], lda: usize,
+             x: &mut [c64], incx: usize) {
 
     unsafe {
         raw::ztbmv_(&(uplo as c_char) as *const _,
@@ -1652,8 +1628,8 @@ pub fn ztbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Comp
 }
 
 #[inline]
-pub fn ztpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f64>],
-             x: &mut [Complex<f64>], incx: usize) {
+pub fn ztpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c64], x: &mut [c64],
+             incx: usize) {
 
     unsafe {
         raw::ztpmv_(&(uplo as c_char) as *const _,
@@ -1668,8 +1644,8 @@ pub fn ztpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f64>]
 }
 
 #[inline]
-pub fn ztrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[Complex<f64>], lda: usize,
-             x: &mut [Complex<f64>], incx: usize) {
+pub fn ztrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c64], lda: usize, x: &mut [c64],
+             incx: usize) {
 
     unsafe {
         raw::ztrsv_(&(uplo as c_char) as *const _,
@@ -1685,8 +1661,8 @@ pub fn ztrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[Complex<f64>],
 }
 
 #[inline]
-pub fn ztbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Complex<f64>],
-             lda: usize, x: &mut [Complex<f64>], incx: usize) {
+pub fn ztbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64], lda: usize,
+             x: &mut [c64], incx: usize) {
 
     unsafe {
         raw::ztbsv_(&(uplo as c_char) as *const _,
@@ -1703,8 +1679,8 @@ pub fn ztbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[Comp
 }
 
 #[inline]
-pub fn ztpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f64>],
-             x: &mut [Complex<f64>], incx: usize) {
+pub fn ztpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c64], x: &mut [c64],
+             incx: usize) {
 
     unsafe {
         raw::ztpsv_(&(uplo as c_char) as *const _,
@@ -1719,8 +1695,8 @@ pub fn ztpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[Complex<f64>]
 }
 
 #[inline]
-pub fn zgeru(m: usize, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
-             y: &[Complex<f64>], incy: usize, a: &mut [Complex<f64>], lda: usize) {
+pub fn zgeru(m: usize, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
+             a: &mut [c64], lda: usize) {
 
     unsafe {
         raw::zgeru_(&(m as c_int) as *const _,
@@ -1737,8 +1713,8 @@ pub fn zgeru(m: usize, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: 
 }
 
 #[inline]
-pub fn zgerc(m: usize, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
-             y: &[Complex<f64>], incy: usize, a: &mut [Complex<f64>], lda: usize) {
+pub fn zgerc(m: usize, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
+             a: &mut [c64], lda: usize) {
 
     unsafe {
         raw::zgerc_(&(m as c_int) as *const _,
@@ -1755,9 +1731,7 @@ pub fn zgerc(m: usize, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: 
 }
 
 #[inline]
-pub fn zher(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
-            a: &mut [Complex<f64>], lda: usize) {
-
+pub fn zher(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, a: &mut [c64], lda: usize) {
     unsafe {
         raw::zher_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -1771,9 +1745,7 @@ pub fn zher(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx:
 }
 
 #[inline]
-pub fn zhpr(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
-            ap: &mut [Complex<f64>]) {
-
+pub fn zhpr(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, ap: &mut [c64]) {
     unsafe {
         raw::zhpr_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -1786,8 +1758,8 @@ pub fn zhpr(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx:
 }
 
 #[inline]
-pub fn zher2(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
-             y: &[Complex<f64>], incy: usize, a: &mut [Complex<f64>], lda: usize) {
+pub fn zher2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
+             a: &mut [c64], lda: usize) {
 
     unsafe {
         raw::zher2_(&(uplo as c_char) as *const _,
@@ -1804,8 +1776,8 @@ pub fn zher2(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx
 }
 
 #[inline]
-pub fn zhpr2(uplo: Uplo, n: usize, alpha: Complex<f64>, x: &[Complex<f64>], incx: usize,
-             y: &[Complex<f64>], incy: usize, ap: &mut [Complex<f64>]) {
+pub fn zhpr2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
+             ap: &mut [c64]) {
 
     unsafe {
         raw::zhpr2_(&(uplo as c_char) as *const _,
@@ -2067,9 +2039,8 @@ pub fn dtrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn cgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: Complex<f32>,
-             a: &[Complex<f32>], lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
-             c: &mut [Complex<f32>], ldc: usize) {
+pub fn cgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: c32, a: &[c32],
+             lda: usize, b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         raw::cgemm_(&(transa as c_char) as *const _,
@@ -2090,9 +2061,8 @@ pub fn cgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 }
 
 #[inline]
-pub fn csymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f32>, a: &[Complex<f32>],
-             lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
-             c: &mut [Complex<f32>], ldc: usize) {
+pub fn csymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize,
+             b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         raw::csymm_(&(side as c_char) as *const _,
@@ -2112,9 +2082,8 @@ pub fn csymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f32>, a:
 }
 
 #[inline]
-pub fn chemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f32>, a: &[Complex<f32>],
-             lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
-             c: &mut [Complex<f32>], ldc: usize) {
+pub fn chemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize,
+             b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         raw::chemm_(&(side as c_char) as *const _,
@@ -2134,8 +2103,8 @@ pub fn chemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f32>, a:
 }
 
 #[inline]
-pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>, a: &[Complex<f32>],
-             lda: usize, beta: Complex<f32>, c: &mut [Complex<f32>], ldc: usize) {
+pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
+             beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         raw::csyrk_(&(uplo as c_char) as *const _,
@@ -2153,8 +2122,8 @@ pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>, 
 }
 
 #[inline]
-pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>, a: &[Complex<f32>],
-             lda: usize, beta: Complex<f32>, c: &mut [Complex<f32>], ldc: usize) {
+pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
+             beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         raw::cherk_(&(uplo as c_char) as *const _,
@@ -2172,9 +2141,8 @@ pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>, 
 }
 
 #[inline]
-pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>,
-              a: &[Complex<f32>], lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
-              c: &mut [Complex<f32>], ldc: usize) {
+pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
+              b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         raw::csyr2k_(&(uplo as c_char) as *const _,
@@ -2194,9 +2162,8 @@ pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>,
 }
 
 #[inline]
-pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>,
-              a: &[Complex<f32>], lda: usize, b: &[Complex<f32>], ldb: usize, beta: Complex<f32>,
-              c: &mut [Complex<f32>], ldc: usize) {
+pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
+              b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         raw::cher2k_(&(uplo as c_char) as *const _,
@@ -2216,9 +2183,8 @@ pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f32>,
 }
 
 #[inline]
-pub fn ctrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
-             alpha: Complex<f32>, a: &[Complex<f32>], lda: usize, b: &mut [Complex<f32>],
-             ldb: usize) {
+pub fn ctrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c32,
+             a: &[c32], lda: usize, b: &mut [c32], ldb: usize) {
 
     unsafe {
         raw::ctrmm_(&(side as c_char) as *const _,
@@ -2237,9 +2203,8 @@ pub fn ctrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn ctrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
-             alpha: Complex<f32>, a: &[Complex<f32>], lda: usize, b: &mut [Complex<f32>],
-             ldb: usize) {
+pub fn ctrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c32,
+             a: &[c32], lda: usize, b: &mut [c32], ldb: usize) {
 
     unsafe {
         raw::ctrsm_(&(side as c_char) as *const _,
@@ -2258,9 +2223,8 @@ pub fn ctrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn zgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: Complex<f64>,
-             a: &[Complex<f64>], lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
-             c: &mut [Complex<f64>], ldc: usize) {
+pub fn zgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: c64, a: &[c64],
+             lda: usize, b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         raw::zgemm_(&(transa as c_char) as *const _,
@@ -2281,9 +2245,8 @@ pub fn zgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 }
 
 #[inline]
-pub fn zsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f64>, a: &[Complex<f64>],
-             lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
-             c: &mut [Complex<f64>], ldc: usize) {
+pub fn zsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize,
+             b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         raw::zsymm_(&(side as c_char) as *const _,
@@ -2303,9 +2266,8 @@ pub fn zsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f64>, a:
 }
 
 #[inline]
-pub fn zhemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f64>, a: &[Complex<f64>],
-             lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
-             c: &mut [Complex<f64>], ldc: usize) {
+pub fn zhemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize,
+             b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         raw::zhemm_(&(side as c_char) as *const _,
@@ -2325,8 +2287,8 @@ pub fn zhemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: Complex<f64>, a:
 }
 
 #[inline]
-pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>, a: &[Complex<f64>],
-             lda: usize, beta: Complex<f64>, c: &mut [Complex<f64>], ldc: usize) {
+pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
+             beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         raw::zsyrk_(&(uplo as c_char) as *const _,
@@ -2344,8 +2306,8 @@ pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>, 
 }
 
 #[inline]
-pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>, a: &[Complex<f64>],
-             lda: usize, beta: Complex<f64>, c: &mut [Complex<f64>], ldc: usize) {
+pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
+             beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         raw::zherk_(&(uplo as c_char) as *const _,
@@ -2363,9 +2325,8 @@ pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>, 
 }
 
 #[inline]
-pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>,
-              a: &[Complex<f64>], lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
-              c: &mut [Complex<f64>], ldc: usize) {
+pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
+              b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         raw::zsyr2k_(&(uplo as c_char) as *const _,
@@ -2385,9 +2346,8 @@ pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>,
 }
 
 #[inline]
-pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>,
-              a: &[Complex<f64>], lda: usize, b: &[Complex<f64>], ldb: usize, beta: Complex<f64>,
-              c: &mut [Complex<f64>], ldc: usize) {
+pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
+              b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         raw::zher2k_(&(uplo as c_char) as *const _,
@@ -2407,9 +2367,8 @@ pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: Complex<f64>,
 }
 
 #[inline]
-pub fn ztrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
-             alpha: Complex<f64>, a: &[Complex<f64>], lda: usize, b: &mut [Complex<f64>],
-             ldb: usize) {
+pub fn ztrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c64,
+             a: &[c64], lda: usize, b: &mut [c64], ldb: usize) {
 
     unsafe {
         raw::ztrmm_(&(side as c_char) as *const _,
@@ -2428,9 +2387,8 @@ pub fn ztrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize,
-             alpha: Complex<f64>, a: &[Complex<f64>], lda: usize, b: &mut [Complex<f64>],
-             ldb: usize) {
+pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c64,
+             a: &[c64], lda: usize, b: &mut [c64], ldb: usize) {
 
     unsafe {
         raw::ztrsm_(&(side as c_char) as *const _,
@@ -2447,3 +2405,4 @@ pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
         )
     }
 }
+

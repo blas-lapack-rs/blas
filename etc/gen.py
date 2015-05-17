@@ -548,7 +548,7 @@ def format_body(f, fty):
             s.append("&({} as c_char) as *const _,\n".format(name))
         elif realty == "usize":
             s.append("&({} as c_int) as *const _,\n".format(name))
-        elif realty == "Complex<f32>" or realty == "Complex<f64>" or realty == "f32" or realty == "f64":
+        elif realty == "c32" or realty == "c64" or realty == "f32" or realty == "f64":
             s.append("&{} as *const _ as *const _,\n".format(name))
         elif realty.startswith("&mut ["):
             s.append("{}.as_mut_ptr() as *mut _,\n".format(name))
@@ -585,15 +585,15 @@ def do(funcs, fty):
 
 do(prepare(level1_single), "f32")
 do(prepare(level1_double), "f64")
-do(prepare(level1_complex), "Complex<f32>")
-do(prepare(level1_double_complex), "Complex<f64>")
+do(prepare(level1_complex), "c32")
+do(prepare(level1_double_complex), "c64")
 
 do(prepare(level2_single), "f32")
 do(prepare(level2_double), "f64")
-do(prepare(level2_complex), "Complex<f32>")
-do(prepare(level2_double_complex), "Complex<f64>")
+do(prepare(level2_complex), "c32")
+do(prepare(level2_double_complex), "c64")
 
 do(prepare(level3_single), "f32")
 do(prepare(level3_double), "f64")
-do(prepare(level3_complex), "Complex<f32>")
-do(prepare(level3_double_complex), "Complex<f64>")
+do(prepare(level3_complex), "c32")
+do(prepare(level3_double_complex), "c64")
