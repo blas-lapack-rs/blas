@@ -547,7 +547,7 @@ def format_body(f, fty):
         if name == "uplo" or name == "diag" or name == "side" or name.startswith("trans"):
             s.append("&({} as c_char) as *const _,\n".format(name))
         elif realty == "usize":
-            s.append("&({} as int) as *const _,\n".format(name))
+            s.append("&({} as c_int) as *const _,\n".format(name))
         elif realty == "Complex<f32>" or realty == "Complex<f64>" or realty == "f32" or realty == "f64":
             s.append("&{} as *const _ as *const _,\n".format(name))
         elif realty.startswith("&mut ["):
