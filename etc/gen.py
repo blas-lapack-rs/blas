@@ -473,7 +473,7 @@ class Func(object):
         ret, line = pull_ret(line)
         return Func(name, args, ret)
 
-def translate_arg_type(name, ty, fty):
+def translate_arg_type(name, ty, fty, level):
     if name == "uplo":
         return "Uplo"
     elif name.startswith("trans"):
@@ -482,6 +482,8 @@ def translate_arg_type(name, ty, fty):
         return "Side"
     elif name == "diag":
         return "Diag"
+    elif name == "m" or name == "n" or name == "k" or name == "kl" or name == "ku":
+        return "usize"
     elif name.startswith("ld") or name.startswith("inc"):
         return "usize"
     elif name == "alpha" or name == "beta":
@@ -494,10 +496,22 @@ def translate_arg_type(name, ty, fty):
         return "&[{}]".format(fty)
     elif ty == "*mut complex_float" or ty == "*mut complex_double":
         return "&mut [{}]".format(fty)
-    elif name == "m" or name == "n" or name == "k" or name == "kl" or name == "ku":
-        return "usize"
     else:
         assert False, "cannot translate `{}: {}`".format(name, ty)
+
+def translate_arg_pass(name, realty):
+    if name == "uplo" or name == "diag" or name == "side" or name.startswith("trans"):
+        return "&({} as c_char) as *const _,".format(name)
+    elif realty == "usize":
+        return "&({} as c_int) as *const _,".format(name)
+    elif realty == "c32" or realty == "c64" or realty == "f32" or realty == "f64":
+        return "&{} as *const _ as *const _,".format(name)
+    elif realty.startswith("&mut ["):
+        return "{}.as_mut_ptr() as *mut _,".format(name)
+    elif realty.startswith("&["):
+        return "{}.as_ptr() as *const _,".format(name)
+    else:
+        assert False, "cannot translate `{}: {}`".format(name, realty)
 
 def translate_ret_type(ty):
     if ty == "c_int":
@@ -509,8 +523,8 @@ def translate_ret_type(ty):
     else:
         assert False, "cannot translate `{}`".format(ty)
 
-def format_header(f, fty):
-    args = format_args(f, fty)
+def format_header(f, fty, level):
+    args = format_args(f, fty, level)
     ret = "" if f.ret is None else " -> {}".format(translate_ret_type(f.ret))
     header = "pub fn {}({}){} {{".format(f.name, args, ret)
 
@@ -532,7 +546,7 @@ def format_header(f, fty):
 
     return "\n".join(s)
 
-def format_body(f, fty):
+def format_body(f, fty, level):
     s = []
     s.append(" " * 4)
     s.append("unsafe {\n")
@@ -541,34 +555,24 @@ def format_body(f, fty):
     indent = 8 + 5 + len(f.name) + 2
     for i, arg in enumerate(f.args):
         name, ty = arg
-        realty = translate_arg_type(name, ty, fty)
+        realty = translate_arg_type(name, ty, fty, level)
         if i > 0:
             s.append(" " * indent)
-        if name == "uplo" or name == "diag" or name == "side" or name.startswith("trans"):
-            s.append("&({} as c_char) as *const _,\n".format(name))
-        elif realty == "usize":
-            s.append("&({} as c_int) as *const _,\n".format(name))
-        elif realty == "c32" or realty == "c64" or realty == "f32" or realty == "f64":
-            s.append("&{} as *const _ as *const _,\n".format(name))
-        elif realty.startswith("&mut ["):
-            s.append("{}.as_mut_ptr() as *mut _,\n".format(name))
-        elif realty.startswith("&["):
-            s.append("{}.as_ptr() as *const _,\n".format(name))
-        else:
-            assert False, "cannot format `{}`".format(name)
+        s.append(translate_arg_pass(name, realty))
+        s.append("\n")
     s.append(" " * 8)
+    s.append(")")
     if f.ret is not None:
-        s.append(") as {}\n".format(translate_ret_type(f.ret)))
-    else:
-        s.append(")\n")
+        s.append(" as {}".format(translate_ret_type(f.ret)))
+    s.append("\n")
     s.append(" " * 4)
     s.append("}")
     return "".join(s)
 
-def format_args(f, fty):
+def format_args(f, fty, level):
     s = []
     for arg in f.args:
-        s.append("{}: {}".format(arg[0], translate_arg_type(*arg, fty=fty)))
+        s.append("{}: {}".format(arg[0], translate_arg_type(*arg, fty=fty, level=level)))
     return ", ".join(s)
 
 def prepare(code):
@@ -576,24 +580,24 @@ def prepare(code):
     lines = filter(lambda line: not re.match(r'^\s*$', line), lines)
     return [Func.parse(line) for line in lines]
 
-def do(funcs, fty):
+def do(funcs, fty, level):
     for f in funcs:
         print("#[inline]")
-        print(format_header(f, fty))
-        print(format_body(f, fty))
+        print(format_header(f, fty, level))
+        print(format_body(f, fty, level))
         print("}\n")
 
-do(prepare(level1_single), "f32")
-do(prepare(level1_double), "f64")
-do(prepare(level1_complex), "c32")
-do(prepare(level1_double_complex), "c64")
+do(prepare(level1_single),         "f32", 1)
+do(prepare(level1_double),         "f64", 1)
+do(prepare(level1_complex),        "c32", 1)
+do(prepare(level1_double_complex), "c64", 1)
 
-do(prepare(level2_single), "f32")
-do(prepare(level2_double), "f64")
-do(prepare(level2_complex), "c32")
-do(prepare(level2_double_complex), "c64")
+do(prepare(level2_single),         "f32", 2)
+do(prepare(level2_double),         "f64", 2)
+do(prepare(level2_complex),        "c32", 2)
+do(prepare(level2_double_complex), "c64", 2)
 
-do(prepare(level3_single), "f32")
-do(prepare(level3_double), "f64")
-do(prepare(level3_complex), "c32")
-do(prepare(level3_double_complex), "c64")
+do(prepare(level3_single),         "f32", 3)
+do(prepare(level3_double),         "f64", 3)
+do(prepare(level3_complex),        "c32", 3)
+do(prepare(level3_double_complex), "c64", 3)
