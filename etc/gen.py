@@ -1,7 +1,7 @@
 import re
 
 level_scalars = {
-    1: ["alpha", "beta"],
+    1: ["alpha", "a", "b", "c", "s", "d1", "d2", "x1", "y1"],
     2: ["alpha", "beta"],
     3: ["alpha", "beta"],
 }
