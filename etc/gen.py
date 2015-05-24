@@ -1,6 +1,3 @@
-# little script to mostly-generate src/metal.rs from some massaged function
-# signatures. Probably not useful anymore now that it has been done once!
-
 import re
 
 level_scalars = {
@@ -493,30 +490,31 @@ def translate_arg_type(name, ty, f):
         return "Side"
     elif name == "diag":
         return "Diag"
-    elif name == "m" or name == "n" or name == "k" or name == "kl" or name == "ku":
+    elif name in ["m", "n", "k", "kl", "ku"]:
         return "usize"
     elif name.startswith("ld") or name.startswith("inc"):
         return "usize"
-    elif is_scalar(name, ty, f):
-        return f.ty
-    elif ty == "*const c_float" or ty == "*const c_double":
-        return "&[{}]".format(f.ty)
-    elif ty == "*mut c_float" or ty == "*mut c_double":
-        return "&mut [{}]".format(f.ty)
-    elif ty == "*const complex_float" or ty == "*const complex_double":
-        return "&[{}]".format(f.ty)
-    elif ty == "*mut complex_float" or ty == "*mut complex_double":
-        return "&mut [{}]".format(f.ty)
-    else:
-        assert False, "cannot translate `{}: {}`".format(name, ty)
+    elif ty.startswith("*const"):
+        if is_scalar(name, ty, f):
+            return f.ty
+        elif "float" in ty or "double" in ty:
+            return "&[{}]".format(f.ty)
+    elif ty.startswith("*mut"):
+        if is_scalar(name, ty, f):
+            return "&mut {}".format(f.ty)
+        elif "float" in ty or "double" in ty:
+            return "&mut [{}]".format(f.ty)
+    assert False, "cannot translate `{}: {}`".format(name, ty)
 
 def translate_arg_pass(name, realty):
-    if name == "uplo" or name == "diag" or name == "side" or name.startswith("trans"):
+    if name in ["uplo", "diag", "side"] or name.startswith("trans"):
         return "&({} as c_char) as *const _,".format(name)
     elif realty == "usize":
         return "&({} as c_int) as *const _,".format(name)
-    elif realty == "c32" or realty == "c64" or realty == "f32" or realty == "f64":
+    elif realty in ["f32", "f64", "c32", "c64"]:
         return "&{} as *const _ as *const _,".format(name)
+    elif realty in ["&mut f32", "&mut f64", "&mut c32", "&mut c64"]:
+        return "&{} as *mut _ as *mut _,".format(name)
     elif realty.startswith("&mut ["):
         return "{}.as_mut_ptr() as *mut _,".format(name)
     elif realty.startswith("&["):
