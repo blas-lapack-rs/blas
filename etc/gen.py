@@ -3,6 +3,12 @@
 
 import re
 
+level_scalars = {
+    1: ["alpha", "beta"],
+    2: ["alpha", "beta"],
+    3: ["alpha", "beta"],
+}
+
 level1_single = """
 pub fn srotg_(a: *mut c_float, b: *mut c_float, c: *mut c_float, s: *mut c_float);
 pub fn srotmg_(d1: *mut c_float, d2: *mut c_float, x1: *mut c_float, y1: *const c_float,
@@ -486,7 +492,7 @@ def translate_arg_type(name, ty, fty, level):
         return "usize"
     elif name.startswith("ld") or name.startswith("inc"):
         return "usize"
-    elif name == "alpha" or name == "beta":
+    elif name in level_scalars[level]:
         return fty
     elif ty == "*const c_float" or ty == "*const c_double":
         return "&[{}]".format(fty)
