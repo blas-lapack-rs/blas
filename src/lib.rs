@@ -40,40 +40,38 @@ pub enum Uplo {
 }
 
 #[inline]
-pub fn srotg(a: &mut [f32], b: &mut [f32], c: &mut [f32], s: &mut [f32]) {
+pub fn srotg(a: &mut f32, b: &mut f32, c: &mut f32, s: &mut f32) {
     unsafe {
-        raw::srotg_(a.as_mut_ptr() as *mut _,
-                    b.as_mut_ptr() as *mut _,
-                    c.as_mut_ptr() as *mut _,
-                    s.as_mut_ptr() as *mut _,
+        raw::srotg_(a as *mut _ as *mut _,
+                    b as *mut _ as *mut _,
+                    c as *mut _ as *mut _,
+                    s as *mut _ as *mut _,
         )
     }
 }
 
 #[inline]
-pub fn srotmg(d1: &mut [f32], d2: &mut [f32], x1: &mut [f32], y1: &[f32], param: &mut [f32]) {
+pub fn srotmg(d1: &mut f32, d2: &mut f32, x1: &mut f32, y1: f32, param: &mut [f32]) {
     unsafe {
-        raw::srotmg_(d1.as_mut_ptr() as *mut _,
-                     d2.as_mut_ptr() as *mut _,
-                     x1.as_mut_ptr() as *mut _,
-                     y1.as_ptr() as *const _,
+        raw::srotmg_(d1 as *mut _ as *mut _,
+                     d2 as *mut _ as *mut _,
+                     x1 as *mut _ as *mut _,
+                     &y1 as *const _ as *const _,
                      param.as_mut_ptr() as *mut _,
         )
     }
 }
 
 #[inline]
-pub fn srot(n: usize, x: &mut [f32], incx: usize, y: &mut [f32], incy: usize, c: &[f32],
-            s: &[f32]) {
-
+pub fn srot(n: usize, x: &mut [f32], incx: usize, y: &mut [f32], incy: usize, c: f32, s: f32) {
     unsafe {
         raw::srot_(&(n as c_int) as *const _,
                    x.as_mut_ptr() as *mut _,
                    &(incx as c_int) as *const _,
                    y.as_mut_ptr() as *mut _,
                    &(incy as c_int) as *const _,
-                   c.as_ptr() as *const _,
-                   s.as_ptr() as *const _,
+                   &c as *const _ as *const _,
+                   &s as *const _ as *const _,
         )
     }
 }
@@ -104,10 +102,10 @@ pub fn sswap(n: usize, x: &mut [f32], incx: usize, y: &mut [f32], incy: usize) {
 }
 
 #[inline]
-pub fn sscal(n: usize, a: &[f32], x: &mut [f32], incx: usize) {
+pub fn sscal(n: usize, a: f32, x: &mut [f32], incx: usize) {
     unsafe {
         raw::sscal_(&(n as c_int) as *const _,
-                    a.as_ptr() as *const _,
+                    &a as *const _ as *const _,
                     x.as_mut_ptr() as *mut _,
                     &(incx as c_int) as *const _,
         )
@@ -205,40 +203,38 @@ pub fn isamax(n: usize, x: &[f32], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn drotg(a: &mut [f64], b: &mut [f64], c: &mut [f64], s: &mut [f64]) {
+pub fn drotg(a: &mut f64, b: &mut f64, c: &mut f64, s: &mut f64) {
     unsafe {
-        raw::drotg_(a.as_mut_ptr() as *mut _,
-                    b.as_mut_ptr() as *mut _,
-                    c.as_mut_ptr() as *mut _,
-                    s.as_mut_ptr() as *mut _,
+        raw::drotg_(a as *mut _ as *mut _,
+                    b as *mut _ as *mut _,
+                    c as *mut _ as *mut _,
+                    s as *mut _ as *mut _,
         )
     }
 }
 
 #[inline]
-pub fn drotmg(d1: &mut [f64], d2: &mut [f64], x1: &mut [f64], y1: &[f64], param: &mut [f64]) {
+pub fn drotmg(d1: &mut f64, d2: &mut f64, x1: &mut f64, y1: f64, param: &mut [f64]) {
     unsafe {
-        raw::drotmg_(d1.as_mut_ptr() as *mut _,
-                     d2.as_mut_ptr() as *mut _,
-                     x1.as_mut_ptr() as *mut _,
-                     y1.as_ptr() as *const _,
+        raw::drotmg_(d1 as *mut _ as *mut _,
+                     d2 as *mut _ as *mut _,
+                     x1 as *mut _ as *mut _,
+                     &y1 as *const _ as *const _,
                      param.as_mut_ptr() as *mut _,
         )
     }
 }
 
 #[inline]
-pub fn drot(n: usize, x: &mut [f64], incx: usize, y: &mut [f64], incy: usize, c: &[f64],
-            s: &[f64]) {
-
+pub fn drot(n: usize, x: &mut [f64], incx: usize, y: &mut [f64], incy: usize, c: f64, s: f64) {
     unsafe {
         raw::drot_(&(n as c_int) as *const _,
                    x.as_mut_ptr() as *mut _,
                    &(incx as c_int) as *const _,
                    y.as_mut_ptr() as *mut _,
                    &(incy as c_int) as *const _,
-                   c.as_ptr() as *const _,
-                   s.as_ptr() as *const _,
+                   &c as *const _ as *const _,
+                   &s as *const _ as *const _,
         )
     }
 }
@@ -269,10 +265,10 @@ pub fn dswap(n: usize, x: &mut [f64], incx: usize, y: &mut [f64], incy: usize) {
 }
 
 #[inline]
-pub fn dscal(n: usize, a: &[f64], x: &mut [f64], incx: usize) {
+pub fn dscal(n: usize, a: f64, x: &mut [f64], incx: usize) {
     unsafe {
         raw::dscal_(&(n as c_int) as *const _,
-                    a.as_ptr() as *const _,
+                    &a as *const _ as *const _,
                     x.as_mut_ptr() as *mut _,
                     &(incx as c_int) as *const _,
         )
@@ -369,28 +365,26 @@ pub fn idamax(n: usize, x: &[f64], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn crotg(a: &mut [c32], b: &[c32], c: &mut [c32], s: &mut [c32]) {
+pub fn crotg(a: &mut c32, b: c32, c: &mut c32, s: &mut c32) {
     unsafe {
-        raw::crotg_(a.as_mut_ptr() as *mut _,
-                    b.as_ptr() as *const _,
-                    c.as_mut_ptr() as *mut _,
-                    s.as_mut_ptr() as *mut _,
+        raw::crotg_(a as *mut _ as *mut _,
+                    &b as *const _ as *const _,
+                    c as *mut _ as *mut _,
+                    s as *mut _ as *mut _,
         )
     }
 }
 
 #[inline]
-pub fn csrot(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize, c: &[c32],
-             s: &[c32]) {
-
+pub fn csrot(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize, c: c32, s: c32) {
     unsafe {
         raw::csrot_(&(n as c_int) as *const _,
                     x.as_mut_ptr() as *mut _,
                     &(incx as c_int) as *const _,
                     y.as_mut_ptr() as *mut _,
                     &(incy as c_int) as *const _,
-                    c.as_ptr() as *const _,
-                    s.as_ptr() as *const _,
+                    &c as *const _ as *const _,
+                    &s as *const _ as *const _,
         )
     }
 }
@@ -408,10 +402,10 @@ pub fn cswap(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize) {
 }
 
 #[inline]
-pub fn cscal(n: usize, a: &[c32], x: &mut [c32], incx: usize) {
+pub fn cscal(n: usize, a: c32, x: &mut [c32], incx: usize) {
     unsafe {
         raw::cscal_(&(n as c_int) as *const _,
-                    a.as_ptr() as *const _,
+                    &a as *const _ as *const _,
                     x.as_mut_ptr() as *mut _,
                     &(incx as c_int) as *const _,
         )
@@ -419,10 +413,10 @@ pub fn cscal(n: usize, a: &[c32], x: &mut [c32], incx: usize) {
 }
 
 #[inline]
-pub fn csscal(n: usize, a: &[c32], x: &mut [c32], incx: usize) {
+pub fn csscal(n: usize, a: c32, x: &mut [c32], incx: usize) {
     unsafe {
         raw::csscal_(&(n as c_int) as *const _,
-                     a.as_ptr() as *const _,
+                     &a as *const _ as *const _,
                      x.as_mut_ptr() as *mut _,
                      &(incx as c_int) as *const _,
         )
@@ -501,28 +495,26 @@ pub fn icamax(n: usize, x: &[c32], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn zrotg(a: &mut [c64], b: &[c64], c: &mut [c64], s: &mut [c64]) {
+pub fn zrotg(a: &mut c64, b: c64, c: &mut c64, s: &mut c64) {
     unsafe {
-        raw::zrotg_(a.as_mut_ptr() as *mut _,
-                    b.as_ptr() as *const _,
-                    c.as_mut_ptr() as *mut _,
-                    s.as_mut_ptr() as *mut _,
+        raw::zrotg_(a as *mut _ as *mut _,
+                    &b as *const _ as *const _,
+                    c as *mut _ as *mut _,
+                    s as *mut _ as *mut _,
         )
     }
 }
 
 #[inline]
-pub fn zdrot(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize, c: &[c64],
-             s: &[c64]) {
-
+pub fn zdrot(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize, c: c64, s: c64) {
     unsafe {
         raw::zdrot_(&(n as c_int) as *const _,
                     x.as_mut_ptr() as *mut _,
                     &(incx as c_int) as *const _,
                     y.as_mut_ptr() as *mut _,
                     &(incy as c_int) as *const _,
-                    c.as_ptr() as *const _,
-                    s.as_ptr() as *const _,
+                    &c as *const _ as *const _,
+                    &s as *const _ as *const _,
         )
     }
 }
@@ -540,10 +532,10 @@ pub fn zswap(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize) {
 }
 
 #[inline]
-pub fn zscal(n: usize, a: &[c64], x: &mut [c64], incx: usize) {
+pub fn zscal(n: usize, a: c64, x: &mut [c64], incx: usize) {
     unsafe {
         raw::zscal_(&(n as c_int) as *const _,
-                    a.as_ptr() as *const _,
+                    &a as *const _ as *const _,
                     x.as_mut_ptr() as *mut _,
                     &(incx as c_int) as *const _,
         )
@@ -551,10 +543,10 @@ pub fn zscal(n: usize, a: &[c64], x: &mut [c64], incx: usize) {
 }
 
 #[inline]
-pub fn zdscal(n: usize, a: &[c64], x: &mut [c64], incx: usize) {
+pub fn zdscal(n: usize, a: c64, x: &mut [c64], incx: usize) {
     unsafe {
         raw::zdscal_(&(n as c_int) as *const _,
-                     a.as_ptr() as *const _,
+                     &a as *const _ as *const _,
                      x.as_mut_ptr() as *mut _,
                      &(incx as c_int) as *const _,
         )
@@ -2405,4 +2397,3 @@ pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
         )
     }
 }
-
