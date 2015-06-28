@@ -14,6 +14,6 @@ The package provides an interface to the [Basic Linear Algebra Subprograms][1].
 
 [version-img]: https://img.shields.io/crates/v/blas.svg
 [version-url]: https://crates.io/crates/blas
-[status-svg]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
+[status-img]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [status-url]: https://travis-ci.org/stainless-steel/blas
 [docs]: https://stainless-steel.github.io/blas
