@@ -11,7 +11,7 @@ fn dgemv() {
 
     blas::dgemv(blas::Trans::N, m, n, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
 
-    assert::equal(&y, &vec![20.0, 40.0]);
+    assert_eq!(&y, &vec![20.0, 40.0]);
 }
 
 #[test]
@@ -24,5 +24,5 @@ fn dgemm() {
 
     blas::dgemm(blas::Trans::N, blas::Trans::N, m, n, k, 1.0, &a, m, &b, k, 1.0, &mut c, m);
 
-    assert::equal(&c, &vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0]);
+    assert_eq!(&c, &vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0]);
 }
