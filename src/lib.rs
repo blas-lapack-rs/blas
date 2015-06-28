@@ -3,15 +3,10 @@
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
 extern crate blas_sys as raw;
+extern crate complex;
 extern crate libc;
-extern crate num;
 
-#[allow(non_camel_case_types)]
-pub type c32 = num::Complex<f32>;
-
-#[allow(non_camel_case_types)]
-pub type c64 = num::Complex<f64>;
-
+use complex::{c32, c64};
 use libc::{c_char, c_int};
 
 #[derive(Clone, Copy)]
