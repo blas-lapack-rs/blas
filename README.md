@@ -1,4 +1,4 @@
-# BLAS [![Build Status][status-svg]][status-url]
+# BLAS [![Version][version-img]][version-url] [![Status][status-img]][status-url]
 
 The package provides an interface to the [Basic Linear Algebra Subprograms][1].
 
@@ -12,6 +12,8 @@ The package provides an interface to the [Basic Linear Algebra Subprograms][1].
 
 [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
+[version-img]: https://img.shields.io/crates/v/blas.svg
+[version-url]: https://crates.io/crates/blas
 [status-svg]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [status-url]: https://travis-ci.org/stainless-steel/blas
 [docs]: https://stainless-steel.github.io/blas
