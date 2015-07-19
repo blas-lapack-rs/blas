@@ -2,19 +2,6 @@ extern crate assert;
 extern crate blas;
 
 #[test]
-fn dgemv() {
-    let (m, n) = (2, 3);
-
-    let a = vec![1.0, 4.0, 2.0, 5.0, 3.0, 6.0];
-    let x = vec![1.0, 2.0, 3.0];
-    let mut y = vec![6.0, 8.0];
-
-    blas::dgemv(blas::Trans::N, m, n, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
-
-    assert_eq!(&y, &vec![20.0, 40.0]);
-}
-
-#[test]
 fn dgemm() {
     let (m, n, k) = (2, 4, 3);
 
