@@ -7,7 +7,7 @@ addons:
       - gfortran
 
 after_success:
-  - curl https://stainless-steel.github.io/travis/after_success.sh | bash
+  - curl https://stainless-steel.github.io/travis/after_success.sh | CARGO_FLAGS=--features=complex bash
 
 env:
   global:

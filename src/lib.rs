@@ -3,11 +3,22 @@
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
 extern crate blas_sys as ffi;
+
+#[cfg(feature = "complex")]
 extern crate complex;
+
 extern crate libc;
 
-use complex::{c32, c64};
 use libc::{c_char, c_int};
+
+#[cfg(feature = "complex")]
+use complex::{c32, c64};
+
+#[cfg(not(feature = "complex"))]
+pub type c32 = ffi::complex_float;
+
+#[cfg(not(feature = "complex"))]
+pub type c64 = ffi::complex_double;
 
 #[derive(Clone, Copy)]
 pub enum Diag {
