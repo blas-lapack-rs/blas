@@ -3,30 +3,30 @@
 extern crate blas;
 extern crate test;
 
-use std::iter::repeat;
+use test::Bencher;
 
 #[bench]
-fn dgemv_few_large(bench: &mut test::Bencher) {
+fn dgemv_few_large(bencher: &mut Bencher) {
     let m = 1000;
 
-    let a = repeat(1.0).take(m * m).collect::<Vec<_>>();
-    let x = repeat(1.0).take(m * 1).collect::<Vec<_>>();
-    let mut y = repeat(1.0).take(m * 1).collect::<Vec<_>>();
+    let a = vec![1.0; m * m];
+    let x = vec![1.0; m];
+    let mut y = vec![1.0; m];
 
-    bench.iter(|| {
+    bencher.iter(|| {
         blas::dgemv(blas::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1)
     });
 }
 
 #[bench]
-fn dgemv_many_small(bench: &mut test::Bencher) {
+fn dgemv_many_small(bencher: &mut Bencher) {
     let m = 20;
 
-    let a = repeat(1.0).take(m * m).collect::<Vec<_>>();
-    let x = repeat(1.0).take(m * 1).collect::<Vec<_>>();
-    let mut y = repeat(1.0).take(m * 1).collect::<Vec<_>>();
+    let a = vec![1.0; m * m];
+    let x = vec![1.0; m];
+    let mut y = vec![1.0; m];
 
-    bench.iter(|| {
+    bencher.iter(|| {
         for _ in 0..20000 {
             blas::dgemv(blas::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
         }
