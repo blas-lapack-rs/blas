@@ -521,17 +521,17 @@ def translate_type_base(ty):
 
 def translate_arg_pass(name, realty):
     if name in ["uplo", "diag", "side"] or name.startswith("trans"):
-        return "&({} as c_char) as *const _,".format(name)
+        return "&({} as c_char),".format(name)
     elif realty == "usize":
-        return "&({} as c_int) as *const _,".format(name)
+        return "&({} as c_int),".format(name)
     elif realty in ["f32", "f64", "c32", "c64"]:
-        return "&{} as *const _ as *const _,".format(name)
+        return "&{},".format(name)
     elif realty in ["&mut f32", "&mut f64", "&mut c32", "&mut c64"]:
-        return "{} as *mut _ as *mut _,".format(name)
+        return "{},".format(name)
     elif realty.startswith("&mut ["):
-        return "{}.as_mut_ptr() as *mut _,".format(name)
+        return "{}.as_mut_ptr(),".format(name)
     elif realty.startswith("&["):
-        return "{}.as_ptr() as *const _,".format(name)
+        return "{}.as_ptr(),".format(name)
     else:
         assert False, "cannot translate `{}: {}`".format(name, realty)
 
