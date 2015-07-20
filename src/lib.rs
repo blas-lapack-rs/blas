@@ -15,10 +15,12 @@ use libc::{c_char, c_int};
 use complex::{c32, c64};
 
 #[cfg(not(feature = "complex"))]
-pub type c32 = ffi::complex_float;
+#[allow(non_camel_case_types)]
+pub type c32 = [f32; 2];
 
 #[cfg(not(feature = "complex"))]
-pub type c64 = ffi::complex_double;
+#[allow(non_camel_case_types)]
+pub type c64 = [f64; 2];
 
 #[derive(Clone, Copy)]
 pub enum Diag {
