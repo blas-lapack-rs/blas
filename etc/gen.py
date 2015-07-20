@@ -521,17 +521,17 @@ def translate_type_base(ty):
 
 def translate_arg_pass(name, realty):
     if name in ["uplo", "diag", "side"] or name.startswith("trans"):
-        return "&({} as c_char),".format(name)
+        return "&({} as c_char)".format(name)
     elif realty == "usize":
-        return "&({} as c_int),".format(name)
+        return "&({} as c_int)".format(name)
     elif realty in ["f32", "f64", "c32", "c64"]:
-        return "&{},".format(name)
+        return "&{}".format(name)
     elif realty in ["&mut f32", "&mut f64", "&mut c32", "&mut c64"]:
-        return "{},".format(name)
+        return "{}".format(name)
     elif realty.startswith("&mut ["):
-        return "{}.as_mut_ptr(),".format(name)
+        return "{}.as_mut_ptr()".format(name)
     elif realty.startswith("&["):
-        return "{}.as_ptr(),".format(name)
+        return "{}.as_ptr()".format(name)
     else:
         assert False, "cannot translate `{}: {}`".format(name, realty)
 
@@ -572,17 +572,22 @@ def format_body(f):
     s = []
     s.append(" " * 4)
     s.append("unsafe {\n")
-    s.append(" " * 8)
-    s.append("ffi::{}_(".format(f.name))
+    l = []
+    l.append(" " * 8)
+    l.append("ffi::{}_(".format(f.name))
     indent = 8 + 5 + len(f.name) + 2
     for i, arg in enumerate(f.args):
         name, ty = arg
         realty = translate_arg_type(name, ty, f)
         if i > 0:
-            s.append(" " * indent)
-        s.append(translate_arg_pass(name, realty))
-        s.append("\n")
-    s.append(" " * 8)
+            l.append(", ")
+        chunk = translate_arg_pass(name, realty)
+        if len("".join(l)) + len(chunk) > 99:
+            s.extend(l)
+            s.append("\n")
+            l = [" " * indent]
+        l.append(chunk)
+    s.extend(l)
     s.append(")")
     if f.ret is not None:
         s.append(" as {}".format(translate_ret_type(f.ret)))
