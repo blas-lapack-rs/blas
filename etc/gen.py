@@ -497,13 +497,25 @@ def translate_arg_type(name, ty, f):
     elif ty.startswith("*const"):
         if is_scalar(name, ty, f):
             return f.ty
-        elif "float" in ty or "double" in ty:
-            return "&[{}]".format(f.ty)
+        elif "complex_double" in ty:
+            return "&[c64]"
+        elif "complex_float" in ty:
+            return "&[c32]"
+        elif "double" in ty:
+            return "&[f64]"
+        elif "float" in ty:
+            return "&[f32]"
     elif ty.startswith("*mut"):
         if is_scalar(name, ty, f):
             return "&mut {}".format(f.ty)
-        elif "float" in ty or "double" in ty:
-            return "&mut [{}]".format(f.ty)
+        elif "complex_double" in ty:
+            return "&mut [c64]"
+        elif "complex_float" in ty:
+            return "&mut [c32]"
+        elif "double" in ty:
+            return "&mut [f64]"
+        elif "float" in ty:
+            return "&mut [f32]"
     assert False, "cannot translate `{}: {}`".format(name, ty)
 
 def translate_arg_pass(name, realty):
@@ -560,7 +572,7 @@ def format_body(f):
     s.append(" " * 4)
     s.append("unsafe {\n")
     s.append(" " * 8)
-    s.append("raw::{}_(".format(f.name))
+    s.append("ffi::{}_(".format(f.name))
     indent = 8 + 5 + len(f.name) + 2
     for i, arg in enumerate(f.args):
         name, ty = arg

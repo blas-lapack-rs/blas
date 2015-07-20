@@ -179,7 +179,7 @@ pub fn snrm2(n: usize, x: &[f32], incx: usize) -> f32 {
 }
 
 #[inline]
-pub fn scnrm2(n: usize, x: &[f32], incx: usize) -> f32 {
+pub fn scnrm2(n: usize, x: &[c32], incx: usize) -> f32 {
     unsafe {
         ffi::scnrm2_(&(n as c_int) as *const _,
                      x.as_ptr() as *const _,
@@ -319,7 +319,7 @@ pub fn ddot(n: usize, x: &[f64], incx: usize, y: &[f64], incy: usize) -> f64 {
 }
 
 #[inline]
-pub fn dsdot(n: usize, x: &[f64], incx: usize, y: &[f64], incy: usize) -> f64 {
+pub fn dsdot(n: usize, x: &[f32], incx: usize, y: &[f32], incy: usize) -> f64 {
     unsafe {
         ffi::dsdot_(&(n as c_int) as *const _,
                     x.as_ptr() as *const _,
@@ -341,7 +341,7 @@ pub fn dnrm2(n: usize, x: &[f64], incx: usize) -> f64 {
 }
 
 #[inline]
-pub fn dznrm2(n: usize, x: &[f64], incx: usize) -> f64 {
+pub fn dznrm2(n: usize, x: &[c64], incx: usize) -> f64 {
     unsafe {
         ffi::dznrm2_(&(n as c_int) as *const _,
                      x.as_ptr() as *const _,
