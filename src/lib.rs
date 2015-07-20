@@ -373,7 +373,7 @@ pub fn idamax(n: usize, x: &[f64], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn crotg(a: &mut c32, b: c32, c: &mut c32, s: &mut c32) {
+pub fn crotg(a: &mut c32, b: c32, c: &mut f32, s: &mut c32) {
     unsafe {
         ffi::crotg_(a as *mut _ as *mut _,
                     &b as *const _ as *const _,
@@ -384,7 +384,7 @@ pub fn crotg(a: &mut c32, b: c32, c: &mut c32, s: &mut c32) {
 }
 
 #[inline]
-pub fn csrot(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize, c: c32, s: c32) {
+pub fn csrot(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize, c: f32, s: f32) {
     unsafe {
         ffi::csrot_(&(n as c_int) as *const _,
                     x.as_mut_ptr() as *mut _,
@@ -421,7 +421,7 @@ pub fn cscal(n: usize, a: c32, x: &mut [c32], incx: usize) {
 }
 
 #[inline]
-pub fn csscal(n: usize, a: c32, x: &mut [c32], incx: usize) {
+pub fn csscal(n: usize, a: f32, x: &mut [c32], incx: usize) {
     unsafe {
         ffi::csscal_(&(n as c_int) as *const _,
                      &a as *const _ as *const _,
@@ -503,7 +503,7 @@ pub fn icamax(n: usize, x: &[c32], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn zrotg(a: &mut c64, b: c64, c: &mut c64, s: &mut c64) {
+pub fn zrotg(a: &mut c64, b: c64, c: &mut f64, s: &mut c64) {
     unsafe {
         ffi::zrotg_(a as *mut _ as *mut _,
                     &b as *const _ as *const _,
@@ -514,7 +514,7 @@ pub fn zrotg(a: &mut c64, b: c64, c: &mut c64, s: &mut c64) {
 }
 
 #[inline]
-pub fn zdrot(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize, c: c64, s: c64) {
+pub fn zdrot(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize, c: f64, s: f64) {
     unsafe {
         ffi::zdrot_(&(n as c_int) as *const _,
                     x.as_mut_ptr() as *mut _,
@@ -551,7 +551,7 @@ pub fn zscal(n: usize, a: c64, x: &mut [c64], incx: usize) {
 }
 
 #[inline]
-pub fn zdscal(n: usize, a: c64, x: &mut [c64], incx: usize) {
+pub fn zdscal(n: usize, a: f64, x: &mut [c64], incx: usize) {
     unsafe {
         ffi::zdscal_(&(n as c_int) as *const _,
                      &a as *const _ as *const _,
@@ -1432,7 +1432,7 @@ pub fn cgerc(m: usize, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], 
 }
 
 #[inline]
-pub fn cher(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, a: &mut [c32], lda: usize) {
+pub fn cher(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, a: &mut [c32], lda: usize) {
     unsafe {
         ffi::cher_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -1446,7 +1446,7 @@ pub fn cher(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, a: &mut [c
 }
 
 #[inline]
-pub fn chpr(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, ap: &mut [c32]) {
+pub fn chpr(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, ap: &mut [c32]) {
     unsafe {
         ffi::chpr_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -1731,7 +1731,7 @@ pub fn zgerc(m: usize, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], 
 }
 
 #[inline]
-pub fn zher(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, a: &mut [c64], lda: usize) {
+pub fn zher(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, a: &mut [c64], lda: usize) {
     unsafe {
         ffi::zher_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -1745,7 +1745,7 @@ pub fn zher(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, a: &mut [c
 }
 
 #[inline]
-pub fn zhpr(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, ap: &mut [c64]) {
+pub fn zhpr(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, ap: &mut [c64]) {
     unsafe {
         ffi::zhpr_(&(uplo as c_char) as *const _,
                    &(n as c_int) as *const _,
@@ -2122,8 +2122,8 @@ pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32]
 }
 
 #[inline]
-pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
-             beta: c32, c: &mut [c32], ldc: usize) {
+pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[c32], lda: usize,
+             beta: f32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::cherk_(&(uplo as c_char) as *const _,
@@ -2163,7 +2163,7 @@ pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32
 
 #[inline]
 pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
-              b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
+              b: &[c32], ldb: usize, beta: f32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::cher2k_(&(uplo as c_char) as *const _,
@@ -2306,8 +2306,8 @@ pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64]
 }
 
 #[inline]
-pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
-             beta: c64, c: &mut [c64], ldc: usize) {
+pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[c64], lda: usize,
+             beta: f64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::zherk_(&(uplo as c_char) as *const _,
@@ -2347,7 +2347,7 @@ pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64
 
 #[inline]
 pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
-              b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
+              b: &[c64], ldb: usize, beta: f64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::zher2k_(&(uplo as c_char) as *const _,

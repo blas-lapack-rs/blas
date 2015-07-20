@@ -495,28 +495,29 @@ def translate_arg_type(name, ty, f):
     elif name.startswith("ld") or name.startswith("inc"):
         return "usize"
     elif ty.startswith("*const"):
+        base = translate_type_base(ty)
         if is_scalar(name, ty, f):
-            return f.ty
-        elif "complex_double" in ty:
-            return "&[c64]"
-        elif "complex_float" in ty:
-            return "&[c32]"
-        elif "double" in ty:
-            return "&[f64]"
-        elif "float" in ty:
-            return "&[f32]"
+            return base
+        else:
+            return "&[{}]".format(base)
     elif ty.startswith("*mut"):
+        base = translate_type_base(ty)
         if is_scalar(name, ty, f):
-            return "&mut {}".format(f.ty)
-        elif "complex_double" in ty:
-            return "&mut [c64]"
-        elif "complex_float" in ty:
-            return "&mut [c32]"
-        elif "double" in ty:
-            return "&mut [f64]"
-        elif "float" in ty:
-            return "&mut [f32]"
+            return "&mut {}".format(base)
+        else:
+            return "&mut [{}]".format(base)
     assert False, "cannot translate `{}: {}`".format(name, ty)
+
+def translate_type_base(ty):
+    if "complex_double" in ty:
+        return "c64"
+    elif "complex_float" in ty:
+        return "c32"
+    elif "double" in ty:
+        return "f64"
+    elif "float" in ty:
+        return "f32"
+    assert False, "cannot translate `{}`".format(ty)
 
 def translate_arg_pass(name, realty):
     if name in ["uplo", "diag", "side"] or name.startswith("trans"):
