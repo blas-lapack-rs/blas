@@ -22,26 +22,26 @@ pub type c32 = [f32; 2];
 #[allow(non_camel_case_types)]
 pub type c64 = [f64; 2];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Diag {
     N = b'N' as isize,
     U = b'U' as isize,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Side {
     L = b'L' as isize,
     R = b'R' as isize,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Trans {
     N = b'N' as isize,
     T = b'T' as isize,
     C = b'C' as isize,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Uplo {
     U = b'U' as isize,
     L = b'L' as isize,
