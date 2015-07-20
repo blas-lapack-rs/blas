@@ -16,11 +16,11 @@ use complex::{c32, c64};
 
 #[cfg(not(feature = "complex"))]
 #[allow(non_camel_case_types)]
-pub type c32 = [f32; 2];
+pub type c32 = (f32, f32);
 
 #[cfg(not(feature = "complex"))]
 #[allow(non_camel_case_types)]
-pub type c64 = [f64; 2];
+pub type c64 = (f64, f64);
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Diag {
