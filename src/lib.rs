@@ -133,7 +133,7 @@ pub fn snrm2(n: usize, x: &[f32], incx: usize) -> f32 {
 #[inline]
 pub fn scnrm2(n: usize, x: &[c32], incx: usize) -> f32 {
     unsafe {
-        ffi::scnrm2_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f32
+        ffi::scnrm2_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f32
     }
 }
 
@@ -237,7 +237,7 @@ pub fn dnrm2(n: usize, x: &[f64], incx: usize) -> f64 {
 #[inline]
 pub fn dznrm2(n: usize, x: &[c64], incx: usize) -> f64 {
     unsafe {
-        ffi::dznrm2_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f64
+        ffi::dznrm2_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f64
     }
 }
 
@@ -258,164 +258,168 @@ pub fn idamax(n: usize, x: &[f64], incx: usize) -> isize {
 #[inline]
 pub fn crotg(a: &mut c32, b: c32, c: &mut f32, s: &mut c32) {
     unsafe {
-        ffi::crotg_(a, &b, c, s)
+        ffi::crotg_(a as *mut _ as *mut _, &b as *const _ as *const _, c, s as *mut _ as *mut _)
     }
 }
 
 #[inline]
 pub fn csrot(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize, c: f32, s: f32) {
     unsafe {
-        ffi::csrot_(&(n as c_int), x.as_mut_ptr(), &(incx as c_int), y.as_mut_ptr(),
-                    &(incy as c_int), &c, &s)
+        ffi::csrot_(&(n as c_int), x.as_mut_ptr() as *mut _, &(incx as c_int),
+                    y.as_mut_ptr() as *mut _, &(incy as c_int), &c, &s)
     }
 }
 
 #[inline]
 pub fn cswap(n: usize, x: &mut [c32], incx: usize, y: &mut [c32], incy: usize) {
     unsafe {
-        ffi::cswap_(&(n as c_int), x.as_mut_ptr(), &(incx as c_int), y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::cswap_(&(n as c_int), x.as_mut_ptr() as *mut _, &(incx as c_int),
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn cscal(n: usize, a: c32, x: &mut [c32], incx: usize) {
     unsafe {
-        ffi::cscal_(&(n as c_int), &a, x.as_mut_ptr(), &(incx as c_int))
+        ffi::cscal_(&(n as c_int), &a as *const _ as *const _, x.as_mut_ptr() as *mut _,
+                    &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn csscal(n: usize, a: f32, x: &mut [c32], incx: usize) {
     unsafe {
-        ffi::csscal_(&(n as c_int), &a, x.as_mut_ptr(), &(incx as c_int))
+        ffi::csscal_(&(n as c_int), &a, x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn ccopy(n: usize, x: &[c32], incx: usize, y: &mut [c32], incy: usize) {
     unsafe {
-        ffi::ccopy_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_mut_ptr(), &(incy as c_int))
+        ffi::ccopy_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int),
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn caxpy(n: usize, alpha: c32, x: &[c32], incx: usize, y: &mut [c32], incy: usize) {
     unsafe {
-        ffi::caxpy_(&(n as c_int), &alpha, x.as_ptr(), &(incx as c_int), y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::caxpy_(&(n as c_int), &alpha as *const _ as *const _, x.as_ptr() as *const _,
+                    &(incx as c_int), y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn cdotu(pres: &mut [c32], n: usize, x: &[c32], incx: usize, y: &[c32], incy: usize) {
     unsafe {
-        ffi::cdotu_(pres.as_mut_ptr(), &(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int))
+        ffi::cdotu_(pres.as_mut_ptr() as *mut _, &(n as c_int), x.as_ptr() as *const _,
+                    &(incx as c_int), y.as_ptr() as *const _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn cdotc(pres: &mut [c32], n: usize, x: &[c32], incx: usize, y: &[c32], incy: usize) {
     unsafe {
-        ffi::cdotc_(pres.as_mut_ptr(), &(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int))
+        ffi::cdotc_(pres.as_mut_ptr() as *mut _, &(n as c_int), x.as_ptr() as *const _,
+                    &(incx as c_int), y.as_ptr() as *const _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn scasum(n: usize, x: &[c32], incx: usize) -> f32 {
     unsafe {
-        ffi::scasum_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f32
+        ffi::scasum_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f32
     }
 }
 
 #[inline]
 pub fn icamax(n: usize, x: &[c32], incx: usize) -> isize {
     unsafe {
-        ffi::icamax_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as isize
+        ffi::icamax_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as isize
     }
 }
 
 #[inline]
 pub fn zrotg(a: &mut c64, b: c64, c: &mut f64, s: &mut c64) {
     unsafe {
-        ffi::zrotg_(a, &b, c, s)
+        ffi::zrotg_(a as *mut _ as *mut _, &b as *const _ as *const _, c, s as *mut _ as *mut _)
     }
 }
 
 #[inline]
 pub fn zdrot(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize, c: f64, s: f64) {
     unsafe {
-        ffi::zdrot_(&(n as c_int), x.as_mut_ptr(), &(incx as c_int), y.as_mut_ptr(),
-                    &(incy as c_int), &c, &s)
+        ffi::zdrot_(&(n as c_int), x.as_mut_ptr() as *mut _, &(incx as c_int),
+                    y.as_mut_ptr() as *mut _, &(incy as c_int), &c, &s)
     }
 }
 
 #[inline]
 pub fn zswap(n: usize, x: &mut [c64], incx: usize, y: &mut [c64], incy: usize) {
     unsafe {
-        ffi::zswap_(&(n as c_int), x.as_mut_ptr(), &(incx as c_int), y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::zswap_(&(n as c_int), x.as_mut_ptr() as *mut _, &(incx as c_int),
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn zscal(n: usize, a: c64, x: &mut [c64], incx: usize) {
     unsafe {
-        ffi::zscal_(&(n as c_int), &a, x.as_mut_ptr(), &(incx as c_int))
+        ffi::zscal_(&(n as c_int), &a as *const _ as *const _, x.as_mut_ptr() as *mut _,
+                    &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn zdscal(n: usize, a: f64, x: &mut [c64], incx: usize) {
     unsafe {
-        ffi::zdscal_(&(n as c_int), &a, x.as_mut_ptr(), &(incx as c_int))
+        ffi::zdscal_(&(n as c_int), &a, x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn zcopy(n: usize, x: &[c64], incx: usize, y: &mut [c64], incy: usize) {
     unsafe {
-        ffi::zcopy_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_mut_ptr(), &(incy as c_int))
+        ffi::zcopy_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int),
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn zaxpy(n: usize, alpha: c64, x: &[c64], incx: usize, y: &mut [c64], incy: usize) {
     unsafe {
-        ffi::zaxpy_(&(n as c_int), &alpha, x.as_ptr(), &(incx as c_int), y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::zaxpy_(&(n as c_int), &alpha as *const _ as *const _, x.as_ptr() as *const _,
+                    &(incx as c_int), y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn zdotu(pres: &mut [c64], n: usize, x: &[c64], incx: usize, y: &[c64], incy: usize) {
     unsafe {
-        ffi::zdotu_(pres.as_mut_ptr(), &(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int))
+        ffi::zdotu_(pres.as_mut_ptr() as *mut _, &(n as c_int), x.as_ptr() as *const _,
+                    &(incx as c_int), y.as_ptr() as *const _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn zdotc(pres: &mut [c64], n: usize, x: &[c64], incx: usize, y: &[c64], incy: usize) {
     unsafe {
-        ffi::zdotc_(pres.as_mut_ptr(), &(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int))
+        ffi::zdotc_(pres.as_mut_ptr() as *mut _, &(n as c_int), x.as_ptr() as *const _,
+                    &(incx as c_int), y.as_ptr() as *const _, &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn dzasum(n: usize, x: &[c64], incx: usize) -> f64 {
     unsafe {
-        ffi::dzasum_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f64
+        ffi::dzasum_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f64
     }
 }
 
 #[inline]
 pub fn izamax(n: usize, x: &[c64], incx: usize) -> isize {
     unsafe {
-        ffi::izamax_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as isize
+        ffi::izamax_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as isize
     }
 }
 
@@ -742,9 +746,10 @@ pub fn cgemv(trans: Trans, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize
              incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
-        ffi::cgemv_(&(trans as c_char), &(m as c_int), &(n as c_int), &alpha, a.as_ptr(),
-                    &(lda as c_int), x.as_ptr(), &(incx as c_int), &beta, y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::cgemv_(&(trans as c_char), &(m as c_int), &(n as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_ptr() as *const _, &(incx as c_int), &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -754,8 +759,9 @@ pub fn cgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c32,
 
     unsafe {
         ffi::cgbmv_(&(trans as c_char), &(m as c_int), &(n as c_int), &(kl as c_int),
-                    &(ku as c_int), &alpha, a.as_ptr(), &(lda as c_int), x.as_ptr(),
-                    &(incx as c_int), &beta, y.as_mut_ptr(), &(incy as c_int))
+                    &(ku as c_int), &alpha as *const _ as *const _, a.as_ptr() as *const _,
+                    &(lda as c_int), x.as_ptr() as *const _, &(incx as c_int),
+                    &beta as *const _ as *const _, y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -764,8 +770,10 @@ pub fn chemv(uplo: Uplo, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
              beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
-        ffi::chemv_(&(uplo as c_char), &(n as c_int), &alpha, a.as_ptr(), &(lda as c_int),
-                    x.as_ptr(), &(incx as c_int), &beta, y.as_mut_ptr(), &(incy as c_int))
+        ffi::chemv_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _, &(lda as c_int), x.as_ptr() as *const _,
+                    &(incx as c_int), &beta as *const _ as *const _, y.as_mut_ptr() as *mut _,
+                    &(incy as c_int))
     }
 }
 
@@ -774,9 +782,10 @@ pub fn chbmv(uplo: Uplo, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize, 
              incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
-        ffi::chbmv_(&(uplo as c_char), &(n as c_int), &(k as c_int), &alpha, a.as_ptr(),
-                    &(lda as c_int), x.as_ptr(), &(incx as c_int), &beta, y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::chbmv_(&(uplo as c_char), &(n as c_int), &(k as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_ptr() as *const _, &(incx as c_int), &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -785,8 +794,9 @@ pub fn chpmv(uplo: Uplo, n: usize, alpha: c32, ap: &[c32], x: &[c32], incx: usiz
              y: &mut [c32], incy: usize) {
 
     unsafe {
-        ffi::chpmv_(&(uplo as c_char), &(n as c_int), &alpha, ap.as_ptr(), x.as_ptr(),
-                    &(incx as c_int), &beta, y.as_mut_ptr(), &(incy as c_int))
+        ffi::chpmv_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    ap.as_ptr() as *const _, x.as_ptr() as *const _, &(incx as c_int),
+                    &beta as *const _ as *const _, y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -796,7 +806,8 @@ pub fn ctrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c32], lda: us
 
     unsafe {
         ffi::ctrmv_(&(uplo as c_char), &(transa as c_char), &(diag as c_char), &(n as c_int),
-                    a.as_ptr(), &(lda as c_int), b.as_mut_ptr(), &(incx as c_int))
+                    a.as_ptr() as *const _, &(lda as c_int), b.as_mut_ptr() as *mut _,
+                    &(incx as c_int))
     }
 }
 
@@ -806,7 +817,8 @@ pub fn ctbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32]
 
     unsafe {
         ffi::ctbmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    &(k as c_int), a.as_ptr(), &(lda as c_int), x.as_mut_ptr(), &(incx as c_int))
+                    &(k as c_int), a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -816,7 +828,7 @@ pub fn ctpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c32], x: &mut
 
     unsafe {
         ffi::ctpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
+                    ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -826,7 +838,8 @@ pub fn ctrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c32], lda: usi
 
     unsafe {
         ffi::ctrsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    a.as_ptr(), &(lda as c_int), x.as_mut_ptr(), &(incx as c_int))
+                    a.as_ptr() as *const _, &(lda as c_int), x.as_mut_ptr() as *mut _,
+                    &(incx as c_int))
     }
 }
 
@@ -836,7 +849,8 @@ pub fn ctbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32]
 
     unsafe {
         ffi::ctbsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    &(k as c_int), a.as_ptr(), &(lda as c_int), x.as_mut_ptr(), &(incx as c_int))
+                    &(k as c_int), a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -846,7 +860,7 @@ pub fn ctpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c32], x: &mut
 
     unsafe {
         ffi::ctpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
+                    ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -855,8 +869,9 @@ pub fn cgeru(m: usize, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], 
              a: &mut [c32], lda: usize) {
 
     unsafe {
-        ffi::cgeru_(&(m as c_int), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int), a.as_mut_ptr(), &(lda as c_int))
+        ffi::cgeru_(&(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
@@ -865,24 +880,25 @@ pub fn cgerc(m: usize, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], 
              a: &mut [c32], lda: usize) {
 
     unsafe {
-        ffi::cgerc_(&(m as c_int), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int), a.as_mut_ptr(), &(lda as c_int))
+        ffi::cgerc_(&(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
 #[inline]
 pub fn cher(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, a: &mut [c32], lda: usize) {
     unsafe {
-        ffi::cher_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                   a.as_mut_ptr(), &(lda as c_int))
+        ffi::cher_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
+                   &(incx as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
 #[inline]
 pub fn chpr(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, ap: &mut [c32]) {
     unsafe {
-        ffi::chpr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                   ap.as_mut_ptr())
+        ffi::chpr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
+                   &(incx as c_int), ap.as_mut_ptr() as *mut _)
     }
 }
 
@@ -891,8 +907,9 @@ pub fn chpr2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32]
              ap: &mut [c32]) {
 
     unsafe {
-        ffi::chpr2_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                    y.as_ptr(), &(incy as c_int), ap.as_mut_ptr())
+        ffi::chpr2_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), ap.as_mut_ptr() as *mut _)
     }
 }
 
@@ -901,8 +918,9 @@ pub fn cher2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32]
              a: &mut [c32], lda: usize) {
 
     unsafe {
-        ffi::cher2_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                    y.as_ptr(), &(incy as c_int), a.as_mut_ptr(), &(lda as c_int))
+        ffi::cher2_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
@@ -911,9 +929,10 @@ pub fn zgemv(trans: Trans, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize
              incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
-        ffi::zgemv_(&(trans as c_char), &(m as c_int), &(n as c_int), &alpha, a.as_ptr(),
-                    &(lda as c_int), x.as_ptr(), &(incx as c_int), &beta, y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::zgemv_(&(trans as c_char), &(m as c_int), &(n as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_ptr() as *const _, &(incx as c_int), &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -923,8 +942,9 @@ pub fn zgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c64,
 
     unsafe {
         ffi::zgbmv_(&(trans as c_char), &(m as c_int), &(n as c_int), &(kl as c_int),
-                    &(ku as c_int), &alpha, a.as_ptr(), &(lda as c_int), x.as_ptr(),
-                    &(incx as c_int), &beta, y.as_mut_ptr(), &(incy as c_int))
+                    &(ku as c_int), &alpha as *const _ as *const _, a.as_ptr() as *const _,
+                    &(lda as c_int), x.as_ptr() as *const _, &(incx as c_int),
+                    &beta as *const _ as *const _, y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -933,8 +953,10 @@ pub fn zhemv(uplo: Uplo, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
              beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
-        ffi::zhemv_(&(uplo as c_char), &(n as c_int), &alpha, a.as_ptr(), &(lda as c_int),
-                    x.as_ptr(), &(incx as c_int), &beta, y.as_mut_ptr(), &(incy as c_int))
+        ffi::zhemv_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _, &(lda as c_int), x.as_ptr() as *const _,
+                    &(incx as c_int), &beta as *const _ as *const _, y.as_mut_ptr() as *mut _,
+                    &(incy as c_int))
     }
 }
 
@@ -943,9 +965,10 @@ pub fn zhbmv(uplo: Uplo, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize, 
              incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
-        ffi::zhbmv_(&(uplo as c_char), &(n as c_int), &(k as c_int), &alpha, a.as_ptr(),
-                    &(lda as c_int), x.as_ptr(), &(incx as c_int), &beta, y.as_mut_ptr(),
-                    &(incy as c_int))
+        ffi::zhbmv_(&(uplo as c_char), &(n as c_int), &(k as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_ptr() as *const _, &(incx as c_int), &beta as *const _ as *const _,
+                    y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -954,8 +977,9 @@ pub fn zhpmv(uplo: Uplo, n: usize, alpha: c64, ap: &[c64], x: &[c64], incx: usiz
              y: &mut [c64], incy: usize) {
 
     unsafe {
-        ffi::zhpmv_(&(uplo as c_char), &(n as c_int), &alpha, ap.as_ptr(), x.as_ptr(),
-                    &(incx as c_int), &beta, y.as_mut_ptr(), &(incy as c_int))
+        ffi::zhpmv_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    ap.as_ptr() as *const _, x.as_ptr() as *const _, &(incx as c_int),
+                    &beta as *const _ as *const _, y.as_mut_ptr() as *mut _, &(incy as c_int))
     }
 }
 
@@ -965,7 +989,8 @@ pub fn ztrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c64], lda: us
 
     unsafe {
         ffi::ztrmv_(&(uplo as c_char), &(transa as c_char), &(diag as c_char), &(n as c_int),
-                    a.as_ptr(), &(lda as c_int), b.as_mut_ptr(), &(incx as c_int))
+                    a.as_ptr() as *const _, &(lda as c_int), b.as_mut_ptr() as *mut _,
+                    &(incx as c_int))
     }
 }
 
@@ -975,7 +1000,8 @@ pub fn ztbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64]
 
     unsafe {
         ffi::ztbmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    &(k as c_int), a.as_ptr(), &(lda as c_int), x.as_mut_ptr(), &(incx as c_int))
+                    &(k as c_int), a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -985,7 +1011,7 @@ pub fn ztpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c64], x: &mut
 
     unsafe {
         ffi::ztpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
+                    ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -995,7 +1021,8 @@ pub fn ztrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c64], lda: usi
 
     unsafe {
         ffi::ztrsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    a.as_ptr(), &(lda as c_int), x.as_mut_ptr(), &(incx as c_int))
+                    a.as_ptr() as *const _, &(lda as c_int), x.as_mut_ptr() as *mut _,
+                    &(incx as c_int))
     }
 }
 
@@ -1005,7 +1032,8 @@ pub fn ztbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64]
 
     unsafe {
         ffi::ztbsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    &(k as c_int), a.as_ptr(), &(lda as c_int), x.as_mut_ptr(), &(incx as c_int))
+                    &(k as c_int), a.as_ptr() as *const _, &(lda as c_int),
+                    x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -1015,7 +1043,7 @@ pub fn ztpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c64], x: &mut
 
     unsafe {
         ffi::ztpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
-                    ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
+                    ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
     }
 }
 
@@ -1024,8 +1052,9 @@ pub fn zgeru(m: usize, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], 
              a: &mut [c64], lda: usize) {
 
     unsafe {
-        ffi::zgeru_(&(m as c_int), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int), a.as_mut_ptr(), &(lda as c_int))
+        ffi::zgeru_(&(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
@@ -1034,24 +1063,25 @@ pub fn zgerc(m: usize, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], 
              a: &mut [c64], lda: usize) {
 
     unsafe {
-        ffi::zgerc_(&(m as c_int), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int), a.as_mut_ptr(), &(lda as c_int))
+        ffi::zgerc_(&(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
 #[inline]
 pub fn zher(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, a: &mut [c64], lda: usize) {
     unsafe {
-        ffi::zher_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                   a.as_mut_ptr(), &(lda as c_int))
+        ffi::zher_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
+                   &(incx as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
 #[inline]
 pub fn zhpr(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, ap: &mut [c64]) {
     unsafe {
-        ffi::zhpr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                   ap.as_mut_ptr())
+        ffi::zhpr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
+                   &(incx as c_int), ap.as_mut_ptr() as *mut _)
     }
 }
 
@@ -1060,8 +1090,9 @@ pub fn zher2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64]
              a: &mut [c64], lda: usize) {
 
     unsafe {
-        ffi::zher2_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                    y.as_ptr(), &(incy as c_int), a.as_mut_ptr(), &(lda as c_int))
+        ffi::zher2_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
     }
 }
 
@@ -1070,8 +1101,9 @@ pub fn zhpr2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64]
              ap: &mut [c64]) {
 
     unsafe {
-        ffi::zhpr2_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
-                    y.as_ptr(), &(incy as c_int), ap.as_mut_ptr())
+        ffi::zhpr2_(&(uplo as c_char), &(n as c_int), &alpha as *const _ as *const _,
+                    x.as_ptr() as *const _, &(incx as c_int), y.as_ptr() as *const _,
+                    &(incy as c_int), ap.as_mut_ptr() as *mut _)
     }
 }
 
@@ -1211,8 +1243,9 @@ pub fn cgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 
     unsafe {
         ffi::cgemm_(&(transa as c_char), &(transb as c_char), &(m as c_int), &(n as c_int),
-                    &(k as c_int), &alpha, a.as_ptr(), &(lda as c_int), b.as_ptr(),
-                    &(ldb as c_int), &beta, c.as_mut_ptr(), &(ldc as c_int))
+                    &(k as c_int), &alpha as *const _ as *const _, a.as_ptr() as *const _,
+                    &(lda as c_int), b.as_ptr() as *const _, &(ldb as c_int),
+                    &beta as *const _ as *const _, c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1221,9 +1254,10 @@ pub fn csymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], 
              b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
-        ffi::csymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                    c.as_mut_ptr(), &(ldc as c_int))
+        ffi::csymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    b.as_ptr() as *const _, &(ldb as c_int), &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1232,9 +1266,10 @@ pub fn chemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], 
              b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
-        ffi::chemm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                    c.as_mut_ptr(), &(ldc as c_int))
+        ffi::chemm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    b.as_ptr() as *const _, &(ldb as c_int), &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1243,8 +1278,9 @@ pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32]
              beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
-        ffi::csyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), &beta, c.as_mut_ptr(), &(ldc as c_int))
+        ffi::csyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    &beta as *const _ as *const _, c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1254,7 +1290,8 @@ pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[c32]
 
     unsafe {
         ffi::cherk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), &beta, c.as_mut_ptr(), &(ldc as c_int))
+                    a.as_ptr() as *const _, &(lda as c_int), &beta, c.as_mut_ptr() as *mut _,
+                    &(ldc as c_int))
     }
 }
 
@@ -1263,9 +1300,10 @@ pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32
               b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
-        ffi::csyr2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                     a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                     c.as_mut_ptr(), &(ldc as c_int))
+        ffi::csyr2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
+                     &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                     b.as_ptr() as *const _, &(ldb as c_int), &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1274,9 +1312,10 @@ pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32
               b: &[c32], ldb: usize, beta: f32, c: &mut [c32], ldc: usize) {
 
     unsafe {
-        ffi::cher2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                     a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                     c.as_mut_ptr(), &(ldc as c_int))
+        ffi::cher2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
+                     &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                     b.as_ptr() as *const _, &(ldb as c_int), &beta, c.as_mut_ptr() as *mut _,
+                     &(ldc as c_int))
     }
 }
 
@@ -1286,8 +1325,9 @@ pub fn ctrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 
     unsafe {
         ffi::ctrmm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
-                    &(m as c_int), &(n as c_int), &alpha, a.as_ptr(), &(lda as c_int),
-                    b.as_mut_ptr(), &(ldb as c_int))
+                    &(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _, &(lda as c_int), b.as_mut_ptr() as *mut _,
+                    &(ldb as c_int))
     }
 }
 
@@ -1297,8 +1337,9 @@ pub fn ctrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 
     unsafe {
         ffi::ctrsm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
-                    &(m as c_int), &(n as c_int), &alpha, a.as_ptr(), &(lda as c_int),
-                    b.as_mut_ptr(), &(ldb as c_int))
+                    &(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _, &(lda as c_int), b.as_mut_ptr() as *mut _,
+                    &(ldb as c_int))
     }
 }
 
@@ -1308,8 +1349,9 @@ pub fn zgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 
     unsafe {
         ffi::zgemm_(&(transa as c_char), &(transb as c_char), &(m as c_int), &(n as c_int),
-                    &(k as c_int), &alpha, a.as_ptr(), &(lda as c_int), b.as_ptr(),
-                    &(ldb as c_int), &beta, c.as_mut_ptr(), &(ldc as c_int))
+                    &(k as c_int), &alpha as *const _ as *const _, a.as_ptr() as *const _,
+                    &(lda as c_int), b.as_ptr() as *const _, &(ldb as c_int),
+                    &beta as *const _ as *const _, c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1318,9 +1360,10 @@ pub fn zsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], 
              b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
-        ffi::zsymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                    c.as_mut_ptr(), &(ldc as c_int))
+        ffi::zsymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    b.as_ptr() as *const _, &(ldb as c_int), &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1329,9 +1372,10 @@ pub fn zhemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], 
              b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
-        ffi::zhemm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                    c.as_mut_ptr(), &(ldc as c_int))
+        ffi::zhemm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    b.as_ptr() as *const _, &(ldb as c_int), &beta as *const _ as *const _,
+                    c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1340,8 +1384,9 @@ pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64]
              beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
-        ffi::zsyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), &beta, c.as_mut_ptr(), &(ldc as c_int))
+        ffi::zsyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
+                    &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                    &beta as *const _ as *const _, c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1351,7 +1396,8 @@ pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[c64]
 
     unsafe {
         ffi::zherk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                    a.as_ptr(), &(lda as c_int), &beta, c.as_mut_ptr(), &(ldc as c_int))
+                    a.as_ptr() as *const _, &(lda as c_int), &beta, c.as_mut_ptr() as *mut _,
+                    &(ldc as c_int))
     }
 }
 
@@ -1360,9 +1406,10 @@ pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64
               b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
-        ffi::zsyr2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                     a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                     c.as_mut_ptr(), &(ldc as c_int))
+        ffi::zsyr2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
+                     &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                     b.as_ptr() as *const _, &(ldb as c_int), &beta as *const _ as *const _,
+                     c.as_mut_ptr() as *mut _, &(ldc as c_int))
     }
 }
 
@@ -1371,9 +1418,10 @@ pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64
               b: &[c64], ldb: usize, beta: f64, c: &mut [c64], ldc: usize) {
 
     unsafe {
-        ffi::zher2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
-                     a.as_ptr(), &(lda as c_int), b.as_ptr(), &(ldb as c_int), &beta,
-                     c.as_mut_ptr(), &(ldc as c_int))
+        ffi::zher2k_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
+                     &alpha as *const _ as *const _, a.as_ptr() as *const _, &(lda as c_int),
+                     b.as_ptr() as *const _, &(ldb as c_int), &beta, c.as_mut_ptr() as *mut _,
+                     &(ldc as c_int))
     }
 }
 
@@ -1383,8 +1431,9 @@ pub fn ztrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 
     unsafe {
         ffi::ztrmm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
-                    &(m as c_int), &(n as c_int), &alpha, a.as_ptr(), &(lda as c_int),
-                    b.as_mut_ptr(), &(ldb as c_int))
+                    &(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _, &(lda as c_int), b.as_mut_ptr() as *mut _,
+                    &(ldb as c_int))
     }
 }
 
@@ -1394,7 +1443,8 @@ pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 
     unsafe {
         ffi::ztrsm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
-                    &(m as c_int), &(n as c_int), &alpha, a.as_ptr(), &(lda as c_int),
-                    b.as_mut_ptr(), &(ldb as c_int))
+                    &(m as c_int), &(n as c_int), &alpha as *const _ as *const _,
+                    a.as_ptr() as *const _, &(lda as c_int), b.as_mut_ptr() as *mut _,
+                    &(ldb as c_int))
     }
 }
