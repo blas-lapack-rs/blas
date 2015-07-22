@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Corey Richardson <corey@octayn.net>", "Ivan Ukhov <ivan.ukhov@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/stainless-steel/blas"
@@ -9,9 +9,6 @@ documentation = "https://stainless-steel.github.io/blas"
 description = "The package provides an interface to the Basic Linear Algebra Subprograms."
 
 [dependencies]
-blas-sys = "*"
+blas-sys = "0.1"
 complex = "0.7"
 libc = "*"
-
-[dev-dependencies]
-assert = "*"
