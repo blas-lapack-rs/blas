@@ -9,31 +9,6 @@ extern crate libc;
 use complex::{c32, c64};
 use libc::{c_char, c_int};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Diag {
-    N = b'N' as isize,
-    U = b'U' as isize,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Side {
-    L = b'L' as isize,
-    R = b'R' as isize,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Trans {
-    N = b'N' as isize,
-    T = b'T' as isize,
-    C = b'C' as isize,
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Uplo {
-    U = b'U' as isize,
-    L = b'L' as isize,
-}
-
 #[inline]
 pub fn srotg(a: &mut f32, b: &mut f32, c: &mut f32, s: &mut f32) {
     unsafe {
@@ -411,7 +386,7 @@ pub fn izamax(n: usize, x: &[c64], incx: usize) -> isize {
 }
 
 #[inline]
-pub fn sgemv(trans: Trans, m: usize, n: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32],
+pub fn sgemv(trans: u8, m: usize, n: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32],
              incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -422,7 +397,7 @@ pub fn sgemv(trans: Trans, m: usize, n: usize, alpha: f32, a: &[f32], lda: usize
 }
 
 #[inline]
-pub fn sgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: f32, a: &[f32],
+pub fn sgbmv(trans: u8, m: usize, n: usize, kl: usize, ku: usize, alpha: f32, a: &[f32],
              lda: usize, x: &[f32], incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -433,7 +408,7 @@ pub fn sgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: f32,
 }
 
 #[inline]
-pub fn ssymv(uplo: Uplo, n: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32], incx: usize,
+pub fn ssymv(uplo: u8, n: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32], incx: usize,
              beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -443,7 +418,7 @@ pub fn ssymv(uplo: Uplo, n: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32],
 }
 
 #[inline]
-pub fn ssbmv(uplo: Uplo, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32],
+pub fn ssbmv(uplo: u8, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize, x: &[f32],
              incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -454,7 +429,7 @@ pub fn ssbmv(uplo: Uplo, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize, 
 }
 
 #[inline]
-pub fn sspmv(uplo: Uplo, n: usize, alpha: f32, ap: &[f32], x: &[f32], incx: usize, beta: f32,
+pub fn sspmv(uplo: u8, n: usize, alpha: f32, ap: &[f32], x: &[f32], incx: usize, beta: f32,
              y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -464,7 +439,7 @@ pub fn sspmv(uplo: Uplo, n: usize, alpha: f32, ap: &[f32], x: &[f32], incx: usiz
 }
 
 #[inline]
-pub fn strmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[f32], lda: usize, b: &mut [f32],
+pub fn strmv(uplo: u8, transa: u8, diag: u8, n: usize, a: &[f32], lda: usize, b: &mut [f32],
              incx: usize) {
 
     unsafe {
@@ -474,7 +449,7 @@ pub fn strmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[f32], lda: us
 }
 
 #[inline]
-pub fn stbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f32], lda: usize,
+pub fn stbmv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[f32], lda: usize,
              x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -484,9 +459,7 @@ pub fn stbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f32]
 }
 
 #[inline]
-pub fn stpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f32], x: &mut [f32],
-             incx: usize) {
-
+pub fn stpmv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[f32], x: &mut [f32], incx: usize) {
     unsafe {
         ffi::stpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
@@ -494,7 +467,7 @@ pub fn stpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f32], x: &mut
 }
 
 #[inline]
-pub fn strsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[f32], lda: usize, x: &mut [f32],
+pub fn strsv(uplo: u8, trans: u8, diag: u8, n: usize, a: &[f32], lda: usize, x: &mut [f32],
              incx: usize) {
 
     unsafe {
@@ -504,7 +477,7 @@ pub fn strsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[f32], lda: usi
 }
 
 #[inline]
-pub fn stbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f32], lda: usize,
+pub fn stbsv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[f32], lda: usize,
              x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -514,9 +487,7 @@ pub fn stbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f32]
 }
 
 #[inline]
-pub fn stpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f32], x: &mut [f32],
-             incx: usize) {
-
+pub fn stpsv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[f32], x: &mut [f32], incx: usize) {
     unsafe {
         ffi::stpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
@@ -534,7 +505,7 @@ pub fn sger(m: usize, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], i
 }
 
 #[inline]
-pub fn ssyr(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, a: &mut [f32], lda: usize) {
+pub fn ssyr(uplo: u8, n: usize, alpha: f32, x: &[f32], incx: usize, a: &mut [f32], lda: usize) {
     unsafe {
         ffi::ssyr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
                    a.as_mut_ptr(), &(lda as c_int))
@@ -542,7 +513,7 @@ pub fn ssyr(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, a: &mut [f
 }
 
 #[inline]
-pub fn sspr(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, ap: &mut [f32]) {
+pub fn sspr(uplo: u8, n: usize, alpha: f32, x: &[f32], incx: usize, ap: &mut [f32]) {
     unsafe {
         ffi::sspr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
                    ap.as_mut_ptr())
@@ -550,7 +521,7 @@ pub fn sspr(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, ap: &mut [
 }
 
 #[inline]
-pub fn ssyr2(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], incy: usize,
+pub fn ssyr2(uplo: u8, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], incy: usize,
              a: &mut [f32], lda: usize) {
 
     unsafe {
@@ -560,7 +531,7 @@ pub fn ssyr2(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32]
 }
 
 #[inline]
-pub fn sspr2(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], incy: usize,
+pub fn sspr2(uplo: u8, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32], incy: usize,
              ap: &mut [f32]) {
 
     unsafe {
@@ -570,7 +541,7 @@ pub fn sspr2(uplo: Uplo, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32]
 }
 
 #[inline]
-pub fn dgemv(trans: Trans, m: usize, n: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64],
+pub fn dgemv(trans: u8, m: usize, n: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64],
              incx: usize, beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -581,7 +552,7 @@ pub fn dgemv(trans: Trans, m: usize, n: usize, alpha: f64, a: &[f64], lda: usize
 }
 
 #[inline]
-pub fn dgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: f64, a: &[f64],
+pub fn dgbmv(trans: u8, m: usize, n: usize, kl: usize, ku: usize, alpha: f64, a: &[f64],
              lda: usize, x: &[f64], incx: usize, beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -592,7 +563,7 @@ pub fn dgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: f64,
 }
 
 #[inline]
-pub fn dsymv(uplo: Uplo, n: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64], incx: usize,
+pub fn dsymv(uplo: u8, n: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64], incx: usize,
              beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -602,7 +573,7 @@ pub fn dsymv(uplo: Uplo, n: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64],
 }
 
 #[inline]
-pub fn dsbmv(uplo: Uplo, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64],
+pub fn dsbmv(uplo: u8, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize, x: &[f64],
              incx: usize, beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -613,7 +584,7 @@ pub fn dsbmv(uplo: Uplo, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize, 
 }
 
 #[inline]
-pub fn dspmv(uplo: Uplo, n: usize, alpha: f64, ap: &[f64], x: &[f64], incx: usize, beta: f64,
+pub fn dspmv(uplo: u8, n: usize, alpha: f64, ap: &[f64], x: &[f64], incx: usize, beta: f64,
              y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -623,7 +594,7 @@ pub fn dspmv(uplo: Uplo, n: usize, alpha: f64, ap: &[f64], x: &[f64], incx: usiz
 }
 
 #[inline]
-pub fn dtrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[f64], lda: usize, b: &mut [f64],
+pub fn dtrmv(uplo: u8, transa: u8, diag: u8, n: usize, a: &[f64], lda: usize, b: &mut [f64],
              incx: usize) {
 
     unsafe {
@@ -633,7 +604,7 @@ pub fn dtrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[f64], lda: us
 }
 
 #[inline]
-pub fn dtbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f64], lda: usize,
+pub fn dtbmv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[f64], lda: usize,
              x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -643,9 +614,7 @@ pub fn dtbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f64]
 }
 
 #[inline]
-pub fn dtpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f64], x: &mut [f64],
-             incx: usize) {
-
+pub fn dtpmv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[f64], x: &mut [f64], incx: usize) {
     unsafe {
         ffi::dtpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
@@ -653,7 +622,7 @@ pub fn dtpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f64], x: &mut
 }
 
 #[inline]
-pub fn dtrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[f64], lda: usize, x: &mut [f64],
+pub fn dtrsv(uplo: u8, trans: u8, diag: u8, n: usize, a: &[f64], lda: usize, x: &mut [f64],
              incx: usize) {
 
     unsafe {
@@ -663,7 +632,7 @@ pub fn dtrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[f64], lda: usi
 }
 
 #[inline]
-pub fn dtbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f64], lda: usize,
+pub fn dtbsv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[f64], lda: usize,
              x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -673,9 +642,7 @@ pub fn dtbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[f64]
 }
 
 #[inline]
-pub fn dtpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[f64], x: &mut [f64],
-             incx: usize) {
-
+pub fn dtpsv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[f64], x: &mut [f64], incx: usize) {
     unsafe {
         ffi::dtpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr(), x.as_mut_ptr(), &(incx as c_int))
@@ -693,7 +660,7 @@ pub fn dger(m: usize, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], i
 }
 
 #[inline]
-pub fn dsyr(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, a: &mut [f64], lda: usize) {
+pub fn dsyr(uplo: u8, n: usize, alpha: f64, x: &[f64], incx: usize, a: &mut [f64], lda: usize) {
     unsafe {
         ffi::dsyr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
                    a.as_mut_ptr(), &(lda as c_int))
@@ -701,7 +668,7 @@ pub fn dsyr(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, a: &mut [f
 }
 
 #[inline]
-pub fn dspr(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, ap: &mut [f64]) {
+pub fn dspr(uplo: u8, n: usize, alpha: f64, x: &[f64], incx: usize, ap: &mut [f64]) {
     unsafe {
         ffi::dspr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr(), &(incx as c_int),
                    ap.as_mut_ptr())
@@ -709,7 +676,7 @@ pub fn dspr(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, ap: &mut [
 }
 
 #[inline]
-pub fn dsyr2(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], incy: usize,
+pub fn dsyr2(uplo: u8, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], incy: usize,
              a: &mut [f64], lda: usize) {
 
     unsafe {
@@ -719,7 +686,7 @@ pub fn dsyr2(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64]
 }
 
 #[inline]
-pub fn dspr2(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], incy: usize,
+pub fn dspr2(uplo: u8, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64], incy: usize,
              ap: &mut [f64]) {
 
     unsafe {
@@ -729,7 +696,7 @@ pub fn dspr2(uplo: Uplo, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64]
 }
 
 #[inline]
-pub fn cgemv(trans: Trans, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
+pub fn cgemv(trans: u8, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
              incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -741,7 +708,7 @@ pub fn cgemv(trans: Trans, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize
 }
 
 #[inline]
-pub fn cgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c32, a: &[c32],
+pub fn cgbmv(trans: u8, m: usize, n: usize, kl: usize, ku: usize, alpha: c32, a: &[c32],
              lda: usize, x: &[c32], incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -753,7 +720,7 @@ pub fn cgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c32,
 }
 
 #[inline]
-pub fn chemv(uplo: Uplo, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32], incx: usize,
+pub fn chemv(uplo: u8, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32], incx: usize,
              beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -765,7 +732,7 @@ pub fn chemv(uplo: Uplo, n: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
 }
 
 #[inline]
-pub fn chbmv(uplo: Uplo, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
+pub fn chbmv(uplo: u8, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize, x: &[c32],
              incx: usize, beta: c32, y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -777,7 +744,7 @@ pub fn chbmv(uplo: Uplo, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize, 
 }
 
 #[inline]
-pub fn chpmv(uplo: Uplo, n: usize, alpha: c32, ap: &[c32], x: &[c32], incx: usize, beta: c32,
+pub fn chpmv(uplo: u8, n: usize, alpha: c32, ap: &[c32], x: &[c32], incx: usize, beta: c32,
              y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -788,7 +755,7 @@ pub fn chpmv(uplo: Uplo, n: usize, alpha: c32, ap: &[c32], x: &[c32], incx: usiz
 }
 
 #[inline]
-pub fn ctrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c32], lda: usize, b: &mut [c32],
+pub fn ctrmv(uplo: u8, transa: u8, diag: u8, n: usize, a: &[c32], lda: usize, b: &mut [c32],
              incx: usize) {
 
     unsafe {
@@ -799,7 +766,7 @@ pub fn ctrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c32], lda: us
 }
 
 #[inline]
-pub fn ctbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32], lda: usize,
+pub fn ctbmv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[c32], lda: usize,
              x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -810,9 +777,7 @@ pub fn ctbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32]
 }
 
 #[inline]
-pub fn ctpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c32], x: &mut [c32],
-             incx: usize) {
-
+pub fn ctpmv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[c32], x: &mut [c32], incx: usize) {
     unsafe {
         ffi::ctpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
@@ -820,7 +785,7 @@ pub fn ctpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c32], x: &mut
 }
 
 #[inline]
-pub fn ctrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c32], lda: usize, x: &mut [c32],
+pub fn ctrsv(uplo: u8, trans: u8, diag: u8, n: usize, a: &[c32], lda: usize, x: &mut [c32],
              incx: usize) {
 
     unsafe {
@@ -831,7 +796,7 @@ pub fn ctrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c32], lda: usi
 }
 
 #[inline]
-pub fn ctbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32], lda: usize,
+pub fn ctbsv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[c32], lda: usize,
              x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -842,9 +807,7 @@ pub fn ctbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c32]
 }
 
 #[inline]
-pub fn ctpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c32], x: &mut [c32],
-             incx: usize) {
-
+pub fn ctpsv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[c32], x: &mut [c32], incx: usize) {
     unsafe {
         ffi::ctpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
@@ -874,7 +837,7 @@ pub fn cgerc(m: usize, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], 
 }
 
 #[inline]
-pub fn cher(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, a: &mut [c32], lda: usize) {
+pub fn cher(uplo: u8, n: usize, alpha: f32, x: &[c32], incx: usize, a: &mut [c32], lda: usize) {
     unsafe {
         ffi::cher_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
                    &(incx as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
@@ -882,7 +845,7 @@ pub fn cher(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, a: &mut [c
 }
 
 #[inline]
-pub fn chpr(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, ap: &mut [c32]) {
+pub fn chpr(uplo: u8, n: usize, alpha: f32, x: &[c32], incx: usize, ap: &mut [c32]) {
     unsafe {
         ffi::chpr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
                    &(incx as c_int), ap.as_mut_ptr() as *mut _)
@@ -890,7 +853,7 @@ pub fn chpr(uplo: Uplo, n: usize, alpha: f32, x: &[c32], incx: usize, ap: &mut [
 }
 
 #[inline]
-pub fn chpr2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
+pub fn chpr2(uplo: u8, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
              ap: &mut [c32]) {
 
     unsafe {
@@ -901,7 +864,7 @@ pub fn chpr2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32]
 }
 
 #[inline]
-pub fn cher2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
+pub fn cher2(uplo: u8, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32], incy: usize,
              a: &mut [c32], lda: usize) {
 
     unsafe {
@@ -912,7 +875,7 @@ pub fn cher2(uplo: Uplo, n: usize, alpha: c32, x: &[c32], incx: usize, y: &[c32]
 }
 
 #[inline]
-pub fn zgemv(trans: Trans, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
+pub fn zgemv(trans: u8, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
              incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -924,7 +887,7 @@ pub fn zgemv(trans: Trans, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize
 }
 
 #[inline]
-pub fn zgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c64, a: &[c64],
+pub fn zgbmv(trans: u8, m: usize, n: usize, kl: usize, ku: usize, alpha: c64, a: &[c64],
              lda: usize, x: &[c64], incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -936,7 +899,7 @@ pub fn zgbmv(trans: Trans, m: usize, n: usize, kl: usize, ku: usize, alpha: c64,
 }
 
 #[inline]
-pub fn zhemv(uplo: Uplo, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64], incx: usize,
+pub fn zhemv(uplo: u8, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64], incx: usize,
              beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -948,7 +911,7 @@ pub fn zhemv(uplo: Uplo, n: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
 }
 
 #[inline]
-pub fn zhbmv(uplo: Uplo, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
+pub fn zhbmv(uplo: u8, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize, x: &[c64],
              incx: usize, beta: c64, y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -960,7 +923,7 @@ pub fn zhbmv(uplo: Uplo, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize, 
 }
 
 #[inline]
-pub fn zhpmv(uplo: Uplo, n: usize, alpha: c64, ap: &[c64], x: &[c64], incx: usize, beta: c64,
+pub fn zhpmv(uplo: u8, n: usize, alpha: c64, ap: &[c64], x: &[c64], incx: usize, beta: c64,
              y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -971,7 +934,7 @@ pub fn zhpmv(uplo: Uplo, n: usize, alpha: c64, ap: &[c64], x: &[c64], incx: usiz
 }
 
 #[inline]
-pub fn ztrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c64], lda: usize, b: &mut [c64],
+pub fn ztrmv(uplo: u8, transa: u8, diag: u8, n: usize, a: &[c64], lda: usize, b: &mut [c64],
              incx: usize) {
 
     unsafe {
@@ -982,7 +945,7 @@ pub fn ztrmv(uplo: Uplo, transa: Trans, diag: Diag, n: usize, a: &[c64], lda: us
 }
 
 #[inline]
-pub fn ztbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64], lda: usize,
+pub fn ztbmv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[c64], lda: usize,
              x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -993,9 +956,7 @@ pub fn ztbmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64]
 }
 
 #[inline]
-pub fn ztpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c64], x: &mut [c64],
-             incx: usize) {
-
+pub fn ztpmv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[c64], x: &mut [c64], incx: usize) {
     unsafe {
         ffi::ztpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
@@ -1003,7 +964,7 @@ pub fn ztpmv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c64], x: &mut
 }
 
 #[inline]
-pub fn ztrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c64], lda: usize, x: &mut [c64],
+pub fn ztrsv(uplo: u8, trans: u8, diag: u8, n: usize, a: &[c64], lda: usize, x: &mut [c64],
              incx: usize) {
 
     unsafe {
@@ -1014,7 +975,7 @@ pub fn ztrsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, a: &[c64], lda: usi
 }
 
 #[inline]
-pub fn ztbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64], lda: usize,
+pub fn ztbsv(uplo: u8, trans: u8, diag: u8, n: usize, k: usize, a: &[c64], lda: usize,
              x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -1025,9 +986,7 @@ pub fn ztbsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, k: usize, a: &[c64]
 }
 
 #[inline]
-pub fn ztpsv(uplo: Uplo, trans: Trans, diag: Diag, n: usize, ap: &[c64], x: &mut [c64],
-             incx: usize) {
-
+pub fn ztpsv(uplo: u8, trans: u8, diag: u8, n: usize, ap: &[c64], x: &mut [c64], incx: usize) {
     unsafe {
         ffi::ztpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &(n as c_int),
                     ap.as_ptr() as *const _, x.as_mut_ptr() as *mut _, &(incx as c_int))
@@ -1057,7 +1016,7 @@ pub fn zgerc(m: usize, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], 
 }
 
 #[inline]
-pub fn zher(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, a: &mut [c64], lda: usize) {
+pub fn zher(uplo: u8, n: usize, alpha: f64, x: &[c64], incx: usize, a: &mut [c64], lda: usize) {
     unsafe {
         ffi::zher_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
                    &(incx as c_int), a.as_mut_ptr() as *mut _, &(lda as c_int))
@@ -1065,7 +1024,7 @@ pub fn zher(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, a: &mut [c
 }
 
 #[inline]
-pub fn zhpr(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, ap: &mut [c64]) {
+pub fn zhpr(uplo: u8, n: usize, alpha: f64, x: &[c64], incx: usize, ap: &mut [c64]) {
     unsafe {
         ffi::zhpr_(&(uplo as c_char), &(n as c_int), &alpha, x.as_ptr() as *const _,
                    &(incx as c_int), ap.as_mut_ptr() as *mut _)
@@ -1073,7 +1032,7 @@ pub fn zhpr(uplo: Uplo, n: usize, alpha: f64, x: &[c64], incx: usize, ap: &mut [
 }
 
 #[inline]
-pub fn zher2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
+pub fn zher2(uplo: u8, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
              a: &mut [c64], lda: usize) {
 
     unsafe {
@@ -1084,7 +1043,7 @@ pub fn zher2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64]
 }
 
 #[inline]
-pub fn zhpr2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
+pub fn zhpr2(uplo: u8, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64], incy: usize,
              ap: &mut [c64]) {
 
     unsafe {
@@ -1095,7 +1054,7 @@ pub fn zhpr2(uplo: Uplo, n: usize, alpha: c64, x: &[c64], incx: usize, y: &[c64]
 }
 
 #[inline]
-pub fn sgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: f32, a: &[f32],
+pub fn sgemm(transa: u8, transb: u8, m: usize, n: usize, k: usize, alpha: f32, a: &[f32],
              lda: usize, b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
 
     unsafe {
@@ -1106,8 +1065,8 @@ pub fn sgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 }
 
 #[inline]
-pub fn ssymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: f32, a: &[f32], lda: usize,
-             b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
+pub fn ssymm(side: u8, uplo: u8, m: usize, n: usize, alpha: f32, a: &[f32], lda: usize, b: &[f32],
+             ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
 
     unsafe {
         ffi::ssymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int), &alpha,
@@ -1117,8 +1076,8 @@ pub fn ssymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: f32, a: &[f32], 
 }
 
 #[inline]
-pub fn ssyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize,
-             beta: f32, c: &mut [f32], ldc: usize) {
+pub fn ssyrk(uplo: u8, trans: u8, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize, beta: f32,
+             c: &mut [f32], ldc: usize) {
 
     unsafe {
         ffi::ssyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
@@ -1127,7 +1086,7 @@ pub fn ssyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[f32]
 }
 
 #[inline]
-pub fn ssyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize,
+pub fn ssyr2k(uplo: u8, trans: u8, n: usize, k: usize, alpha: f32, a: &[f32], lda: usize,
               b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
 
     unsafe {
@@ -1138,8 +1097,8 @@ pub fn ssyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[f32
 }
 
 #[inline]
-pub fn strmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f32,
-             a: &[f32], lda: usize, b: &mut [f32], ldb: usize) {
+pub fn strmm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: f32, a: &[f32],
+             lda: usize, b: &mut [f32], ldb: usize) {
 
     unsafe {
         ffi::strmm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1149,8 +1108,8 @@ pub fn strmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn strsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f32,
-             a: &[f32], lda: usize, b: &mut [f32], ldb: usize) {
+pub fn strsm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: f32, a: &[f32],
+             lda: usize, b: &mut [f32], ldb: usize) {
 
     unsafe {
         ffi::strsm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1160,7 +1119,7 @@ pub fn strsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn dgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: f64, a: &[f64],
+pub fn dgemm(transa: u8, transb: u8, m: usize, n: usize, k: usize, alpha: f64, a: &[f64],
              lda: usize, b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
 
     unsafe {
@@ -1171,8 +1130,8 @@ pub fn dgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 }
 
 #[inline]
-pub fn dsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: f64, a: &[f64], lda: usize,
-             b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
+pub fn dsymm(side: u8, uplo: u8, m: usize, n: usize, alpha: f64, a: &[f64], lda: usize, b: &[f64],
+             ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
 
     unsafe {
         ffi::dsymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int), &alpha,
@@ -1182,8 +1141,8 @@ pub fn dsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: f64, a: &[f64], 
 }
 
 #[inline]
-pub fn dsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize,
-             beta: f64, c: &mut [f64], ldc: usize) {
+pub fn dsyrk(uplo: u8, trans: u8, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize, beta: f64,
+             c: &mut [f64], ldc: usize) {
 
     unsafe {
         ffi::dsyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
@@ -1192,7 +1151,7 @@ pub fn dsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[f64]
 }
 
 #[inline]
-pub fn dsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize,
+pub fn dsyr2k(uplo: u8, trans: u8, n: usize, k: usize, alpha: f64, a: &[f64], lda: usize,
               b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
 
     unsafe {
@@ -1203,8 +1162,8 @@ pub fn dsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[f64
 }
 
 #[inline]
-pub fn dtrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f64,
-             a: &[f64], lda: usize, b: &mut [f64], ldb: usize) {
+pub fn dtrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: f64, a: &[f64],
+             lda: usize, b: &mut [f64], ldb: usize) {
 
     unsafe {
         ffi::dtrmm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1214,8 +1173,8 @@ pub fn dtrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn dtrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: f64,
-             a: &[f64], lda: usize, b: &mut [f64], ldb: usize) {
+pub fn dtrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: f64, a: &[f64],
+             lda: usize, b: &mut [f64], ldb: usize) {
 
     unsafe {
         ffi::dtrsm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1225,7 +1184,7 @@ pub fn dtrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn cgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: c32, a: &[c32],
+pub fn cgemm(transa: u8, transb: u8, m: usize, n: usize, k: usize, alpha: c32, a: &[c32],
              lda: usize, b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
@@ -1237,8 +1196,8 @@ pub fn cgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 }
 
 #[inline]
-pub fn csymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize,
-             b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
+pub fn csymm(side: u8, uplo: u8, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize, b: &[c32],
+             ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::csymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
@@ -1249,8 +1208,8 @@ pub fn csymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], 
 }
 
 #[inline]
-pub fn chemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize,
-             b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
+pub fn chemm(side: u8, uplo: u8, m: usize, n: usize, alpha: c32, a: &[c32], lda: usize, b: &[c32],
+             ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::chemm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
@@ -1261,8 +1220,8 @@ pub fn chemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c32, a: &[c32], 
 }
 
 #[inline]
-pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
-             beta: c32, c: &mut [c32], ldc: usize) {
+pub fn csyrk(uplo: u8, trans: u8, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize, beta: c32,
+             c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::csyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
@@ -1272,8 +1231,8 @@ pub fn csyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32]
 }
 
 #[inline]
-pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[c32], lda: usize,
-             beta: f32, c: &mut [c32], ldc: usize) {
+pub fn cherk(uplo: u8, trans: u8, n: usize, k: usize, alpha: f32, a: &[c32], lda: usize, beta: f32,
+             c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::cherk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
@@ -1283,7 +1242,7 @@ pub fn cherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f32, a: &[c32]
 }
 
 #[inline]
-pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
+pub fn csyr2k(uplo: u8, trans: u8, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
               b: &[c32], ldb: usize, beta: c32, c: &mut [c32], ldc: usize) {
 
     unsafe {
@@ -1295,7 +1254,7 @@ pub fn csyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32
 }
 
 #[inline]
-pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
+pub fn cher2k(uplo: u8, trans: u8, n: usize, k: usize, alpha: c32, a: &[c32], lda: usize,
               b: &[c32], ldb: usize, beta: f32, c: &mut [c32], ldc: usize) {
 
     unsafe {
@@ -1307,8 +1266,8 @@ pub fn cher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c32, a: &[c32
 }
 
 #[inline]
-pub fn ctrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c32,
-             a: &[c32], lda: usize, b: &mut [c32], ldb: usize) {
+pub fn ctrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: c32, a: &[c32],
+             lda: usize, b: &mut [c32], ldb: usize) {
 
     unsafe {
         ffi::ctrmm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1319,8 +1278,8 @@ pub fn ctrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn ctrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c32,
-             a: &[c32], lda: usize, b: &mut [c32], ldb: usize) {
+pub fn ctrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: c32, a: &[c32],
+             lda: usize, b: &mut [c32], ldb: usize) {
 
     unsafe {
         ffi::ctrsm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1331,7 +1290,7 @@ pub fn ctrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn zgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: c64, a: &[c64],
+pub fn zgemm(transa: u8, transb: u8, m: usize, n: usize, k: usize, alpha: c64, a: &[c64],
              lda: usize, b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
@@ -1343,8 +1302,8 @@ pub fn zgemm(transa: Trans, transb: Trans, m: usize, n: usize, k: usize, alpha: 
 }
 
 #[inline]
-pub fn zsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize,
-             b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
+pub fn zsymm(side: u8, uplo: u8, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize, b: &[c64],
+             ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::zsymm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
@@ -1355,8 +1314,8 @@ pub fn zsymm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], 
 }
 
 #[inline]
-pub fn zhemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize,
-             b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
+pub fn zhemm(side: u8, uplo: u8, m: usize, n: usize, alpha: c64, a: &[c64], lda: usize, b: &[c64],
+             ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::zhemm_(&(side as c_char), &(uplo as c_char), &(m as c_int), &(n as c_int),
@@ -1367,8 +1326,8 @@ pub fn zhemm(side: Side, uplo: Uplo, m: usize, n: usize, alpha: c64, a: &[c64], 
 }
 
 #[inline]
-pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
-             beta: c64, c: &mut [c64], ldc: usize) {
+pub fn zsyrk(uplo: u8, trans: u8, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize, beta: c64,
+             c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::zsyrk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int),
@@ -1378,8 +1337,8 @@ pub fn zsyrk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64]
 }
 
 #[inline]
-pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[c64], lda: usize,
-             beta: f64, c: &mut [c64], ldc: usize) {
+pub fn zherk(uplo: u8, trans: u8, n: usize, k: usize, alpha: f64, a: &[c64], lda: usize, beta: f64,
+             c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::zherk_(&(uplo as c_char), &(trans as c_char), &(n as c_int), &(k as c_int), &alpha,
@@ -1389,7 +1348,7 @@ pub fn zherk(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: f64, a: &[c64]
 }
 
 #[inline]
-pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
+pub fn zsyr2k(uplo: u8, trans: u8, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
               b: &[c64], ldb: usize, beta: c64, c: &mut [c64], ldc: usize) {
 
     unsafe {
@@ -1401,7 +1360,7 @@ pub fn zsyr2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64
 }
 
 #[inline]
-pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
+pub fn zher2k(uplo: u8, trans: u8, n: usize, k: usize, alpha: c64, a: &[c64], lda: usize,
               b: &[c64], ldb: usize, beta: f64, c: &mut [c64], ldc: usize) {
 
     unsafe {
@@ -1413,8 +1372,8 @@ pub fn zher2k(uplo: Uplo, trans: Trans, n: usize, k: usize, alpha: c64, a: &[c64
 }
 
 #[inline]
-pub fn ztrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c64,
-             a: &[c64], lda: usize, b: &mut [c64], ldb: usize) {
+pub fn ztrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: c64, a: &[c64],
+             lda: usize, b: &mut [c64], ldb: usize) {
 
     unsafe {
         ffi::ztrmm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1425,8 +1384,8 @@ pub fn ztrmm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
 }
 
 #[inline]
-pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usize, alpha: c64,
-             a: &[c64], lda: usize, b: &mut [c64], ldb: usize) {
+pub fn ztrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha: c64, a: &[c64],
+             lda: usize, b: &mut [c64], ldb: usize) {
 
     unsafe {
         ffi::ztrsm_(&(side as c_char), &(uplo as c_char), &(transa as c_char), &(diag as c_char),
@@ -1435,3 +1394,4 @@ pub fn ztrsm(side: Side, uplo: Uplo, transa: Trans, diag: Diag, m: usize, n: usi
                     &(ldb as c_int))
     }
 }
+

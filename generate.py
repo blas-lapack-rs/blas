@@ -496,17 +496,13 @@ def is_mut(name, cty):
     return "*mut" in cty
 
 def translate_argument(name, cty, f):
-    if name == "uplo":
-        return "Uplo"
-    elif name.startswith("trans"):
-        return "Trans"
-    elif name == "side":
-        return "Side"
-    elif name == "diag":
-        return "Diag"
-
-    elif is_natural(name, cty):
+    if is_natural(name, cty):
+        assert(is_const(name, cty))
         return "usize"
+
+    elif is_letter(name, cty):
+        assert(is_const(name, cty))
+        return "u8"
 
     elif is_const(name, cty):
         base = translate_type_base(cty)
@@ -536,26 +532,29 @@ def translate_type_base(cty):
     assert False, "cannot translate `{}`".format(cty)
 
 def translate_body_argument(name, rty):
-    if name in ["uplo", "diag", "side"] or name.startswith("trans"):
+    if rty == "u8":
         return "&({} as c_char)".format(name)
+
     elif rty == "usize":
         return "&({} as c_int)".format(name)
-    elif rty in ["f32", "f64"]:
+
+    elif rty.startswith("f"):
         return "&{}".format(name)
-    elif rty in ["c32", "c64"]:
-        return "&{} as *const _ as *const _".format(name)
-    elif rty in ["&mut f32", "&mut f64"]:
+    elif rty.startswith("&mut f"):
         return "{}".format(name)
-    elif rty in ["&mut c32", "&mut c64"]:
+    elif rty.startswith("&[f"):
+        return "{}.as_ptr()".format(name)
+    elif rty.startswith("&mut [f"):
+        return "{}.as_mut_ptr()".format(name)
+
+    elif rty.startswith("c"):
+        return "&{} as *const _ as *const _".format(name)
+    elif rty.startswith("&mut c"):
         return "{} as *mut _ as *mut _".format(name)
     elif rty.startswith("&[c"):
         return "{}.as_ptr() as *const _".format(name)
     elif rty.startswith("&mut [c"):
         return "{}.as_mut_ptr() as *mut _".format(name)
-    elif rty.startswith("&["):
-        return "{}.as_ptr()".format(name)
-    elif rty.startswith("&mut ["):
-        return "{}.as_mut_ptr()".format(name)
 
     assert False, "cannot translate `{}: {}`".format(name, rty)
 
