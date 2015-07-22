@@ -14,7 +14,7 @@ fn dgemv_few_large(bencher: &mut Bencher) {
     let mut y = vec![1.0; m];
 
     bencher.iter(|| {
-        blas::dgemv(blas::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1)
+        blas::dgemv(b'N', m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1)
     });
 }
 
@@ -28,7 +28,7 @@ fn dgemv_many_small(bencher: &mut Bencher) {
 
     bencher.iter(|| {
         for _ in 0..20000 {
-            blas::dgemv(blas::Trans::N, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
+            blas::dgemv(b'N', m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1);
         }
     });
 }
