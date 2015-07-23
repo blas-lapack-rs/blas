@@ -26,7 +26,7 @@ assert_eq!(&c, &vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0]);
 
 [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
-[version-img]: https://img.shields.io/crates/v/blas.svg
+[version-img]: http://stainless-steel.github.io/images/crates.svg
 [version-url]: https://crates.io/crates/blas
 [status-img]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [status-url]: https://travis-ci.org/stainless-steel/blas
