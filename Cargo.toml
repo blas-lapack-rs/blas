@@ -8,7 +8,15 @@ homepage = "https://github.com/stainless-steel/blas"
 documentation = "https://stainless-steel.github.io/blas"
 description = "The package provides an interface to the Basic Linear Algebra Subprograms."
 
+[features]
+default = ["openblas"]
+openblas = ["blas-sys/openblas"]
+netlib = ["blas-sys/netlib"]
+
 [dependencies]
-blas-sys = "0.1"
 complex = "0.7"
 libc = "*"
+
+[dependencies.blas-sys]
+version = "0.1"
+default-features = false
