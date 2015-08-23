@@ -12,6 +12,7 @@ description = "The package provides an interface to the Basic Linear Algebra Sub
 default = ["openblas"]
 openblas = ["blas-sys/openblas"]
 netlib = ["blas-sys/netlib"]
+accelerate = ["blas-sys/accelerate"]
 
 [dependencies]
 complex = "0.7"
