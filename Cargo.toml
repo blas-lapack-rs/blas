@@ -1,7 +1,11 @@
 [package]
 name = "blas"
 version = "0.7.0"
-authors = ["Corey Richardson <corey@octayn.net>", "Ivan Ukhov <ivan.ukhov@gmail.com>"]
+authors = [
+  "Andrew Straw <strawman@astraw.com>",
+  "Corey Richardson <corey@octayn.net>",
+  "Ivan Ukhov <ivan.ukhov@gmail.com>",
+]
 license = "MIT"
 repository = "https://github.com/stainless-steel/blas"
 homepage = "https://github.com/stainless-steel/blas"
@@ -10,14 +14,15 @@ description = "The package provides an interface to the Basic Linear Algebra Sub
 
 [features]
 default = ["openblas"]
-openblas = ["blas-sys/openblas"]
-netlib = ["blas-sys/netlib"]
+
 accelerate = ["blas-sys/accelerate"]
+netlib = ["blas-sys/netlib"]
+openblas = ["blas-sys/openblas"]
 
 [dependencies]
 complex = "0.7"
 libc = "*"
 
 [dependencies.blas-sys]
-version = "0.1"
+version = "0.2"
 default-features = false
