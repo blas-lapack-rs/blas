@@ -20,8 +20,12 @@ netlib = ["blas-sys/netlib"]
 openblas = ["blas-sys/openblas"]
 
 [dependencies]
-complex = "0.7"
-libc = "*"
+libc = "0.1"
+
+[dependencies.num]
+version = "0.1"
+default-features = false
+features = ["complex"]
 
 [dependencies.blas-sys]
 version = "0.2"

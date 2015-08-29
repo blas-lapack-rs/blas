@@ -17,11 +17,16 @@
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
 extern crate blas_sys as ffi;
-extern crate complex;
 extern crate libc;
+extern crate num;
 
-use complex::{c32, c64};
 use libc::{c_char, c_int};
+
+#[allow(non_camel_case_types)]
+pub type c32 = num::Complex<f32>;
+
+#[allow(non_camel_case_types)]
+pub type c64 = num::Complex<f64>;
 
 #[inline]
 pub fn srotg(a: &mut f32, b: &mut f32, c: &mut f32, s: &mut f32) {
