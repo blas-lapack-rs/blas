@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.8.0"
+version = "0.9.0"
 authors = [
   "Andrew Straw <strawman@astraw.com>",
   "Corey Richardson <corey@octayn.net>",
