@@ -17,7 +17,6 @@ env:
     - FEATURE=openblas
 
   global:
-    - RUSTDOC_VERSION=nightly
     - secure: CAsWkX68mwPcXVNOiBaekoq8lMWgKRhVVyNhmT2ruMpAbeTmnDLzs9IFWOjvytacMv/YH8Z85HedWxIcg7m6gCIdpIOeNqlDUvGi3T18UdIu55pp6ScOcCyHd762OsC1UGOCudVIBDwK1a8gm6D/6xzzrbxPT3Bs99HXF/vL+E8=
 
 matrix:
@@ -32,7 +31,9 @@ script:
   - cargo test --no-default-features --features=$FEATURE --verbose
 
 after_success:
-  - curl https://stainless-steel.github.io/travis/after_success.sh | bash
+  - if [ "$TRAVIS_OS_NAME" == "osx" ] && [ "$TRAVIS_RUST_VERSION" == "nightly" ] && [ "$FEATURE" == "openblas" ]; then
+      curl https://stainless-steel.github.io/travis/update_documentation.sh | bash;
+    fi
 
 notifications:
   email: false
