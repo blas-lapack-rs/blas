@@ -513,7 +513,7 @@ def translate_argument(name, cty, f):
     elif cty == "CblasTranspose":
         return "Transpose"
     elif cty == "CblasUplo":
-        return "Triangular"
+        return "Part"
 
     base = translate_type_base(cty)
 
@@ -546,7 +546,7 @@ def translate_body_argument(name, rty):
     if rty == "usize":
         return "{} as c_int".format(name)
 
-    elif rty in ["Diagonal", "Layout", "Side", "Transpose", "Triangular"]:
+    elif rty in ["Diagonal", "Layout", "Part", "Side", "Transpose"]:
         return "{}.into()".format(name)
 
     elif rty.startswith("f"):
