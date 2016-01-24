@@ -11,7 +11,7 @@
 //! let b = vec![1.0, 5.0, 9.0, 2.0, 6.0, 10.0, 3.0, 7.0, 11.0, 4.0, 8.0, 12.0];
 //! let mut c = vec![2.0, 7.0, 6.0, 2.0, 0.0, 7.0, 4.0, 2.0];
 //!
-//! dgemm(Major::Column, Transpose::None, Transpose::None,
+//! dgemm(Layout::ColumnMajor, Transpose::None, Transpose::None,
 //!       m, n, k, 1.0, &a, m, &b, k, 1.0, &mut c, m);
 //!
 //! assert_eq!(&c, &vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0]);
@@ -31,9 +31,9 @@ pub enum Diagonal {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(C)]
-pub enum Major {
-    Row = 101,
-    Column = 102,
+pub enum Layout {
+    RowMajor = 101,
+    ColumnMajor = 102,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -73,7 +73,7 @@ macro_rules! convert {
 
 convert! {
     Diagonal => CblasDiag,
-    Major => CblasLayout,
+    Layout => CblasLayout,
     Side => CblasSide,
     Transpose => CblasTranspose,
     Triangular => CblasUplo,
@@ -434,7 +434,7 @@ pub fn zdscal(n: usize, alpha: f64, x: &mut [c64], incx: usize) {
 }
 
 #[inline]
-pub fn sgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: f32, a: &[f32],
+pub fn sgemv(layout: Layout, transa: Transpose, m: usize, n: usize, alpha: f32, a: &[f32],
              lda: usize, x: &[f32], incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -445,7 +445,7 @@ pub fn sgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: f32, a
 }
 
 #[inline]
-pub fn sgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
+pub fn sgbmv(layout: Layout, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
              alpha: f32, a: &[f32], lda: usize, x: &[f32], incx: usize, beta: f32, y: &mut [f32],
              incy: usize) {
 
@@ -457,7 +457,7 @@ pub fn sgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku
 }
 
 #[inline]
-pub fn strmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn strmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[f32], lda: usize, x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -467,7 +467,7 @@ pub fn strmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn stbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn stbmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[f32], lda: usize, x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -477,7 +477,7 @@ pub fn stbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn stpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn stpmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[f32], x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -487,7 +487,7 @@ pub fn stpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn strsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn strsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[f32], lda: usize, x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -497,7 +497,7 @@ pub fn strsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn stbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn stbsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[f32], lda: usize, x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -507,7 +507,7 @@ pub fn stbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn stpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn stpsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[f32], x: &mut [f32], incx: usize) {
 
     unsafe {
@@ -517,7 +517,7 @@ pub fn stpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn dgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: f64, a: &[f64],
+pub fn dgemv(layout: Layout, transa: Transpose, m: usize, n: usize, alpha: f64, a: &[f64],
              lda: usize, x: &[f64], incx: usize, beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -528,7 +528,7 @@ pub fn dgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: f64, a
 }
 
 #[inline]
-pub fn dgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
+pub fn dgbmv(layout: Layout, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
              alpha: f64, a: &[f64], lda: usize, x: &[f64], incx: usize, beta: f64, y: &mut [f64],
              incy: usize) {
 
@@ -540,7 +540,7 @@ pub fn dgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku
 }
 
 #[inline]
-pub fn dtrmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn dtrmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[f64], lda: usize, x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -550,7 +550,7 @@ pub fn dtrmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn dtbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn dtbmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[f64], lda: usize, x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -560,7 +560,7 @@ pub fn dtbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn dtpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn dtpmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[f64], x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -570,7 +570,7 @@ pub fn dtpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn dtrsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn dtrsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[f64], lda: usize, x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -580,7 +580,7 @@ pub fn dtrsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn dtbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn dtbsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[f64], lda: usize, x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -590,7 +590,7 @@ pub fn dtbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn dtpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn dtpsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[f64], x: &mut [f64], incx: usize) {
 
     unsafe {
@@ -600,7 +600,7 @@ pub fn dtpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn cgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: &[c32], a: &[c32],
+pub fn cgemv(layout: Layout, transa: Transpose, m: usize, n: usize, alpha: &[c32], a: &[c32],
              lda: usize, x: &[c32], incx: usize, beta: &[c32], y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -612,7 +612,7 @@ pub fn cgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: &[c32]
 }
 
 #[inline]
-pub fn cgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
+pub fn cgbmv(layout: Layout, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
              alpha: &[c32], a: &[c32], lda: usize, x: &[c32], incx: usize, beta: &[c32],
              y: &mut [c32], incy: usize) {
 
@@ -625,7 +625,7 @@ pub fn cgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku
 }
 
 #[inline]
-pub fn ctrmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ctrmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[c32], lda: usize, x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -636,7 +636,7 @@ pub fn ctrmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ctbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ctbmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[c32], lda: usize, x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -647,7 +647,7 @@ pub fn ctbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ctpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ctpmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[c32], x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -657,7 +657,7 @@ pub fn ctpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ctrsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ctrsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[c32], lda: usize, x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -668,7 +668,7 @@ pub fn ctrsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ctbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ctbsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[c32], lda: usize, x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -679,7 +679,7 @@ pub fn ctbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ctpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ctpsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[c32], x: &mut [c32], incx: usize) {
 
     unsafe {
@@ -689,7 +689,7 @@ pub fn ctpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn zgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: &[c64], a: &[c64],
+pub fn zgemv(layout: Layout, transa: Transpose, m: usize, n: usize, alpha: &[c64], a: &[c64],
              lda: usize, x: &[c64], incx: usize, beta: &[c64], y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -701,7 +701,7 @@ pub fn zgemv(layout: Major, transa: Transpose, m: usize, n: usize, alpha: &[c64]
 }
 
 #[inline]
-pub fn zgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
+pub fn zgbmv(layout: Layout, transa: Transpose, m: usize, n: usize, kl: usize, ku: usize,
              alpha: &[c64], a: &[c64], lda: usize, x: &[c64], incx: usize, beta: &[c64],
              y: &mut [c64], incy: usize) {
 
@@ -714,7 +714,7 @@ pub fn zgbmv(layout: Major, transa: Transpose, m: usize, n: usize, kl: usize, ku
 }
 
 #[inline]
-pub fn ztrmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ztrmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[c64], lda: usize, x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -725,7 +725,7 @@ pub fn ztrmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ztbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ztbmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[c64], lda: usize, x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -736,7 +736,7 @@ pub fn ztbmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ztpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ztpmv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[c64], x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -746,7 +746,7 @@ pub fn ztpmv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ztrsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ztrsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              a: &[c64], lda: usize, x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -757,7 +757,7 @@ pub fn ztrsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ztbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ztbsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              k: usize, a: &[c64], lda: usize, x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -768,7 +768,7 @@ pub fn ztbsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ztpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
+pub fn ztpsv(layout: Layout, uplo: Triangular, transa: Transpose, diag: Diagonal, n: usize,
              ap: &[c64], x: &mut [c64], incx: usize) {
 
     unsafe {
@@ -778,7 +778,7 @@ pub fn ztpsv(layout: Major, uplo: Triangular, transa: Transpose, diag: Diagonal,
 }
 
 #[inline]
-pub fn ssymv(layout: Major, uplo: Triangular, n: usize, alpha: f32, a: &[f32], lda: usize,
+pub fn ssymv(layout: Layout, uplo: Triangular, n: usize, alpha: f32, a: &[f32], lda: usize,
              x: &[f32], incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -788,7 +788,7 @@ pub fn ssymv(layout: Major, uplo: Triangular, n: usize, alpha: f32, a: &[f32], l
 }
 
 #[inline]
-pub fn ssbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: f32, a: &[f32],
+pub fn ssbmv(layout: Layout, uplo: Triangular, n: usize, k: usize, alpha: f32, a: &[f32],
              lda: usize, x: &[f32], incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -799,7 +799,7 @@ pub fn ssbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: f32, a:
 }
 
 #[inline]
-pub fn sspmv(layout: Major, uplo: Triangular, n: usize, alpha: f32, ap: &[f32], x: &[f32],
+pub fn sspmv(layout: Layout, uplo: Triangular, n: usize, alpha: f32, ap: &[f32], x: &[f32],
              incx: usize, beta: f32, y: &mut [f32], incy: usize) {
 
     unsafe {
@@ -809,7 +809,7 @@ pub fn sspmv(layout: Major, uplo: Triangular, n: usize, alpha: f32, ap: &[f32], 
 }
 
 #[inline]
-pub fn sger(layout: Major, m: usize, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32],
+pub fn sger(layout: Layout, m: usize, n: usize, alpha: f32, x: &[f32], incx: usize, y: &[f32],
             incy: usize, a: &mut [f32], lda: usize) {
 
     unsafe {
@@ -819,7 +819,7 @@ pub fn sger(layout: Major, m: usize, n: usize, alpha: f32, x: &[f32], incx: usiz
 }
 
 #[inline]
-pub fn ssyr(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
+pub fn ssyr(layout: Layout, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
             a: &mut [f32], lda: usize) {
 
     unsafe {
@@ -829,7 +829,7 @@ pub fn ssyr(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], in
 }
 
 #[inline]
-pub fn sspr(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
+pub fn sspr(layout: Layout, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
             ap: &mut [f32]) {
 
     unsafe {
@@ -839,7 +839,7 @@ pub fn sspr(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], in
 }
 
 #[inline]
-pub fn ssyr2(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
+pub fn ssyr2(layout: Layout, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
              y: &[f32], incy: usize, a: &mut [f32], lda: usize) {
 
     unsafe {
@@ -849,7 +849,7 @@ pub fn ssyr2(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], i
 }
 
 #[inline]
-pub fn sspr2(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
+pub fn sspr2(layout: Layout, uplo: Triangular, n: usize, alpha: f32, x: &[f32], incx: usize,
              y: &[f32], incy: usize, a: &mut [f32]) {
 
     unsafe {
@@ -859,7 +859,7 @@ pub fn sspr2(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[f32], i
 }
 
 #[inline]
-pub fn dsymv(layout: Major, uplo: Triangular, n: usize, alpha: f64, a: &[f64], lda: usize,
+pub fn dsymv(layout: Layout, uplo: Triangular, n: usize, alpha: f64, a: &[f64], lda: usize,
              x: &[f64], incx: usize, beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -869,7 +869,7 @@ pub fn dsymv(layout: Major, uplo: Triangular, n: usize, alpha: f64, a: &[f64], l
 }
 
 #[inline]
-pub fn dsbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: f64, a: &[f64],
+pub fn dsbmv(layout: Layout, uplo: Triangular, n: usize, k: usize, alpha: f64, a: &[f64],
              lda: usize, x: &[f64], incx: usize, beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -880,7 +880,7 @@ pub fn dsbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: f64, a:
 }
 
 #[inline]
-pub fn dspmv(layout: Major, uplo: Triangular, n: usize, alpha: f64, ap: &[f64], x: &[f64],
+pub fn dspmv(layout: Layout, uplo: Triangular, n: usize, alpha: f64, ap: &[f64], x: &[f64],
              incx: usize, beta: f64, y: &mut [f64], incy: usize) {
 
     unsafe {
@@ -890,7 +890,7 @@ pub fn dspmv(layout: Major, uplo: Triangular, n: usize, alpha: f64, ap: &[f64], 
 }
 
 #[inline]
-pub fn dger(layout: Major, m: usize, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64],
+pub fn dger(layout: Layout, m: usize, n: usize, alpha: f64, x: &[f64], incx: usize, y: &[f64],
             incy: usize, a: &mut [f64], lda: usize) {
 
     unsafe {
@@ -900,7 +900,7 @@ pub fn dger(layout: Major, m: usize, n: usize, alpha: f64, x: &[f64], incx: usiz
 }
 
 #[inline]
-pub fn dsyr(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
+pub fn dsyr(layout: Layout, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
             a: &mut [f64], lda: usize) {
 
     unsafe {
@@ -910,7 +910,7 @@ pub fn dsyr(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], in
 }
 
 #[inline]
-pub fn dspr(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
+pub fn dspr(layout: Layout, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
             ap: &mut [f64]) {
 
     unsafe {
@@ -920,7 +920,7 @@ pub fn dspr(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], in
 }
 
 #[inline]
-pub fn dsyr2(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
+pub fn dsyr2(layout: Layout, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
              y: &[f64], incy: usize, a: &mut [f64], lda: usize) {
 
     unsafe {
@@ -930,7 +930,7 @@ pub fn dsyr2(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], i
 }
 
 #[inline]
-pub fn dspr2(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
+pub fn dspr2(layout: Layout, uplo: Triangular, n: usize, alpha: f64, x: &[f64], incx: usize,
              y: &[f64], incy: usize, a: &mut [f64]) {
 
     unsafe {
@@ -940,7 +940,7 @@ pub fn dspr2(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[f64], i
 }
 
 #[inline]
-pub fn chemv(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], a: &[c32], lda: usize,
+pub fn chemv(layout: Layout, uplo: Triangular, n: usize, alpha: &[c32], a: &[c32], lda: usize,
              x: &[c32], incx: usize, beta: &[c32], y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -952,7 +952,7 @@ pub fn chemv(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], a: &[c32]
 }
 
 #[inline]
-pub fn chbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: &[c32], a: &[c32],
+pub fn chbmv(layout: Layout, uplo: Triangular, n: usize, k: usize, alpha: &[c32], a: &[c32],
              lda: usize, x: &[c32], incx: usize, beta: &[c32], y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -964,7 +964,7 @@ pub fn chbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: &[c32],
 }
 
 #[inline]
-pub fn chpmv(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], ap: &[c32], x: &[c32],
+pub fn chpmv(layout: Layout, uplo: Triangular, n: usize, alpha: &[c32], ap: &[c32], x: &[c32],
              incx: usize, beta: &[c32], y: &mut [c32], incy: usize) {
 
     unsafe {
@@ -975,7 +975,7 @@ pub fn chpmv(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], ap: &[c32
 }
 
 #[inline]
-pub fn cgeru(layout: Major, m: usize, n: usize, alpha: &[c32], x: &[c32], incx: usize, y: &[c32],
+pub fn cgeru(layout: Layout, m: usize, n: usize, alpha: &[c32], x: &[c32], incx: usize, y: &[c32],
              incy: usize, a: &mut [c32], lda: usize) {
 
     unsafe {
@@ -986,7 +986,7 @@ pub fn cgeru(layout: Major, m: usize, n: usize, alpha: &[c32], x: &[c32], incx: 
 }
 
 #[inline]
-pub fn cgerc(layout: Major, m: usize, n: usize, alpha: &[c32], x: &[c32], incx: usize, y: &[c32],
+pub fn cgerc(layout: Layout, m: usize, n: usize, alpha: &[c32], x: &[c32], incx: usize, y: &[c32],
              incy: usize, a: &mut [c32], lda: usize) {
 
     unsafe {
@@ -997,7 +997,7 @@ pub fn cgerc(layout: Major, m: usize, n: usize, alpha: &[c32], x: &[c32], incx: 
 }
 
 #[inline]
-pub fn cher(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[c32], incx: usize,
+pub fn cher(layout: Layout, uplo: Triangular, n: usize, alpha: f32, x: &[c32], incx: usize,
             a: &mut [c32], lda: usize) {
 
     unsafe {
@@ -1007,7 +1007,7 @@ pub fn cher(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[c32], in
 }
 
 #[inline]
-pub fn chpr(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[c32], incx: usize,
+pub fn chpr(layout: Layout, uplo: Triangular, n: usize, alpha: f32, x: &[c32], incx: usize,
             a: &mut [c32]) {
 
     unsafe {
@@ -1017,7 +1017,7 @@ pub fn chpr(layout: Major, uplo: Triangular, n: usize, alpha: f32, x: &[c32], in
 }
 
 #[inline]
-pub fn cher2(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], x: &[c32], incx: usize,
+pub fn cher2(layout: Layout, uplo: Triangular, n: usize, alpha: &[c32], x: &[c32], incx: usize,
              y: &[c32], incy: usize, a: &mut [c32], lda: usize) {
 
     unsafe {
@@ -1028,7 +1028,7 @@ pub fn cher2(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], x: &[c32]
 }
 
 #[inline]
-pub fn chpr2(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], x: &[c32], incx: usize,
+pub fn chpr2(layout: Layout, uplo: Triangular, n: usize, alpha: &[c32], x: &[c32], incx: usize,
              y: &[c32], incy: usize, ap: &mut [c32]) {
 
     unsafe {
@@ -1039,7 +1039,7 @@ pub fn chpr2(layout: Major, uplo: Triangular, n: usize, alpha: &[c32], x: &[c32]
 }
 
 #[inline]
-pub fn zhemv(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], a: &[c64], lda: usize,
+pub fn zhemv(layout: Layout, uplo: Triangular, n: usize, alpha: &[c64], a: &[c64], lda: usize,
              x: &[c64], incx: usize, beta: &[c64], y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -1051,7 +1051,7 @@ pub fn zhemv(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], a: &[c64]
 }
 
 #[inline]
-pub fn zhbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: &[c64], a: &[c64],
+pub fn zhbmv(layout: Layout, uplo: Triangular, n: usize, k: usize, alpha: &[c64], a: &[c64],
              lda: usize, x: &[c64], incx: usize, beta: &[c64], y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -1063,7 +1063,7 @@ pub fn zhbmv(layout: Major, uplo: Triangular, n: usize, k: usize, alpha: &[c64],
 }
 
 #[inline]
-pub fn zhpmv(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], ap: &[c64], x: &[c64],
+pub fn zhpmv(layout: Layout, uplo: Triangular, n: usize, alpha: &[c64], ap: &[c64], x: &[c64],
              incx: usize, beta: &[c64], y: &mut [c64], incy: usize) {
 
     unsafe {
@@ -1074,7 +1074,7 @@ pub fn zhpmv(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], ap: &[c64
 }
 
 #[inline]
-pub fn zgeru(layout: Major, m: usize, n: usize, alpha: &[c64], x: &[c64], incx: usize, y: &[c64],
+pub fn zgeru(layout: Layout, m: usize, n: usize, alpha: &[c64], x: &[c64], incx: usize, y: &[c64],
              incy: usize, a: &mut [c64], lda: usize) {
 
     unsafe {
@@ -1085,7 +1085,7 @@ pub fn zgeru(layout: Major, m: usize, n: usize, alpha: &[c64], x: &[c64], incx: 
 }
 
 #[inline]
-pub fn zgerc(layout: Major, m: usize, n: usize, alpha: &[c64], x: &[c64], incx: usize, y: &[c64],
+pub fn zgerc(layout: Layout, m: usize, n: usize, alpha: &[c64], x: &[c64], incx: usize, y: &[c64],
              incy: usize, a: &mut [c64], lda: usize) {
 
     unsafe {
@@ -1096,7 +1096,7 @@ pub fn zgerc(layout: Major, m: usize, n: usize, alpha: &[c64], x: &[c64], incx: 
 }
 
 #[inline]
-pub fn zher(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[c64], incx: usize,
+pub fn zher(layout: Layout, uplo: Triangular, n: usize, alpha: f64, x: &[c64], incx: usize,
             a: &mut [c64], lda: usize) {
 
     unsafe {
@@ -1106,7 +1106,7 @@ pub fn zher(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[c64], in
 }
 
 #[inline]
-pub fn zhpr(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[c64], incx: usize,
+pub fn zhpr(layout: Layout, uplo: Triangular, n: usize, alpha: f64, x: &[c64], incx: usize,
             a: &mut [c64]) {
 
     unsafe {
@@ -1116,7 +1116,7 @@ pub fn zhpr(layout: Major, uplo: Triangular, n: usize, alpha: f64, x: &[c64], in
 }
 
 #[inline]
-pub fn zher2(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], x: &[c64], incx: usize,
+pub fn zher2(layout: Layout, uplo: Triangular, n: usize, alpha: &[c64], x: &[c64], incx: usize,
              y: &[c64], incy: usize, a: &mut [c64], lda: usize) {
 
     unsafe {
@@ -1127,7 +1127,7 @@ pub fn zher2(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], x: &[c64]
 }
 
 #[inline]
-pub fn zhpr2(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], x: &[c64], incx: usize,
+pub fn zhpr2(layout: Layout, uplo: Triangular, n: usize, alpha: &[c64], x: &[c64], incx: usize,
              y: &[c64], incy: usize, ap: &mut [c64]) {
 
     unsafe {
@@ -1138,7 +1138,7 @@ pub fn zhpr2(layout: Major, uplo: Triangular, n: usize, alpha: &[c64], x: &[c64]
 }
 
 #[inline]
-pub fn sgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
+pub fn sgemm(layout: Layout, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
              alpha: f32, a: &[f32], lda: usize, b: &[f32], ldb: usize, beta: f32, c: &mut [f32],
              ldc: usize) {
 
@@ -1150,7 +1150,7 @@ pub fn sgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: u
 }
 
 #[inline]
-pub fn ssymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, alpha: f32,
+pub fn ssymm(layout: Layout, side: Side, uplo: Triangular, m: usize, n: usize, alpha: f32,
              a: &[f32], lda: usize, b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
 
     unsafe {
@@ -1161,7 +1161,7 @@ pub fn ssymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, al
 }
 
 #[inline]
-pub fn ssyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f32,
+pub fn ssyrk(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f32,
              a: &[f32], lda: usize, beta: f32, c: &mut [f32], ldc: usize) {
 
     unsafe {
@@ -1171,7 +1171,7 @@ pub fn ssyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usi
 }
 
 #[inline]
-pub fn ssyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f32,
+pub fn ssyr2k(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f32,
               a: &[f32], lda: usize, b: &[f32], ldb: usize, beta: f32, c: &mut [f32], ldc: usize) {
 
     unsafe {
@@ -1182,7 +1182,7 @@ pub fn ssyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: us
 }
 
 #[inline]
-pub fn strmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn strmm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: f32, a: &[f32], lda: usize, b: &mut [f32], ldb: usize) {
 
     unsafe {
@@ -1193,7 +1193,7 @@ pub fn strmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn strsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn strsm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: f32, a: &[f32], lda: usize, b: &mut [f32], ldb: usize) {
 
     unsafe {
@@ -1204,7 +1204,7 @@ pub fn strsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn dgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
+pub fn dgemm(layout: Layout, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
              alpha: f64, a: &[f64], lda: usize, b: &[f64], ldb: usize, beta: f64, c: &mut [f64],
              ldc: usize) {
 
@@ -1216,7 +1216,7 @@ pub fn dgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: u
 }
 
 #[inline]
-pub fn dsymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, alpha: f64,
+pub fn dsymm(layout: Layout, side: Side, uplo: Triangular, m: usize, n: usize, alpha: f64,
              a: &[f64], lda: usize, b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
 
     unsafe {
@@ -1227,7 +1227,7 @@ pub fn dsymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, al
 }
 
 #[inline]
-pub fn dsyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f64,
+pub fn dsyrk(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f64,
              a: &[f64], lda: usize, beta: f64, c: &mut [f64], ldc: usize) {
 
     unsafe {
@@ -1237,7 +1237,7 @@ pub fn dsyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usi
 }
 
 #[inline]
-pub fn dsyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f64,
+pub fn dsyr2k(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f64,
               a: &[f64], lda: usize, b: &[f64], ldb: usize, beta: f64, c: &mut [f64], ldc: usize) {
 
     unsafe {
@@ -1248,7 +1248,7 @@ pub fn dsyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: us
 }
 
 #[inline]
-pub fn dtrmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn dtrmm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: f64, a: &[f64], lda: usize, b: &mut [f64], ldb: usize) {
 
     unsafe {
@@ -1259,7 +1259,7 @@ pub fn dtrmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn dtrsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn dtrsm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: f64, a: &[f64], lda: usize, b: &mut [f64], ldb: usize) {
 
     unsafe {
@@ -1270,7 +1270,7 @@ pub fn dtrsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn cgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
+pub fn cgemm(layout: Layout, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
              alpha: &[c32], a: &[c32], lda: usize, b: &[c32], ldb: usize, beta: &[c32],
              c: &mut [c32], ldc: usize) {
 
@@ -1283,7 +1283,7 @@ pub fn cgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: u
 }
 
 #[inline]
-pub fn csymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c32],
+pub fn csymm(layout: Layout, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c32],
              a: &[c32], lda: usize, b: &[c32], ldb: usize, beta: &[c32], c: &mut [c32],
              ldc: usize) {
 
@@ -1296,7 +1296,7 @@ pub fn csymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, al
 }
 
 #[inline]
-pub fn csyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c32],
+pub fn csyrk(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c32],
              a: &[c32], lda: usize, beta: &[c32], c: &mut [c32], ldc: usize) {
 
     unsafe {
@@ -1307,9 +1307,9 @@ pub fn csyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usi
 }
 
 #[inline]
-pub fn csyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c32],
-              a: &[c32], lda: usize, b: &[c32], ldb: usize, beta: &[c32], c: &mut [c32],
-              ldc: usize) {
+pub fn csyr2k(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize,
+              alpha: &[c32], a: &[c32], lda: usize, b: &[c32], ldb: usize, beta: &[c32],
+              c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::cblas_csyr2k(layout.into(), uplo.into(), trans.into(), n as c_int, k as c_int,
@@ -1320,7 +1320,7 @@ pub fn csyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: us
 }
 
 #[inline]
-pub fn ctrmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn ctrmm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: &[c32], a: &[c32], lda: usize, b: &mut [c32], ldb: usize) {
 
     unsafe {
@@ -1332,7 +1332,7 @@ pub fn ctrmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn ctrsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn ctrsm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: &[c32], a: &[c32], lda: usize, b: &mut [c32], ldb: usize) {
 
     unsafe {
@@ -1344,7 +1344,7 @@ pub fn ctrsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn zgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
+pub fn zgemm(layout: Layout, transa: Transpose, transb: Transpose, m: usize, n: usize, k: usize,
              alpha: &[c64], a: &[c64], lda: usize, b: &[c64], ldb: usize, beta: &[c64],
              c: &mut [c64], ldc: usize) {
 
@@ -1357,7 +1357,7 @@ pub fn zgemm(layout: Major, transa: Transpose, transb: Transpose, m: usize, n: u
 }
 
 #[inline]
-pub fn zsymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c64],
+pub fn zsymm(layout: Layout, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c64],
              a: &[c64], lda: usize, b: &[c64], ldb: usize, beta: &[c64], c: &mut [c64],
              ldc: usize) {
 
@@ -1370,7 +1370,7 @@ pub fn zsymm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, al
 }
 
 #[inline]
-pub fn zsyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c64],
+pub fn zsyrk(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c64],
              a: &[c64], lda: usize, beta: &[c64], c: &mut [c64], ldc: usize) {
 
     unsafe {
@@ -1381,9 +1381,9 @@ pub fn zsyrk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usi
 }
 
 #[inline]
-pub fn zsyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c64],
-              a: &[c64], lda: usize, b: &[c64], ldb: usize, beta: &[c64], c: &mut [c64],
-              ldc: usize) {
+pub fn zsyr2k(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize,
+              alpha: &[c64], a: &[c64], lda: usize, b: &[c64], ldb: usize, beta: &[c64],
+              c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::cblas_zsyr2k(layout.into(), uplo.into(), trans.into(), n as c_int, k as c_int,
@@ -1394,7 +1394,7 @@ pub fn zsyr2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: us
 }
 
 #[inline]
-pub fn ztrmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn ztrmm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: &[c64], a: &[c64], lda: usize, b: &mut [c64], ldb: usize) {
 
     unsafe {
@@ -1406,7 +1406,7 @@ pub fn ztrmm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn ztrsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
+pub fn ztrsm(layout: Layout, side: Side, uplo: Triangular, transa: Transpose, diag: Diagonal,
              m: usize, n: usize, alpha: &[c64], a: &[c64], lda: usize, b: &mut [c64], ldb: usize) {
 
     unsafe {
@@ -1418,7 +1418,7 @@ pub fn ztrsm(layout: Major, side: Side, uplo: Triangular, transa: Transpose, dia
 }
 
 #[inline]
-pub fn chemm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c32],
+pub fn chemm(layout: Layout, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c32],
              a: &[c32], lda: usize, b: &[c32], ldb: usize, beta: &[c32], c: &mut [c32],
              ldc: usize) {
 
@@ -1431,7 +1431,7 @@ pub fn chemm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, al
 }
 
 #[inline]
-pub fn cherk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f32,
+pub fn cherk(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f32,
              a: &[c32], lda: usize, beta: f32, c: &mut [c32], ldc: usize) {
 
     unsafe {
@@ -1442,8 +1442,9 @@ pub fn cherk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usi
 }
 
 #[inline]
-pub fn cher2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c32],
-              a: &[c32], lda: usize, b: &[c32], ldb: usize, beta: f32, c: &mut [c32], ldc: usize) {
+pub fn cher2k(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize,
+              alpha: &[c32], a: &[c32], lda: usize, b: &[c32], ldb: usize, beta: f32,
+              c: &mut [c32], ldc: usize) {
 
     unsafe {
         ffi::cblas_cher2k(layout.into(), uplo.into(), trans.into(), n as c_int, k as c_int,
@@ -1454,7 +1455,7 @@ pub fn cher2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: us
 }
 
 #[inline]
-pub fn zhemm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c64],
+pub fn zhemm(layout: Layout, side: Side, uplo: Triangular, m: usize, n: usize, alpha: &[c64],
              a: &[c64], lda: usize, b: &[c64], ldb: usize, beta: &[c64], c: &mut [c64],
              ldc: usize) {
 
@@ -1467,7 +1468,7 @@ pub fn zhemm(layout: Major, side: Side, uplo: Triangular, m: usize, n: usize, al
 }
 
 #[inline]
-pub fn zherk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f64,
+pub fn zherk(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: f64,
              a: &[c64], lda: usize, beta: f64, c: &mut [c64], ldc: usize) {
 
     unsafe {
@@ -1478,8 +1479,9 @@ pub fn zherk(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usi
 }
 
 #[inline]
-pub fn zher2k(layout: Major, uplo: Triangular, trans: Transpose, n: usize, k: usize, alpha: &[c64],
-              a: &[c64], lda: usize, b: &[c64], ldb: usize, beta: f64, c: &mut [c64], ldc: usize) {
+pub fn zher2k(layout: Layout, uplo: Triangular, trans: Transpose, n: usize, k: usize,
+              alpha: &[c64], a: &[c64], lda: usize, b: &[c64], ldb: usize, beta: f64,
+              c: &mut [c64], ldc: usize) {
 
     unsafe {
         ffi::cblas_zher2k(layout.into(), uplo.into(), trans.into(), n as c_int, k as c_int,
