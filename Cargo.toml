@@ -28,5 +28,5 @@ default-features = false
 features = ["complex"]
 
 [dependencies.blas-sys]
-version = "0.2"
+version = "0.3"
 default-features = false
