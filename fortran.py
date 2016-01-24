@@ -591,10 +591,11 @@ def format_header(f):
 
 def format_body(f):
     a = format_body_arguments(f)
-    if f.ret is None:
-        a = "{})".format(a)
-    if f.ret is not None:
-        a = "{}) as {}".format(a, translate_return_type(f.ret))
+    r = format_body_return(f)
+    if r is None:
+        tail = "{})".format(a)
+    else:
+        tail = "{}) as {}".format(a, r)
 
     s = []
     s.append(" " * 4)
@@ -602,24 +603,23 @@ def format_body(f):
     s.append(" " * 8)
     s.append("ffi::{}_(".format(f.name))
 
-    a = "".join(a)
     indent = 8 + 5 + len(f.name) + 2
-    while len(a) > 0:
-        if len(a) + indent > 99:
-            i = a.find(",")
+    while len(tail) > 0:
+        if len(tail) + indent > 99:
+            i = tail.find(",")
             if i < 0 or i > 98:
                 assert False, "cannot format `{}`".format(f.name)
             while True:
-                l = a.find(",", i + 1)
+                l = tail.find(",", i + 1)
                 if l < 0 or l + indent > 98: break
                 i = l
-            s.append(a[0:i+1])
+            s.append(tail[0:i+1])
             s.append("\n")
             s.append(" " * indent)
-            a = a[i+2:]
+            tail = tail[i+2:]
         else:
-            s.append(a)
-            a = ""
+            s.append(tail)
+            tail = ""
 
     s.append("\n")
     s.append(" " * 4)
@@ -639,6 +639,16 @@ def format_body_arguments(f):
         rty = translate_argument(*arg, f=f)
         s.append(translate_body_argument(arg[0], rty))
     return ", ".join(s)
+
+def format_body_return(f):
+    if f.ret is None:
+        return None
+
+    rty = translate_return_type(f.ret)
+    if rty.startswith("f"):
+        return None
+
+    return rty
 
 def prepare(level, code):
     lines = filter(lambda line: not re.match(r'^\s*//.*', line), code.split('\n'))

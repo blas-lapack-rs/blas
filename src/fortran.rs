@@ -66,8 +66,7 @@ pub fn saxpy(n: usize, alpha: f32, x: &[f32], incx: usize, y: &mut [f32], incy: 
 #[inline]
 pub fn sdot(n: usize, x: &[f32], incx: usize, y: &[f32], incy: usize) -> f32 {
     unsafe {
-        ffi::sdot_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                   &(incy as c_int)) as f32
+        ffi::sdot_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(), &(incy as c_int))
     }
 }
 
@@ -75,28 +74,28 @@ pub fn sdot(n: usize, x: &[f32], incx: usize, y: &[f32], incy: usize) -> f32 {
 pub fn sdsdot(n: usize, sb: &[f32], x: &[f32], incx: usize, y: &[f32], incy: usize) -> f32 {
     unsafe {
         ffi::sdsdot_(&(n as c_int), sb.as_ptr(), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                     &(incy as c_int)) as f32
+                     &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn snrm2(n: usize, x: &[f32], incx: usize) -> f32 {
     unsafe {
-        ffi::snrm2_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f32
+        ffi::snrm2_(&(n as c_int), x.as_ptr(), &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn scnrm2(n: usize, x: &[c32], incx: usize) -> f32 {
     unsafe {
-        ffi::scnrm2_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f32
+        ffi::scnrm2_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn sasum(n: usize, x: &[f32], incx: usize) -> f32 {
     unsafe {
-        ffi::sasum_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f32
+        ffi::sasum_(&(n as c_int), x.as_ptr(), &(incx as c_int))
     }
 }
 
@@ -170,37 +169,35 @@ pub fn daxpy(n: usize, alpha: f64, x: &[f64], incx: usize, y: &mut [f64], incy: 
 #[inline]
 pub fn ddot(n: usize, x: &[f64], incx: usize, y: &[f64], incy: usize) -> f64 {
     unsafe {
-        ffi::ddot_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                   &(incy as c_int)) as f64
+        ffi::ddot_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(), &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn dsdot(n: usize, x: &[f32], incx: usize, y: &[f32], incy: usize) -> f64 {
     unsafe {
-        ffi::dsdot_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(),
-                    &(incy as c_int)) as f64
+        ffi::dsdot_(&(n as c_int), x.as_ptr(), &(incx as c_int), y.as_ptr(), &(incy as c_int))
     }
 }
 
 #[inline]
 pub fn dnrm2(n: usize, x: &[f64], incx: usize) -> f64 {
     unsafe {
-        ffi::dnrm2_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f64
+        ffi::dnrm2_(&(n as c_int), x.as_ptr(), &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn dznrm2(n: usize, x: &[c64], incx: usize) -> f64 {
     unsafe {
-        ffi::dznrm2_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f64
+        ffi::dznrm2_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int))
     }
 }
 
 #[inline]
 pub fn dasum(n: usize, x: &[f64], incx: usize) -> f64 {
     unsafe {
-        ffi::dasum_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as f64
+        ffi::dasum_(&(n as c_int), x.as_ptr(), &(incx as c_int))
     }
 }
 
@@ -284,7 +281,7 @@ pub fn cdotc(pres: &mut [c32], n: usize, x: &[c32], incx: usize, y: &[c32], incy
 #[inline]
 pub fn scasum(n: usize, x: &[c32], incx: usize) -> f32 {
     unsafe {
-        ffi::scasum_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f32
+        ffi::scasum_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int))
     }
 }
 
@@ -368,7 +365,7 @@ pub fn zdotc(pres: &mut [c64], n: usize, x: &[c64], incx: usize, y: &[c64], incy
 #[inline]
 pub fn dzasum(n: usize, x: &[c64], incx: usize) -> f64 {
     unsafe {
-        ffi::dzasum_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as f64
+        ffi::dzasum_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int))
     }
 }
 
