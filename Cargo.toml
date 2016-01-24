@@ -28,7 +28,7 @@ default-features = false
 features = ["complex"]
 
 [dependencies.blas-sys]
-version = "0.3"
+version = "0.4"
 default-features = false
 
 [[bench]]

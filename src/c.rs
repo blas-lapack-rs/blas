@@ -17,7 +17,7 @@
 //! assert_eq!(&c, &vec![40.0, 90.0, 50.0, 100.0, 50.0, 120.0, 60.0, 130.0]);
 //! ```
 
-use ffi;
+use blas_sys::c as ffi;
 use libc::c_int;
 
 use {c32, c64};

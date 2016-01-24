@@ -2,7 +2,7 @@
 //!
 //! [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
-extern crate blas_sys as ffi;
+extern crate blas_sys;
 extern crate libc;
 extern crate num;
 
