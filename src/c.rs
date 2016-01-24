@@ -25,7 +25,7 @@ use {c32, c64};
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[repr(C)]
 pub enum Diagonal {
-    NonUnit = 131,
+    Generic = 131,
     Unit = 132,
 }
 
