@@ -1388,4 +1388,3 @@ pub fn ztrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: usize, n: usize, alpha
                     &(ldb as c_int))
     }
 }
-

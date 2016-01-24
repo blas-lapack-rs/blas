@@ -11,7 +11,8 @@ level_scalars = {
 def is_scalar(name, cty, f):
     return name in level_scalars[f.level]
 
-level1_single = """
+level1 = """
+    // Single
     pub fn srotg_(a: *mut c_float, b: *mut c_float, c: *mut c_float, s: *mut c_float);
     pub fn srotmg_(d1: *mut c_float, d2: *mut c_float, x1: *mut c_float, y1: *const c_float,
                    param: *mut c_float);
@@ -34,9 +35,8 @@ level1_single = """
     pub fn scnrm2_(n: *const c_int, x: *const c_float_complex, incx: *const c_int) -> c_float;
     pub fn sasum_(n: *const c_int, x: *const c_float, incx: *const c_int) -> c_float;
     pub fn isamax_(n: *const c_int, x: *const c_float, incx: *const c_int) -> c_int;
-"""
 
-level1_double = """
+    // Double
     pub fn drotg_(a: *mut c_double, b: *mut c_double, c: *mut c_double, s: *mut c_double);
     pub fn drotmg_(d1: *mut c_double, d2: *mut c_double, x1: *mut c_double, y1: *const c_double,
                    param: *mut c_double);
@@ -59,9 +59,8 @@ level1_double = """
     pub fn dznrm2_(n: *const c_int, x: *const c_double_complex, incx: *const c_int) -> c_double;
     pub fn dasum_(n: *const c_int, x: *const c_double, incx: *const c_int) -> c_double;
     pub fn idamax_(n: *const c_int, x: *const c_double, incx: *const c_int) -> c_int;
-"""
 
-level1_complex = """
+    // Complex
     pub fn crotg_(a: *mut c_float_complex, b: *const c_float_complex, c: *mut c_float,
                   s: *mut c_float_complex);
     pub fn csrot_(n: *const c_int, x: *mut c_float_complex, incx: *const c_int,
@@ -83,9 +82,8 @@ level1_complex = """
                   incx: *const c_int, y: *const c_float_complex, incy: *const c_int);
     pub fn scasum_(n: *const c_int, x: *const c_float_complex, incx: *const c_int) -> c_float;
     pub fn icamax_(n: *const c_int, x: *const c_float_complex, incx: *const c_int) -> c_int;
-"""
 
-level1_double_complex = """
+    // Double complex
     pub fn zrotg_(a: *mut c_double_complex, b: *const c_double_complex, c: *mut c_double,
                   s: *mut c_double_complex);
     pub fn zdrot_(n: *const c_int, x: *mut c_double_complex, incx: *const c_int,
@@ -109,7 +107,8 @@ level1_double_complex = """
     pub fn izamax_(n: *const c_int, x: *const c_double_complex, incx: *const c_int) -> c_int;
 """
 
-level2_single = """
+level2 = """
+    // Single
     pub fn sgemv_(trans: *const c_char, m: *const c_int, n: *const c_int, alpha: *const c_float,
                   a: *const c_float, lda: *const c_int, x: *const c_float, incx: *const c_int,
                   beta: *const c_float, y: *mut c_float, incy: *const c_int);
@@ -152,9 +151,8 @@ level2_single = """
                   lda: *const c_int);
     pub fn sspr2_(uplo: *const c_char, n: *const c_int, alpha: *const c_float, x: *const c_float,
                   incx: *const c_int, y: *const c_float, incy: *const c_int, ap: *mut c_float);
-"""
 
-level2_double = """
+    // Double
     pub fn dgemv_(trans: *const c_char, m: *const c_int, n: *const c_int, alpha: *const c_double,
                   a: *const c_double, lda: *const c_int, x: *const c_double, incx: *const c_int,
                   beta: *const c_double, y: *mut c_double, incy: *const c_int);
@@ -197,9 +195,8 @@ level2_double = """
                   lda: *const c_int);
     pub fn dspr2_(uplo: *const c_char, n: *const c_int, alpha: *const c_double, x: *const c_double,
                   incx: *const c_int, y: *const c_double, incy: *const c_int, ap: *mut c_double);
-"""
 
-level2_complex = """
+    // Complex
     pub fn cgemv_(trans: *const c_char, m: *const c_int, n: *const c_int,
                   alpha: *const c_float_complex, a: *const c_float_complex, lda: *const c_int,
                   x: *const c_float_complex, incx: *const c_int, beta: *const c_float_complex,
@@ -252,9 +249,8 @@ level2_complex = """
     pub fn cher2_(uplo: *const c_char, n: *const c_int, alpha: *const c_float_complex,
                   x: *const c_float_complex, incx: *const c_int, y: *const c_float_complex,
                   incy: *const c_int, a: *mut c_float_complex, lda: *const c_int);
-"""
 
-level2_double_complex = """
+    // Double complex
     pub fn zgemv_(trans: *const c_char, m: *const c_int, n: *const c_int,
                   alpha: *const c_double_complex, a: *const c_double_complex, lda: *const c_int,
                   x: *const c_double_complex, incx: *const c_int, beta: *const c_double_complex,
@@ -309,7 +305,8 @@ level2_double_complex = """
                   incy: *const c_int, ap: *mut c_double_complex);
 """
 
-level3_single = """
+level3 = """
+    // Single
     pub fn sgemm_(transa: *const c_char, transb: *const c_char, m: *const c_int, n: *const c_int,
                   k: *const c_int, alpha: *const c_float, a: *const c_float, lda: *const c_int,
                   b: *const c_float, ldb: *const c_int, beta: *const c_float, c: *mut c_float,
@@ -329,9 +326,8 @@ level3_single = """
     pub fn strsm_(side: *const c_char, uplo: *const c_char, transa: *const c_char,
                   diag: *const c_char, m: *const c_int, n: *const c_int, alpha: *const c_float,
                   a: *const c_float, lda: *const c_int, b: *mut c_float, ldb: *const c_int);
-"""
 
-level3_double = """
+    // Double
     pub fn dgemm_(transa: *const c_char, transb: *const c_char, m: *const c_int, n: *const c_int,
                   k: *const c_int, alpha: *const c_double, a: *const c_double, lda: *const c_int,
                   b: *const c_double, ldb: *const c_int, beta: *const c_double, c: *mut c_double,
@@ -353,9 +349,8 @@ level3_double = """
     pub fn dtrsm_(side: *const c_char, uplo: *const c_char, transa: *const c_char,
                   diag: *const c_char, m: *const c_int, n: *const c_int, alpha: *const c_double,
                   a: *const c_double, lda: *const c_int, b: *mut c_double, ldb: *const c_int);
-"""
 
-level3_complex = """
+    // Complex
     pub fn cgemm_(transa: *const c_char, transb: *const c_char, m: *const c_int, n: *const c_int,
                   k: *const c_int, alpha: *const c_float_complex, a: *const c_float_complex,
                   lda: *const c_int, b: *const c_float_complex, ldb: *const c_int,
@@ -390,9 +385,8 @@ level3_complex = """
                   diag: *const c_char, m: *const c_int, n: *const c_int,
                   alpha: *const c_float_complex, a: *const c_float_complex, lda: *const c_int,
                   b: *mut c_float_complex, ldb: *const c_int);
-"""
 
-level3_double_complex = """
+    // Double complex
     pub fn zgemm_(transa: *const c_char, transb: *const c_char, m: *const c_int, n: *const c_int,
                   k: *const c_int, alpha: *const c_double_complex, a: *const c_double_complex,
                   lda: *const c_int, b: *const c_double_complex, ldb: *const c_int,
@@ -646,7 +640,8 @@ def format_body_arguments(f):
     return ", ".join(s)
 
 def prepare(level, code):
-    lines = re.sub(r'\s+', ' ', "".join(code.split('\n'))).strip().split(';')
+    lines = filter(lambda line: not re.match(r'^\s*//.*', line), code.split('\n'))
+    lines = re.sub(r'\s+', ' ', "".join(lines)).strip().split(';')
     lines = filter(lambda line: not re.match(r'^\s*$', line), lines)
     return [Func.parse(level, line) for line in lines]
 
@@ -657,17 +652,6 @@ def do(funcs):
         print(format_body(f))
         print("}\n")
 
-do(prepare(1, level1_single))
-do(prepare(1, level1_double))
-do(prepare(1, level1_complex))
-do(prepare(1, level1_double_complex))
-
-do(prepare(2, level2_single))
-do(prepare(2, level2_double))
-do(prepare(2, level2_complex))
-do(prepare(2, level2_double_complex))
-
-do(prepare(3, level3_single))
-do(prepare(3, level3_double))
-do(prepare(3, level3_complex))
-do(prepare(3, level3_double_complex))
+do(prepare(1, level1))
+do(prepare(2, level2))
+do(prepare(3, level3))
