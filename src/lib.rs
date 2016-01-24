@@ -26,6 +26,8 @@ pub type c32 = num::Complex<f32>;
 #[allow(non_camel_case_types)]
 pub type c64 = num::Complex<f64>;
 
+mod c;
 mod fortran;
 
+pub use c::*;
 pub use fortran::*;
