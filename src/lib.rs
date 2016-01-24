@@ -6,9 +6,11 @@ extern crate blas_sys as ffi;
 extern crate libc;
 extern crate num;
 
+/// A complex number with 32-bit parts.
 #[allow(non_camel_case_types)]
 pub type c32 = num::Complex<f32>;
 
+/// A complex number with 64-bit parts.
 #[allow(non_camel_case_types)]
 pub type c64 = num::Complex<f64>;
 

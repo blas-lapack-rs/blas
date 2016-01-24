@@ -1,3 +1,5 @@
+//! The Fortran interface.
+//!
 //! ## Example
 //!
 //! ```

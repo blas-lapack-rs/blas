@@ -1,4 +1,4 @@
-//! CBLAS interface.
+//! The C interface (CBLAS).
 //!
 //! ## Example
 //!
