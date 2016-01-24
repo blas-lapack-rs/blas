@@ -1,16 +1,16 @@
 [package]
 name = "blas"
-version = "0.9.1"
+version = "0.10.0"
+license = "Apache-2.0/MIT"
 authors = [
   "Andrew Straw <strawman@astraw.com>",
   "Corey Richardson <corey@octayn.net>",
   "Ivan Ukhov <ivan.ukhov@gmail.com>",
 ]
-license = "MIT"
-repository = "https://github.com/stainless-steel/blas"
-homepage = "https://github.com/stainless-steel/blas"
-documentation = "https://stainless-steel.github.io/blas"
 description = "The package provides an interface to the Basic Linear Algebra Subprograms."
+documentation = "https://stainless-steel.github.io/blas"
+homepage = "https://github.com/stainless-steel/blas"
+repository = "https://github.com/stainless-steel/blas"
 
 [features]
 default = ["openblas"]
