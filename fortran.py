@@ -428,26 +428,26 @@ argument_re = re.compile("(\w+): ([^,]*)(,|\))")
 return_re = re.compile("(?:\s*->\s*([^;]+))?");
 
 def pull_name(s):
-    m = name_re.match(s)
-    assert(m is not None)
-    return m.group(1), s[m.end(1)+1:]
+    match = name_re.match(s)
+    assert(match is not None)
+    return match.group(1), s[match.end(1)+1:]
 
 def pull_argument(s):
-    m = argument_re.match(s)
-    if m is None:
+    match = argument_re.match(s)
+    if match is None:
         return None, None, s
 
-    return m.group(1), m.group(2), s[m.end(3):]
+    return match.group(1), match.group(2), s[match.end(3):]
 
 def pull_return(s):
-    m = return_re.match(s)
-    if m is None:
+    match = return_re.match(s)
+    if match is None:
         return None, s
 
-    return m.group(1), s[m.end(1):]
+    return match.group(1), s[match.end(1):]
 
 def chew(s, c):
-    assert s[0] == c
+    assert(s[0] == c)
     return s[1:]
 
 class Func(object):
@@ -507,6 +507,7 @@ def translate_argument(name, cty, f):
             return base
         else:
             return "&[{}]".format(base)
+
     elif is_mut(name, cty):
         base = translate_type_base(cty)
         if is_scalar(name, cty, f):
@@ -557,7 +558,7 @@ def translate_body_argument(name, rty):
 
 def translate_return_type(cty):
     if cty == "c_int":
-        return "isize"
+        return "usize"
     elif cty == "c_float":
         return "f32"
     elif cty == "c_double":
@@ -576,12 +577,12 @@ def format_header(f):
         if len(header) <= 99:
             s.append(header)
             break
-        k = 98 - header[98::-1].index(',')
-        if k < 0:
+        i = 98 - header[98::-1].index(',')
+        if i < 0:
             s.append(header)
             break
-        s.append(header[:k+1])
-        header = "{}{}".format(" " * indent, header[k+2:])
+        s.append(header[:i+1])
+        header = "{}{}".format(" " * indent, header[i+2:])
 
     if len(s) > 1:
         s.append("")
@@ -605,17 +606,17 @@ def format_body(f):
     indent = 8 + 5 + len(f.name) + 2
     while len(a) > 0:
         if len(a) + indent > 99:
-            k = a.find(",")
-            if k < 0 or k > 98:
+            i = a.find(",")
+            if i < 0 or i > 98:
                 assert False, "cannot format `{}`".format(f.name)
             while True:
-                l = a.find(",", k + 1)
+                l = a.find(",", i + 1)
                 if l < 0 or l + indent > 98: break
-                k = l
-            s.append(a[0:k+1])
+                i = l
+            s.append(a[0:i+1])
             s.append("\n")
             s.append(" " * indent)
-            a = a[k+2:]
+            a = a[i+2:]
         else:
             s.append(a)
             a = ""

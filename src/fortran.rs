@@ -101,9 +101,9 @@ pub fn sasum(n: usize, x: &[f32], incx: usize) -> f32 {
 }
 
 #[inline]
-pub fn isamax(n: usize, x: &[f32], incx: usize) -> isize {
+pub fn isamax(n: usize, x: &[f32], incx: usize) -> usize {
     unsafe {
-        ffi::isamax_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as isize
+        ffi::isamax_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as usize
     }
 }
 
@@ -205,9 +205,9 @@ pub fn dasum(n: usize, x: &[f64], incx: usize) -> f64 {
 }
 
 #[inline]
-pub fn idamax(n: usize, x: &[f64], incx: usize) -> isize {
+pub fn idamax(n: usize, x: &[f64], incx: usize) -> usize {
     unsafe {
-        ffi::idamax_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as isize
+        ffi::idamax_(&(n as c_int), x.as_ptr(), &(incx as c_int)) as usize
     }
 }
 
@@ -289,9 +289,9 @@ pub fn scasum(n: usize, x: &[c32], incx: usize) -> f32 {
 }
 
 #[inline]
-pub fn icamax(n: usize, x: &[c32], incx: usize) -> isize {
+pub fn icamax(n: usize, x: &[c32], incx: usize) -> usize {
     unsafe {
-        ffi::icamax_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as isize
+        ffi::icamax_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as usize
     }
 }
 
@@ -373,9 +373,9 @@ pub fn dzasum(n: usize, x: &[c64], incx: usize) -> f64 {
 }
 
 #[inline]
-pub fn izamax(n: usize, x: &[c64], incx: usize) -> isize {
+pub fn izamax(n: usize, x: &[c64], incx: usize) -> usize {
     unsafe {
-        ffi::izamax_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as isize
+        ffi::izamax_(&(n as c_int), x.as_ptr() as *const _, &(incx as c_int)) as usize
     }
 }
 
