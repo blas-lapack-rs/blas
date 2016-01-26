@@ -17,7 +17,8 @@ level1_functions = """
     pub fn cblas_scabs1(c: *const c_float_complex) -> c_float;
 
     pub fn cblas_sdsdot(n: c_int, alpha: c_float, x: *const c_float, incx: c_int,
-                        y: *const c_float, incy: c_int) -> c_float;
+                        y: *const c_float, incy: c_int)
+                        -> c_float;
     pub fn cblas_dsdot(n: c_int, x: *const c_float, incx: c_int, y: *const c_float, incy: c_int)
                        -> c_double;
     pub fn cblas_sdot(n: c_int, x: *const c_float, incx: c_int, y: *const c_float, incy: c_int)
@@ -50,10 +51,10 @@ level1_functions = """
     pub fn cblas_dzasum(n: c_int, x: *const c_double_complex, incx: c_int) -> c_double;
 
     // Standard prefixes (S, D, C, and Z)
-    pub fn cblas_isamax(n: c_int, x: *const c_float, incx: c_int) -> CblasIndex;
-    pub fn cblas_idamax(n: c_int, x: *const c_double, incx: c_int) -> CblasIndex;
-    pub fn cblas_icamax(n: c_int, x: *const c_float_complex, incx: c_int) -> CblasIndex;
-    pub fn cblas_izamax(n: c_int, x: *const c_double_complex, incx: c_int) -> CblasIndex;
+    pub fn cblas_isamax(n: c_int, x: *const c_float, incx: c_int) -> c_int;
+    pub fn cblas_idamax(n: c_int, x: *const c_double, incx: c_int) -> c_int;
+    pub fn cblas_icamax(n: c_int, x: *const c_float_complex, incx: c_int) -> c_int;
+    pub fn cblas_izamax(n: c_int, x: *const c_double_complex, incx: c_int) -> c_int;
 """
 
 level1_routines = """
@@ -112,336 +113,341 @@ level1_routines = """
 
 level2 = """
     // Standard prefixes (S, D, C, and Z)
-    pub fn cblas_sgemv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int,
+    pub fn cblas_sgemv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
                        alpha: c_float, a: *const c_float, lda: c_int, x: *const c_float,
                        incx: c_int, beta: c_float, y: *mut c_float, incy: c_int);
-    pub fn cblas_sgbmv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int, kl: c_int,
-                       ku: c_int, alpha: c_float, a: *const c_float, lda: c_int, x: *const c_float,
-                       incx: c_int, beta: c_float, y: *mut c_float, incy: c_int);
-    pub fn cblas_strmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_float, lda: c_int, x: *mut c_float,
+    pub fn cblas_sgbmv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
+                       kl: c_int, ku: c_int, alpha: c_float, a: *const c_float, lda: c_int,
+                       x: *const c_float, incx: c_int, beta: c_float, y: *mut c_float,
+                       incy: c_int);
+    pub fn cblas_strmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_float, lda: c_int, x: *mut c_float,
                        incx: c_int);
-    pub fn cblas_stbmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_float, lda: c_int,
+    pub fn cblas_stbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_float, lda: c_int,
                        x: *mut c_float, incx: c_int);
-    pub fn cblas_stpmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_float, x: *mut c_float,
+    pub fn cblas_stpmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_float, x: *mut c_float,
                        incx: c_int);
-    pub fn cblas_strsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_float, lda: c_int, x: *mut c_float,
+    pub fn cblas_strsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_float, lda: c_int, x: *mut c_float,
                        incx: c_int);
-    pub fn cblas_stbsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_float, lda: c_int,
+    pub fn cblas_stbsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_float, lda: c_int,
                        x: *mut c_float, incx: c_int);
-    pub fn cblas_stpsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_float, x: *mut c_float,
+    pub fn cblas_stpsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_float, x: *mut c_float,
                        incx: c_int);
 
-    pub fn cblas_dgemv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int,
+    pub fn cblas_dgemv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
                        alpha: c_double, a: *const c_double, lda: c_int, x: *const c_double,
                        incx: c_int, beta: c_double, y: *mut c_double, incy: c_int);
-    pub fn cblas_dgbmv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int, kl: c_int,
-                       ku: c_int, alpha: c_double, a: *const c_double, lda: c_int,
+    pub fn cblas_dgbmv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
+                       kl: c_int, ku: c_int, alpha: c_double, a: *const c_double, lda: c_int,
                        x: *const c_double, incx: c_int, beta: c_double, y: *mut c_double,
                        incy: c_int);
-    pub fn cblas_dtrmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_double, lda: c_int, x: *mut c_double,
-                       incx: c_int);
-    pub fn cblas_dtbmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_double, lda: c_int,
+    pub fn cblas_dtrmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_double, lda: c_int,
                        x: *mut c_double, incx: c_int);
-    pub fn cblas_dtpmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_double, x: *mut c_double,
-                       incx: c_int);
-    pub fn cblas_dtrsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_double, lda: c_int, x: *mut c_double,
-                       incx: c_int);
-    pub fn cblas_dtbsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_double, lda: c_int,
+    pub fn cblas_dtbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_double, lda: c_int,
                        x: *mut c_double, incx: c_int);
-    pub fn cblas_dtpsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_double, x: *mut c_double,
+    pub fn cblas_dtpmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_double, x: *mut c_double,
+                       incx: c_int);
+    pub fn cblas_dtrsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_double, lda: c_int,
+                       x: *mut c_double, incx: c_int);
+    pub fn cblas_dtbsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_double, lda: c_int,
+                       x: *mut c_double, incx: c_int);
+    pub fn cblas_dtpsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_double, x: *mut c_double,
                        incx: c_int);
 
-    pub fn cblas_cgemv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int,
+    pub fn cblas_cgemv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
                        alpha: *const c_float_complex, a: *const c_float_complex, lda: c_int,
                        x: *const c_float_complex, incx: c_int, beta: *const c_float_complex,
                        y: *mut c_float_complex, incy: c_int);
-    pub fn cblas_cgbmv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int, kl: c_int,
-                       ku: c_int, alpha: *const c_float_complex, a: *const c_float_complex,
-                       lda: c_int, x: *const c_float_complex, incx: c_int,
-                       beta: *const c_float_complex, y: *mut c_float_complex, incy: c_int);
-    pub fn cblas_ctrmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_float_complex, lda: c_int,
+    pub fn cblas_cgbmv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
+                       kl: c_int, ku: c_int, alpha: *const c_float_complex,
+                       a: *const c_float_complex, lda: c_int, x: *const c_float_complex,
+                       incx: c_int, beta: *const c_float_complex, y: *mut c_float_complex,
+                       incy: c_int);
+    pub fn cblas_ctrmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_float_complex, lda: c_int,
                        x: *mut c_float_complex, incx: c_int);
-    pub fn cblas_ctbmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_float_complex, lda: c_int,
+    pub fn cblas_ctbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_float_complex, lda: c_int,
                        x: *mut c_float_complex, incx: c_int);
-    pub fn cblas_ctpmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_float_complex,
+    pub fn cblas_ctpmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_float_complex,
                        x: *mut c_float_complex, incx: c_int);
-    pub fn cblas_ctrsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_float_complex, lda: c_int,
+    pub fn cblas_ctrsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_float_complex, lda: c_int,
                        x: *mut c_float_complex, incx: c_int);
-    pub fn cblas_ctbsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_float_complex, lda: c_int,
+    pub fn cblas_ctbsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_float_complex, lda: c_int,
                        x: *mut c_float_complex, incx: c_int);
-    pub fn cblas_ctpsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_float_complex,
+    pub fn cblas_ctpsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_float_complex,
                        x: *mut c_float_complex, incx: c_int);
 
-    pub fn cblas_zgemv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int,
+    pub fn cblas_zgemv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
                        alpha: *const c_double_complex, a: *const c_double_complex, lda: c_int,
                        x: *const c_double_complex, incx: c_int, beta: *const c_double_complex,
                        y: *mut c_double_complex, incy: c_int);
-    pub fn cblas_zgbmv(layout: CblasLayout, transa: CblasTranspose, m: c_int, n: c_int, kl: c_int,
-                       ku: c_int, alpha: *const c_double_complex, a: *const c_double_complex,
-                       lda: c_int, x: *const c_double_complex, incx: c_int,
-                       beta: *const c_double_complex, y: *mut c_double_complex, incy: c_int);
-    pub fn cblas_ztrmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_double_complex, lda: c_int,
+    pub fn cblas_zgbmv(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, m: c_int, n: c_int,
+                       kl: c_int, ku: c_int, alpha: *const c_double_complex,
+                       a: *const c_double_complex, lda: c_int, x: *const c_double_complex,
+                       incx: c_int, beta: *const c_double_complex, y: *mut c_double_complex,
+                       incy: c_int);
+    pub fn cblas_ztrmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_double_complex, lda: c_int,
                        x: *mut c_double_complex, incx: c_int);
-    pub fn cblas_ztbmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_double_complex, lda: c_int,
+    pub fn cblas_ztbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_double_complex,
+                       lda: c_int, x: *mut c_double_complex, incx: c_int);
+    pub fn cblas_ztpmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_double_complex,
                        x: *mut c_double_complex, incx: c_int);
-    pub fn cblas_ztpmv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_double_complex,
+    pub fn cblas_ztrsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, a: *const c_double_complex, lda: c_int,
                        x: *mut c_double_complex, incx: c_int);
-    pub fn cblas_ztrsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, a: *const c_double_complex, lda: c_int,
-                       x: *mut c_double_complex, incx: c_int);
-    pub fn cblas_ztbsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, k: c_int, a: *const c_double_complex, lda: c_int,
-                       x: *mut c_double_complex, incx: c_int);
-    pub fn cblas_ztpsv(layout: CblasLayout, uplo: CblasUplo, transa: CblasTranspose,
-                       diag: CblasDiag, n: c_int, ap: *const c_double_complex,
+    pub fn cblas_ztbsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, k: c_int, a: *const c_double_complex,
+                       lda: c_int, x: *mut c_double_complex, incx: c_int);
+    pub fn cblas_ztpsv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, transa: CBLAS_TRANSPOSE,
+                       diag: CBLAS_DIAG, n: c_int, ap: *const c_double_complex,
                        x: *mut c_double_complex, incx: c_int);
 
     // Prefixes S and D only
-    pub fn cblas_ssymv(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_ssymv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                        a: *const c_float, lda: c_int, x: *const c_float, incx: c_int,
                        beta: c_float, y: *mut c_float, incy: c_int);
-    pub fn cblas_ssbmv(layout: CblasLayout, uplo: CblasUplo, n: c_int, k: c_int, alpha: c_float,
+    pub fn cblas_ssbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, k: c_int, alpha: c_float,
                        a: *const c_float, lda: c_int, x: *const c_float, incx: c_int,
                        beta: c_float, y: *mut c_float, incy: c_int);
-    pub fn cblas_sspmv(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_sspmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                        ap: *const c_float, x: *const c_float, incx: c_int, beta: c_float,
                        y: *mut c_float, incy: c_int);
-    pub fn cblas_sger(layout: CblasLayout, m: c_int, n: c_int, alpha: c_float, x: *const c_float,
+    pub fn cblas_sger(layout: CBLAS_LAYOUT, m: c_int, n: c_int, alpha: c_float, x: *const c_float,
                       incx: c_int, y: *const c_float, incy: c_int, a: *mut c_float, lda: c_int);
-    pub fn cblas_ssyr(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_ssyr(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                       x: *const c_float, incx: c_int, a: *mut c_float, lda: c_int);
-    pub fn cblas_sspr(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_sspr(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                       x: *const c_float, incx: c_int, ap: *mut c_float);
-    pub fn cblas_ssyr2(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_ssyr2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                        x: *const c_float, incx: c_int, y: *const c_float, incy: c_int,
                        a: *mut c_float, lda: c_int);
-    pub fn cblas_sspr2(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_sspr2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                        x: *const c_float, incx: c_int, y: *const c_float, incy: c_int,
                        a: *mut c_float);
 
-    pub fn cblas_dsymv(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_dsymv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                        a: *const c_double, lda: c_int, x: *const c_double, incx: c_int,
                        beta: c_double, y: *mut c_double, incy: c_int);
-    pub fn cblas_dsbmv(layout: CblasLayout, uplo: CblasUplo, n: c_int, k: c_int, alpha: c_double,
+    pub fn cblas_dsbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, k: c_int, alpha: c_double,
                        a: *const c_double, lda: c_int, x: *const c_double, incx: c_int,
                        beta: c_double, y: *mut c_double, incy: c_int);
-    pub fn cblas_dspmv(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_dspmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                        ap: *const c_double, x: *const c_double, incx: c_int, beta: c_double,
                        y: *mut c_double, incy: c_int);
-    pub fn cblas_dger(layout: CblasLayout, m: c_int, n: c_int, alpha: c_double, x: *const c_double,
-                      incx: c_int, y: *const c_double, incy: c_int, a: *mut c_double, lda: c_int);
-    pub fn cblas_dsyr(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_dger(layout: CBLAS_LAYOUT, m: c_int, n: c_int, alpha: c_double,
+                      x: *const c_double, incx: c_int, y: *const c_double, incy: c_int,
+                      a: *mut c_double, lda: c_int);
+    pub fn cblas_dsyr(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                       x: *const c_double, incx: c_int, a: *mut c_double, lda: c_int);
-    pub fn cblas_dspr(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_dspr(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                       x: *const c_double, incx: c_int, ap: *mut c_double);
-    pub fn cblas_dsyr2(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_dsyr2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                        x: *const c_double, incx: c_int, y: *const c_double, incy: c_int,
                        a: *mut c_double, lda: c_int);
-    pub fn cblas_dspr2(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_dspr2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                        x: *const c_double, incx: c_int, y: *const c_double, incy: c_int,
                        a: *mut c_double);
 
     // Prefixes C and Z only
-    pub fn cblas_chemv(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_chemv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_float_complex, a: *const c_float_complex, lda: c_int,
                        x: *const c_float_complex, incx: c_int, beta: *const c_float_complex,
                        y: *mut c_float_complex, incy: c_int);
-    pub fn cblas_chbmv(layout: CblasLayout, uplo: CblasUplo, n: c_int, k: c_int,
+    pub fn cblas_chbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, k: c_int,
                        alpha: *const c_float_complex, a: *const c_float_complex, lda: c_int,
                        x: *const c_float_complex, incx: c_int, beta: *const c_float_complex,
                        y: *mut c_float_complex, incy: c_int);
-    pub fn cblas_chpmv(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_chpmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_float_complex, ap: *const c_float_complex,
                        x: *const c_float_complex, incx: c_int, beta: *const c_float_complex,
                        y: *mut c_float_complex, incy: c_int);
-    pub fn cblas_cgeru(layout: CblasLayout, m: c_int, n: c_int, alpha: *const c_float_complex,
+    pub fn cblas_cgeru(layout: CBLAS_LAYOUT, m: c_int, n: c_int, alpha: *const c_float_complex,
                        x: *const c_float_complex, incx: c_int, y: *const c_float_complex,
                        incy: c_int, a: *mut c_float_complex, lda: c_int);
-    pub fn cblas_cgerc(layout: CblasLayout, m: c_int, n: c_int, alpha: *const c_float_complex,
+    pub fn cblas_cgerc(layout: CBLAS_LAYOUT, m: c_int, n: c_int, alpha: *const c_float_complex,
                        x: *const c_float_complex, incx: c_int, y: *const c_float_complex,
                        incy: c_int, a: *mut c_float_complex, lda: c_int);
-    pub fn cblas_cher(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_cher(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                       x: *const c_float_complex, incx: c_int, a: *mut c_float_complex, lda: c_int);
-    pub fn cblas_chpr(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_float,
+    pub fn cblas_chpr(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_float,
                       x: *const c_float_complex, incx: c_int, a: *mut c_float_complex);
-    pub fn cblas_cher2(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_cher2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_float_complex, x: *const c_float_complex, incx: c_int,
                        y: *const c_float_complex, incy: c_int, a: *mut c_float_complex,
                        lda: c_int);
-    pub fn cblas_chpr2(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_chpr2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_float_complex, x: *const c_float_complex, incx: c_int,
                        y: *const c_float_complex, incy: c_int, ap: *mut c_float_complex);
 
-    pub fn cblas_zhemv(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_zhemv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_double_complex, a: *const c_double_complex, lda: c_int,
                        x: *const c_double_complex, incx: c_int, beta: *const c_double_complex,
                        y: *mut c_double_complex, incy: c_int);
-    pub fn cblas_zhbmv(layout: CblasLayout, uplo: CblasUplo, n: c_int, k: c_int,
+    pub fn cblas_zhbmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, k: c_int,
                        alpha: *const c_double_complex, a: *const c_double_complex, lda: c_int,
                        x: *const c_double_complex, incx: c_int, beta: *const c_double_complex,
                        y: *mut c_double_complex, incy: c_int);
-    pub fn cblas_zhpmv(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_zhpmv(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_double_complex, ap: *const c_double_complex,
                        x: *const c_double_complex, incx: c_int, beta: *const c_double_complex,
                        y: *mut c_double_complex, incy: c_int);
-    pub fn cblas_zgeru(layout: CblasLayout, m: c_int, n: c_int, alpha: *const c_double_complex,
+    pub fn cblas_zgeru(layout: CBLAS_LAYOUT, m: c_int, n: c_int, alpha: *const c_double_complex,
                        x: *const c_double_complex, incx: c_int, y: *const c_double_complex,
                        incy: c_int, a: *mut c_double_complex, lda: c_int);
-    pub fn cblas_zgerc(layout: CblasLayout, m: c_int, n: c_int, alpha: *const c_double_complex,
+    pub fn cblas_zgerc(layout: CBLAS_LAYOUT, m: c_int, n: c_int, alpha: *const c_double_complex,
                        x: *const c_double_complex, incx: c_int, y: *const c_double_complex,
                        incy: c_int, a: *mut c_double_complex, lda: c_int);
-    pub fn cblas_zher(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_zher(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                       x: *const c_double_complex, incx: c_int, a: *mut c_double_complex,
                       lda: c_int);
-    pub fn cblas_zhpr(layout: CblasLayout, uplo: CblasUplo, n: c_int, alpha: c_double,
+    pub fn cblas_zhpr(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int, alpha: c_double,
                       x: *const c_double_complex, incx: c_int, a: *mut c_double_complex);
-    pub fn cblas_zher2(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_zher2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_double_complex, x: *const c_double_complex, incx: c_int,
                        y: *const c_double_complex, incy: c_int, a: *mut c_double_complex,
                        lda: c_int);
-    pub fn cblas_zhpr2(layout: CblasLayout, uplo: CblasUplo, n: c_int,
+    pub fn cblas_zhpr2(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, n: c_int,
                        alpha: *const c_double_complex, x: *const c_double_complex, incx: c_int,
                        y: *const c_double_complex, incy: c_int, ap: *mut c_double_complex);
 """
 
 level3 = """
     // Standard prefixes (S, D, C, and Z)
-    pub fn cblas_sgemm(layout: CblasLayout, transa: CblasTranspose, transb: CblasTranspose,
+    pub fn cblas_sgemm(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, transb: CBLAS_TRANSPOSE,
                        m: c_int, n: c_int, k: c_int, alpha: c_float, a: *const c_float, lda: c_int,
                        b: *const c_float, ldb: c_int, beta: c_float, c: *mut c_float, ldc: c_int);
-    pub fn cblas_ssymm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo, m: c_int, n: c_int,
-                       alpha: c_float, a: *const c_float, lda: c_int, b: *const c_float,
+    pub fn cblas_ssymm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO, m: c_int,
+                       n: c_int, alpha: c_float, a: *const c_float, lda: c_int, b: *const c_float,
                        ldb: c_int, beta: c_float, c: *mut c_float, ldc: c_int);
-    pub fn cblas_ssyrk(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_ssyrk(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                        k: c_int, alpha: c_float, a: *const c_float, lda: c_int, beta: c_float,
                        c: *mut c_float, ldc: c_int);
-    pub fn cblas_ssyr2k(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_ssyr2k(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                         k: c_int, alpha: c_float, a: *const c_float, lda: c_int, b: *const c_float,
                         ldb: c_int, beta: c_float, c: *mut c_float, ldc: c_int);
-    pub fn cblas_strmm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int, alpha: c_float,
-                       a: *const c_float, lda: c_int, b: *mut c_float, ldb: c_int);
-    pub fn cblas_strsm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int, alpha: c_float,
-                       a: *const c_float, lda: c_int, b: *mut c_float, ldb: c_int);
+    pub fn cblas_strmm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
+                       alpha: c_float, a: *const c_float, lda: c_int, b: *mut c_float, ldb: c_int);
+    pub fn cblas_strsm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
+                       alpha: c_float, a: *const c_float, lda: c_int, b: *mut c_float, ldb: c_int);
 
-    pub fn cblas_dgemm(layout: CblasLayout, transa: CblasTranspose, transb: CblasTranspose,
+    pub fn cblas_dgemm(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, transb: CBLAS_TRANSPOSE,
                        m: c_int, n: c_int, k: c_int, alpha: c_double, a: *const c_double,
                        lda: c_int, b: *const c_double, ldb: c_int, beta: c_double,
                        c: *mut c_double, ldc: c_int);
-    pub fn cblas_dsymm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo, m: c_int, n: c_int,
-                       alpha: c_double, a: *const c_double, lda: c_int, b: *const c_double,
-                       ldb: c_int, beta: c_double, c: *mut c_double, ldc: c_int);
-    pub fn cblas_dsyrk(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_dsymm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO, m: c_int,
+                       n: c_int, alpha: c_double, a: *const c_double, lda: c_int,
+                       b: *const c_double, ldb: c_int, beta: c_double, c: *mut c_double,
+                       ldc: c_int);
+    pub fn cblas_dsyrk(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                        k: c_int, alpha: c_double, a: *const c_double, lda: c_int, beta: c_double,
                        c: *mut c_double, ldc: c_int);
-    pub fn cblas_dsyr2k(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_dsyr2k(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                         k: c_int, alpha: c_double, a: *const c_double, lda: c_int,
                         b: *const c_double, ldb: c_int, beta: c_double, c: *mut c_double,
                         ldc: c_int);
-    pub fn cblas_dtrmm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int,
+    pub fn cblas_dtrmm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
                        alpha: c_double, a: *const c_double, lda: c_int, b: *mut c_double,
                        ldb: c_int);
-    pub fn cblas_dtrsm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int,
+    pub fn cblas_dtrsm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
                        alpha: c_double, a: *const c_double, lda: c_int, b: *mut c_double,
                        ldb: c_int);
 
-    pub fn cblas_cgemm(layout: CblasLayout, transa: CblasTranspose, transb: CblasTranspose,
+    pub fn cblas_cgemm(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, transb: CBLAS_TRANSPOSE,
                        m: c_int, n: c_int, k: c_int, alpha: *const c_float_complex,
                        a: *const c_float_complex, lda: c_int, b: *const c_float_complex,
                        ldb: c_int, beta: *const c_float_complex, c: *mut c_float_complex,
                        ldc: c_int);
-    pub fn cblas_csymm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo, m: c_int, n: c_int,
-                       alpha: *const c_float_complex, a: *const c_float_complex, lda: c_int,
-                       b: *const c_float_complex, ldb: c_int, beta: *const c_float_complex,
-                       c: *mut c_float_complex, ldc: c_int);
-    pub fn cblas_csyrk(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_csymm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO, m: c_int,
+                       n: c_int, alpha: *const c_float_complex, a: *const c_float_complex,
+                       lda: c_int, b: *const c_float_complex, ldb: c_int,
+                       beta: *const c_float_complex, c: *mut c_float_complex, ldc: c_int);
+    pub fn cblas_csyrk(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                        k: c_int, alpha: *const c_float_complex, a: *const c_float_complex,
                        lda: c_int, beta: *const c_float_complex, c: *mut c_float_complex,
                        ldc: c_int);
-    pub fn cblas_csyr2k(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_csyr2k(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                         k: c_int, alpha: *const c_float_complex, a: *const c_float_complex,
                         lda: c_int, b: *const c_float_complex, ldb: c_int,
                         beta: *const c_float_complex, c: *mut c_float_complex, ldc: c_int);
-    pub fn cblas_ctrmm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int,
+    pub fn cblas_ctrmm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
                        alpha: *const c_float_complex, a: *const c_float_complex, lda: c_int,
                        b: *mut c_float_complex, ldb: c_int);
-    pub fn cblas_ctrsm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int,
+    pub fn cblas_ctrsm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
                        alpha: *const c_float_complex, a: *const c_float_complex, lda: c_int,
                        b: *mut c_float_complex, ldb: c_int);
 
-    pub fn cblas_zgemm(layout: CblasLayout, transa: CblasTranspose, transb: CblasTranspose,
+    pub fn cblas_zgemm(layout: CBLAS_LAYOUT, transa: CBLAS_TRANSPOSE, transb: CBLAS_TRANSPOSE,
                        m: c_int, n: c_int, k: c_int, alpha: *const c_double_complex,
                        a: *const c_double_complex, lda: c_int, b: *const c_double_complex,
                        ldb: c_int, beta: *const c_double_complex, c: *mut c_double_complex,
                        ldc: c_int);
-    pub fn cblas_zsymm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo, m: c_int, n: c_int,
-                       alpha: *const c_double_complex, a: *const c_double_complex, lda: c_int,
-                       b: *const c_double_complex, ldb: c_int, beta: *const c_double_complex,
-                       c: *mut c_double_complex, ldc: c_int);
-    pub fn cblas_zsyrk(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_zsymm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO, m: c_int,
+                       n: c_int, alpha: *const c_double_complex, a: *const c_double_complex,
+                       lda: c_int, b: *const c_double_complex, ldb: c_int,
+                       beta: *const c_double_complex, c: *mut c_double_complex, ldc: c_int);
+    pub fn cblas_zsyrk(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                        k: c_int, alpha: *const c_double_complex, a: *const c_double_complex,
                        lda: c_int, beta: *const c_double_complex, c: *mut c_double_complex,
                        ldc: c_int);
-    pub fn cblas_zsyr2k(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_zsyr2k(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                         k: c_int, alpha: *const c_double_complex, a: *const c_double_complex,
                         lda: c_int, b: *const c_double_complex, ldb: c_int,
                         beta: *const c_double_complex, c: *mut c_double_complex, ldc: c_int);
-    pub fn cblas_ztrmm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int,
+    pub fn cblas_ztrmm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
                        alpha: *const c_double_complex, a: *const c_double_complex, lda: c_int,
                        b: *mut c_double_complex, ldb: c_int);
-    pub fn cblas_ztrsm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo,
-                       transa: CblasTranspose, diag: CblasDiag, m: c_int, n: c_int,
+    pub fn cblas_ztrsm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO,
+                       transa: CBLAS_TRANSPOSE, diag: CBLAS_DIAG, m: c_int, n: c_int,
                        alpha: *const c_double_complex, a: *const c_double_complex, lda: c_int,
                        b: *mut c_double_complex, ldb: c_int);
 
     // Prefixes C and Z only
-    pub fn cblas_chemm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo, m: c_int, n: c_int,
-                       alpha: *const c_float_complex, a: *const c_float_complex, lda: c_int,
-                       b: *const c_float_complex, ldb: c_int, beta: *const c_float_complex,
-                       c: *mut c_float_complex, ldc: c_int);
-    pub fn cblas_cherk(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_chemm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO, m: c_int,
+                       n: c_int, alpha: *const c_float_complex, a: *const c_float_complex,
+                       lda: c_int, b: *const c_float_complex, ldb: c_int,
+                       beta: *const c_float_complex, c: *mut c_float_complex, ldc: c_int);
+    pub fn cblas_cherk(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                        k: c_int, alpha: c_float, a: *const c_float_complex, lda: c_int,
                        beta: c_float, c: *mut c_float_complex, ldc: c_int);
-    pub fn cblas_cher2k(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_cher2k(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                         k: c_int, alpha: *const c_float_complex, a: *const c_float_complex,
                         lda: c_int, b: *const c_float_complex, ldb: c_int, beta: c_float,
                         c: *mut c_float_complex, ldc: c_int);
 
-    pub fn cblas_zhemm(layout: CblasLayout, side: CblasSide, uplo: CblasUplo, m: c_int, n: c_int,
-                       alpha: *const c_double_complex, a: *const c_double_complex, lda: c_int,
-                       b: *const c_double_complex, ldb: c_int, beta: *const c_double_complex,
-                       c: *mut c_double_complex, ldc: c_int);
-    pub fn cblas_zherk(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_zhemm(layout: CBLAS_LAYOUT, side: CBLAS_SIDE, uplo: CBLAS_UPLO, m: c_int,
+                       n: c_int, alpha: *const c_double_complex, a: *const c_double_complex,
+                       lda: c_int, b: *const c_double_complex, ldb: c_int,
+                       beta: *const c_double_complex, c: *mut c_double_complex, ldc: c_int);
+    pub fn cblas_zherk(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                        k: c_int, alpha: c_double, a: *const c_double_complex, lda: c_int,
                        beta: c_double, c: *mut c_double_complex, ldc: c_int);
-    pub fn cblas_zher2k(layout: CblasLayout, uplo: CblasUplo, trans: CblasTranspose, n: c_int,
+    pub fn cblas_zher2k(layout: CBLAS_LAYOUT, uplo: CBLAS_UPLO, trans: CBLAS_TRANSPOSE, n: c_int,
                         k: c_int, alpha: *const c_double_complex, a: *const c_double_complex,
                         lda: c_int, b: *const c_double_complex, ldb: c_int, beta: c_double,
                         c: *mut c_double_complex, ldc: c_int);
@@ -504,15 +510,15 @@ def translate_argument(name, cty, f):
     if cty == "c_int":
         return "usize"
 
-    elif cty == "CblasDiag":
+    elif cty == "CBLAS_DIAG":
         return "Diagonal"
-    elif cty == "CblasLayout":
+    elif cty == "CBLAS_LAYOUT":
         return "Layout"
-    elif cty == "CblasSide":
+    elif cty == "CBLAS_SIDE":
         return "Side"
-    elif cty == "CblasTranspose":
+    elif cty == "CBLAS_TRANSPOSE":
         return "Transpose"
-    elif cty == "CblasUplo":
+    elif cty == "CBLAS_UPLO":
         return "Part"
 
     base = translate_type_base(cty)
@@ -570,7 +576,7 @@ def translate_body_argument(name, rty):
     assert False, "cannot translate `{}: {}`".format(name, rty)
 
 def translate_return_type(cty):
-    if cty == "CblasIndex":
+    if cty == "c_int":
         return "usize"
     elif cty == "c_float":
         return "f32"
