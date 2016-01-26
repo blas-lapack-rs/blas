@@ -71,11 +71,11 @@ macro_rules! convert {
 }
 
 convert! {
-    Diagonal => CblasDiag,
-    Layout => CblasLayout,
-    Part => CblasUplo,
-    Side => CblasSide,
-    Transpose => CblasTranspose,
+    Diagonal => CBLAS_DIAG,
+    Layout => CBLAS_LAYOUT,
+    Part => CBLAS_UPLO,
+    Side => CBLAS_SIDE,
+    Transpose => CBLAS_TRANSPOSE,
 }
 
 #[inline]
