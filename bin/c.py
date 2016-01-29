@@ -466,14 +466,12 @@ def pull_argument(s):
     match = argument_re.match(s)
     if match is None:
         return None, None, s
-
     return match.group(1), match.group(2), s[match.end(3):]
 
 def pull_return(s):
     match = return_re.match(s)
     if match is None:
         return None, s
-
     return match.group(1), s[match.end(1):]
 
 def chew(s, c):
