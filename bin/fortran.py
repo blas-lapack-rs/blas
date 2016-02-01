@@ -8,9 +8,6 @@ level_scalars = {
     3: ["alpha", "beta"],
 }
 
-def is_scalar(name, cty, f):
-    return name in level_scalars[f.level]
-
 level1 = """
     // Single
     pub fn srotg_(a: *mut c_float, b: *mut c_float, c: *mut c_float, s: *mut c_float);
@@ -477,29 +474,25 @@ class Func(object):
 def is_const(name, cty):
     return "*const" in cty
 
-def is_letter(name, cty):
-    return "c_char" in cty
-
-def is_natural(name, cty):
-    return "c_int" in cty and (
-        name in ["m", "n", "k", "kl", "ku"] or
-        name.startswith("ld") or
-        name.startswith("inc")
-    )
-
 def is_mut(name, cty):
     return "*mut" in cty
 
+def is_letter(name, cty):
+    return "c_char" in cty
+
+def is_scalar(name, cty, f):
+    return (
+        "c_char" in cty or
+        "c_int" in cty and (
+            name in ["m", "n", "k", "kl", "ku"] or
+            name.startswith("ld") or
+            name.startswith("inc")
+        ) or
+        name in level_scalars[f.level]
+    )
+
 def translate_argument(name, cty, f):
-    if is_natural(name, cty):
-        assert(is_const(name, cty))
-        return "usize"
-
-    elif is_letter(name, cty):
-        assert(is_const(name, cty))
-        return "u8"
-
-    elif is_const(name, cty):
+    if is_const(name, cty):
         base = translate_type_base(cty)
         if is_scalar(name, cty, f):
             return base
@@ -516,7 +509,11 @@ def translate_argument(name, cty, f):
     assert False, "cannot translate `{}: {}`".format(name, cty)
 
 def translate_type_base(cty):
-    if "c_double_complex" in cty:
+    if "c_char" in cty:
+        return "u8"
+    elif "c_int" in cty:
+        return "i32"
+    elif "c_double_complex" in cty:
         return "c64"
     elif "c_float_complex" in cty:
         return "c32"
@@ -531,8 +528,8 @@ def translate_body_argument(name, rty):
     if rty == "u8":
         return "&({} as c_char)".format(name)
 
-    elif rty == "usize":
-        return "&({} as c_int)".format(name)
+    elif rty == "i32":
+        return "&{}".format(name)
 
     elif rty.startswith("f"):
         return "&{}".format(name)

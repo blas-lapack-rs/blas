@@ -9,9 +9,6 @@ level_scalars = {
     0: [],
 }
 
-def is_scalar(name, cty, f):
-    return name in level_scalars[f.level]
-
 level1_functions = """
     pub fn cblas_dcabs1(z: *const c_double_complex) -> c_double;
     pub fn cblas_scabs1(c: *const c_float_complex) -> c_float;
@@ -506,7 +503,7 @@ class Func(object):
 
 def translate_argument(name, cty, f):
     if cty == "c_int":
-        return "usize"
+        return "i32"
 
     elif cty == "CBLAS_DIAG":
         return "Diagonal"
@@ -534,6 +531,9 @@ def translate_argument(name, cty, f):
 
     return base
 
+def is_scalar(name, cty, f):
+    return name in level_scalars[f.level]
+
 def translate_type_base(cty):
     if "c_double_complex" in cty:
         return "c64"
@@ -547,8 +547,8 @@ def translate_type_base(cty):
     assert False, "cannot translate `{}`".format(cty)
 
 def translate_body_argument(name, rty):
-    if rty == "usize":
-        return "{} as c_int".format(name)
+    if rty == "i32":
+        return name
 
     elif rty in ["Diagonal", "Layout", "Part", "Side", "Transpose"]:
         return "{}.into()".format(name)
@@ -575,7 +575,7 @@ def translate_body_argument(name, rty):
 
 def translate_return_type(cty):
     if cty == "c_int":
-        return "usize"
+        return "i32"
     elif cty == "c_float":
         return "f32"
     elif cty == "c_double":
