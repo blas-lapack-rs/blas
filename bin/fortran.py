@@ -477,9 +477,6 @@ def is_const(name, cty):
 def is_mut(name, cty):
     return "*mut" in cty
 
-def is_letter(name, cty):
-    return "c_char" in cty
-
 def is_scalar(name, cty, f):
     return (
         "c_char" in cty or
