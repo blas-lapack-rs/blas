@@ -12,10 +12,10 @@ use blas::c::{Layout, Transpose, dgemv};
 #[bench] fn dgemv_rm_01000(bencher: &mut Bencher) { run(Layout::RowMajor,  1000, bencher) }
 #[bench] fn dgemv_rm_10000(bencher: &mut Bencher) { run(Layout::RowMajor, 10000, bencher) }
 
-fn run(layout: Layout, m: usize, bencher: &mut Bencher) {
-    let a = vec![1.0; m * m];
-    let x = vec![1.0; m];
-    let mut y = vec![1.0; m];
+fn run(layout: Layout, m: i32, bencher: &mut Bencher) {
+    let a = vec![1.0; (m * m) as usize];
+    let x = vec![1.0; m as usize];
+    let mut y = vec![1.0; m as usize];
 
     bencher.iter(|| {
         dgemv(layout, Transpose::None, m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1)
