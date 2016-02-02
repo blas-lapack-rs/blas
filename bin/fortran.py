@@ -489,15 +489,13 @@ def is_scalar(name, cty, f):
     )
 
 def translate_argument(name, cty, f):
+    base = translate_type_base(cty)
     if is_const(name, cty):
-        base = translate_type_base(cty)
         if is_scalar(name, cty, f):
             return base
         else:
             return "&[{}]".format(base)
-
     elif is_mut(name, cty):
-        base = translate_type_base(cty)
         if is_scalar(name, cty, f):
             return "&mut {}".format(base)
         else:
