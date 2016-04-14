@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.15.0"
+version = "0.15.1"
 license = "Apache-2.0/MIT"
 authors = [
   "Andrew Straw <strawman@astraw.com>",
@@ -22,10 +22,9 @@ openblas = ["blas-sys/openblas"]
 [dependencies]
 libc = "0.2"
 
-[dependencies.num]
+[dependencies.num-complex]
 version = "0.1"
 default-features = false
-features = ["complex"]
 
 [dependencies.blas-sys]
 version = "0.6"
