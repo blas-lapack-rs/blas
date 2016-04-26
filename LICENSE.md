@@ -11,7 +11,7 @@ The following two notices apply to every file of the project.
 ## The Apache License
 
 ```
-Copyright 2014–1016 The blas Developers
+Copyright 2014–2016 The blas Developers
 
 Licensed under the Apache License, Version 2.0 (the “License”); you may not use
 this file except in compliance with the License. You may obtain a copy of the
