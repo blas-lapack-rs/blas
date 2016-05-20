@@ -43,8 +43,8 @@ will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
 
 [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
-[version-img]: https://img.shields.io/crates/v/blas.svg
-[version-url]: https://crates.io/crates/blas
+[doc]: https://stainless-steel.github.io/blas
 [status-img]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [status-url]: https://travis-ci.org/stainless-steel/blas
-[doc]: https://stainless-steel.github.io/blas
+[version-img]: https://img.shields.io/crates/v/blas.svg
+[version-url]: https://crates.io/crates/blas
