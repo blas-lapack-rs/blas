@@ -29,9 +29,9 @@ before_install:
   - curl https://stainless-steel.github.io/travis/fortran.sh | bash
 
 script:
-  - cargo test --no-default-features --features=$FEATURE --verbose
+  - cargo test -vv --no-default-features --features=$FEATURE
   - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
-      cargo bench --no-default-features --features=$FEATURE --verbose;
+      cargo bench -vv --no-default-features --features=$FEATURE;
     fi
 
 after_success:
