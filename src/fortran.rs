@@ -21,6 +21,7 @@ use libc::c_char;
 use {c32, c64};
 
 #[inline]
+/// setup Givens rotation (real single-precision)
 pub fn srotg(a: &mut f32, b: &mut f32, c: &mut f32, s: &mut f32) {
     unsafe {
         ffi::srotg_(a, b, c, s)
@@ -28,6 +29,7 @@ pub fn srotg(a: &mut f32, b: &mut f32, c: &mut f32, s: &mut f32) {
 }
 
 #[inline]
+/// setup modified Givens rotation (real single-precision)
 pub fn srotmg(d1: &mut f32, d2: &mut f32, x1: &mut f32, y1: f32, param: &mut [f32]) {
     unsafe {
         ffi::srotmg_(d1, d2, x1, &y1, param.as_mut_ptr())
@@ -35,6 +37,7 @@ pub fn srotmg(d1: &mut f32, d2: &mut f32, x1: &mut f32, y1: f32, param: &mut [f3
 }
 
 #[inline]
+/// apply Givens rotation (real single-precision)
 pub fn srot(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, c: f32, s: f32) {
     unsafe {
         ffi::srot_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy, &c, &s)
@@ -42,6 +45,7 @@ pub fn srot(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, c: f32, 
 }
 
 #[inline]
+/// apply modified Givens rotation (real single-precision)
 pub fn srotm(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, param: &[f32]) {
     unsafe {
         ffi::srotm_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy, param.as_ptr())
@@ -49,6 +53,7 @@ pub fn srotm(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, param: 
 }
 
 #[inline]
+/// swap x and y (real single-precision)
 pub fn sswap(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32) {
     unsafe {
         ffi::sswap_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy)
@@ -56,6 +61,7 @@ pub fn sswap(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32) {
 }
 
 #[inline]
+/// x = α·x (real single-precision)
 pub fn sscal(n: i32, a: f32, x: &mut [f32], incx: i32) {
     unsafe {
         ffi::sscal_(&n, &a, x.as_mut_ptr(), &incx)
@@ -63,6 +69,7 @@ pub fn sscal(n: i32, a: f32, x: &mut [f32], incx: i32) {
 }
 
 #[inline]
+/// copy x into y (real single-precision)
 pub fn scopy(n: i32, x: &[f32], incx: i32, y: &mut [f32], incy: i32) {
     unsafe {
         ffi::scopy_(&n, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
@@ -70,6 +77,7 @@ pub fn scopy(n: i32, x: &[f32], incx: i32, y: &mut [f32], incy: i32) {
 }
 
 #[inline]
+/// y = α·x + y (real single-precision)
 pub fn saxpy(n: i32, alpha: f32, x: &[f32], incx: i32, y: &mut [f32], incy: i32) {
     unsafe {
         ffi::saxpy_(&n, &alpha, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
@@ -77,6 +85,7 @@ pub fn saxpy(n: i32, alpha: f32, x: &[f32], incx: i32, y: &mut [f32], incy: i32)
 }
 
 #[inline]
+/// dot product (real single-precision)
 pub fn sdot(n: i32, x: &[f32], incx: i32, y: &[f32], incy: i32) -> f32 {
     unsafe {
         ffi::sdot_(&n, x.as_ptr(), &incx, y.as_ptr(), &incy)
@@ -84,6 +93,7 @@ pub fn sdot(n: i32, x: &[f32], incx: i32, y: &[f32], incy: i32) -> f32 {
 }
 
 #[inline]
+/// dot product with extended precision accumulation (real single-precision)
 pub fn sdsdot(n: i32, sb: &[f32], x: &[f32], incx: i32, y: &[f32], incy: i32) -> f32 {
     unsafe {
         ffi::sdsdot_(&n, sb.as_ptr(), x.as_ptr(), &incx, y.as_ptr(), &incy)
@@ -91,6 +101,7 @@ pub fn sdsdot(n: i32, sb: &[f32], x: &[f32], incx: i32, y: &[f32], incy: i32) ->
 }
 
 #[inline]
+/// Euclidean norm (real single-precision)
 pub fn snrm2(n: i32, x: &[f32], incx: i32) -> f32 {
     unsafe {
         ffi::snrm2_(&n, x.as_ptr(), &incx)
@@ -98,6 +109,7 @@ pub fn snrm2(n: i32, x: &[f32], incx: i32) -> f32 {
 }
 
 #[inline]
+/// Euclidean norm (single-precision)
 pub fn scnrm2(n: i32, x: &[c32], incx: i32) -> f32 {
     unsafe {
         ffi::scnrm2_(&n, x.as_ptr() as *const _, &incx)
@@ -105,6 +117,7 @@ pub fn scnrm2(n: i32, x: &[c32], incx: i32) -> f32 {
 }
 
 #[inline]
+/// sum of absolute values (real single-precision)
 pub fn sasum(n: i32, x: &[f32], incx: i32) -> f32 {
     unsafe {
         ffi::sasum_(&n, x.as_ptr(), &incx)
@@ -112,6 +125,7 @@ pub fn sasum(n: i32, x: &[f32], incx: i32) -> f32 {
 }
 
 #[inline]
+/// index of max abs value (real single-precision)
 pub fn isamax(n: i32, x: &[f32], incx: i32) -> usize {
     unsafe {
         ffi::isamax_(&n, x.as_ptr(), &incx) as usize
@@ -119,6 +133,7 @@ pub fn isamax(n: i32, x: &[f32], incx: i32) -> usize {
 }
 
 #[inline]
+/// setup Givens rotation (real double-precision)
 pub fn drotg(a: &mut f64, b: &mut f64, c: &mut f64, s: &mut f64) {
     unsafe {
         ffi::drotg_(a, b, c, s)
@@ -126,6 +141,7 @@ pub fn drotg(a: &mut f64, b: &mut f64, c: &mut f64, s: &mut f64) {
 }
 
 #[inline]
+/// setup modified Givens rotation (real double-precision)
 pub fn drotmg(d1: &mut f64, d2: &mut f64, x1: &mut f64, y1: f64, param: &mut [f64]) {
     unsafe {
         ffi::drotmg_(d1, d2, x1, &y1, param.as_mut_ptr())
@@ -133,6 +149,7 @@ pub fn drotmg(d1: &mut f64, d2: &mut f64, x1: &mut f64, y1: f64, param: &mut [f6
 }
 
 #[inline]
+/// apply Givens rotation (real double-precision)
 pub fn drot(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32, c: f64, s: f64) {
     unsafe {
         ffi::drot_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy, &c, &s)
@@ -140,6 +157,7 @@ pub fn drot(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32, c: f64, 
 }
 
 #[inline]
+/// apply modified Givens rotation (real double-precision)
 pub fn drotm(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32, param: &[f64]) {
     unsafe {
         ffi::drotm_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy, param.as_ptr())
@@ -147,6 +165,7 @@ pub fn drotm(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32, param: 
 }
 
 #[inline]
+/// swap x and y (real double-precision)
 pub fn dswap(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32) {
     unsafe {
         ffi::dswap_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy)
@@ -154,6 +173,7 @@ pub fn dswap(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32) {
 }
 
 #[inline]
+/// x = α·x (real double-precision)
 pub fn dscal(n: i32, a: f64, x: &mut [f64], incx: i32) {
     unsafe {
         ffi::dscal_(&n, &a, x.as_mut_ptr(), &incx)
@@ -161,6 +181,7 @@ pub fn dscal(n: i32, a: f64, x: &mut [f64], incx: i32) {
 }
 
 #[inline]
+/// copy x into y (real double-precision)
 pub fn dcopy(n: i32, x: &[f64], incx: i32, y: &mut [f64], incy: i32) {
     unsafe {
         ffi::dcopy_(&n, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
@@ -168,6 +189,7 @@ pub fn dcopy(n: i32, x: &[f64], incx: i32, y: &mut [f64], incy: i32) {
 }
 
 #[inline]
+/// y = α·x + y (real double-precision)
 pub fn daxpy(n: i32, alpha: f64, x: &[f64], incx: i32, y: &mut [f64], incy: i32) {
     unsafe {
         ffi::daxpy_(&n, &alpha, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
@@ -175,6 +197,7 @@ pub fn daxpy(n: i32, alpha: f64, x: &[f64], incx: i32, y: &mut [f64], incy: i32)
 }
 
 #[inline]
+/// dot product (real double-precision)
 pub fn ddot(n: i32, x: &[f64], incx: i32, y: &[f64], incy: i32) -> f64 {
     unsafe {
         ffi::ddot_(&n, x.as_ptr(), &incx, y.as_ptr(), &incy)
@@ -182,6 +205,7 @@ pub fn ddot(n: i32, x: &[f64], incx: i32, y: &[f64], incy: i32) -> f64 {
 }
 
 #[inline]
+/// dot product with extended precision accumulation (real double-precision)
 pub fn dsdot(n: i32, x: &[f32], incx: i32, y: &[f32], incy: i32) -> f64 {
     unsafe {
         ffi::dsdot_(&n, x.as_ptr(), &incx, y.as_ptr(), &incy)
@@ -189,6 +213,7 @@ pub fn dsdot(n: i32, x: &[f32], incx: i32, y: &[f32], incy: i32) -> f64 {
 }
 
 #[inline]
+/// Euclidean norm (real double-precision)
 pub fn dnrm2(n: i32, x: &[f64], incx: i32) -> f64 {
     unsafe {
         ffi::dnrm2_(&n, x.as_ptr(), &incx)
@@ -196,6 +221,7 @@ pub fn dnrm2(n: i32, x: &[f64], incx: i32) -> f64 {
 }
 
 #[inline]
+/// Euclidean norm (double-precision)
 pub fn dznrm2(n: i32, x: &[c64], incx: i32) -> f64 {
     unsafe {
         ffi::dznrm2_(&n, x.as_ptr() as *const _, &incx)
@@ -203,6 +229,7 @@ pub fn dznrm2(n: i32, x: &[c64], incx: i32) -> f64 {
 }
 
 #[inline]
+/// sum of absolute values (real double-precision)
 pub fn dasum(n: i32, x: &[f64], incx: i32) -> f64 {
     unsafe {
         ffi::dasum_(&n, x.as_ptr(), &incx)
@@ -210,6 +237,7 @@ pub fn dasum(n: i32, x: &[f64], incx: i32) -> f64 {
 }
 
 #[inline]
+/// index of max abs value (real double-precision)
 pub fn idamax(n: i32, x: &[f64], incx: i32) -> usize {
     unsafe {
         ffi::idamax_(&n, x.as_ptr(), &incx) as usize
@@ -217,6 +245,7 @@ pub fn idamax(n: i32, x: &[f64], incx: i32) -> usize {
 }
 
 #[inline]
+/// setup Givens rotation (complex single-precision)
 pub fn crotg(a: &mut c32, b: c32, c: &mut f32, s: &mut c32) {
     unsafe {
         ffi::crotg_(a as *mut _ as *mut _, &b as *const _ as *const _, c, s as *mut _ as *mut _)
@@ -224,6 +253,7 @@ pub fn crotg(a: &mut c32, b: c32, c: &mut f32, s: &mut c32) {
 }
 
 #[inline]
+/// apply Givens rotation (complex single-precision)
 pub fn csrot(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32, c: f32, s: f32) {
     unsafe {
         ffi::csrot_(&n, x.as_mut_ptr() as *mut _, &incx, y.as_mut_ptr() as *mut _, &incy, &c, &s)
@@ -231,6 +261,7 @@ pub fn csrot(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32, c: f32,
 }
 
 #[inline]
+/// swap x and y (complex single-precision)
 pub fn cswap(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32) {
     unsafe {
         ffi::cswap_(&n, x.as_mut_ptr() as *mut _, &incx, y.as_mut_ptr() as *mut _, &incy)
@@ -238,6 +269,7 @@ pub fn cswap(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32) {
 }
 
 #[inline]
+/// x = α·x (complex single-precision)
 pub fn cscal(n: i32, a: c32, x: &mut [c32], incx: i32) {
     unsafe {
         ffi::cscal_(&n, &a as *const _ as *const _, x.as_mut_ptr() as *mut _, &incx)
@@ -245,6 +277,7 @@ pub fn cscal(n: i32, a: c32, x: &mut [c32], incx: i32) {
 }
 
 #[inline]
+/// x = α·x, scalar α (complex single-precision)
 pub fn csscal(n: i32, a: f32, x: &mut [c32], incx: i32) {
     unsafe {
         ffi::csscal_(&n, &a, x.as_mut_ptr() as *mut _, &incx)
@@ -252,6 +285,7 @@ pub fn csscal(n: i32, a: f32, x: &mut [c32], incx: i32) {
 }
 
 #[inline]
+/// copy x into y (complex single-precision)
 pub fn ccopy(n: i32, x: &[c32], incx: i32, y: &mut [c32], incy: i32) {
     unsafe {
         ffi::ccopy_(&n, x.as_ptr() as *const _, &incx, y.as_mut_ptr() as *mut _, &incy)
@@ -259,6 +293,7 @@ pub fn ccopy(n: i32, x: &[c32], incx: i32, y: &mut [c32], incy: i32) {
 }
 
 #[inline]
+/// y = α·x + y (complex single-precision)
 pub fn caxpy(n: i32, alpha: c32, x: &[c32], incx: i32, y: &mut [c32], incy: i32) {
     unsafe {
         ffi::caxpy_(&n, &alpha as *const _ as *const _, x.as_ptr() as *const _, &incx,
@@ -267,6 +302,7 @@ pub fn caxpy(n: i32, alpha: c32, x: &[c32], incx: i32, y: &mut [c32], incy: i32)
 }
 
 #[inline]
+/// y = x<sup>T</sup> · y, dot product (complex single-precision)
 pub fn cdotu(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], incy: i32) {
     unsafe {
         ffi::cdotu_(pres.as_mut_ptr() as *mut _, &n, x.as_ptr() as *const _, &incx,
@@ -275,6 +311,7 @@ pub fn cdotu(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], incy: i3
 }
 
 #[inline]
+/// y = x<sup>T</sup> · y, dot product with first argument conjugated (complex single-precision)
 pub fn cdotc(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], incy: i32) {
     unsafe {
         ffi::cdotc_(pres.as_mut_ptr() as *mut _, &n, x.as_ptr() as *const _, &incx,
@@ -283,6 +320,7 @@ pub fn cdotc(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], incy: i3
 }
 
 #[inline]
+/// sum of absolute values (single-precision)
 pub fn scasum(n: i32, x: &[c32], incx: i32) -> f32 {
     unsafe {
         ffi::scasum_(&n, x.as_ptr() as *const _, &incx)
@@ -290,6 +328,7 @@ pub fn scasum(n: i32, x: &[c32], incx: i32) -> f32 {
 }
 
 #[inline]
+/// index of max abs value (complex single-precision)
 pub fn icamax(n: i32, x: &[c32], incx: i32) -> usize {
     unsafe {
         ffi::icamax_(&n, x.as_ptr() as *const _, &incx) as usize
@@ -297,6 +336,7 @@ pub fn icamax(n: i32, x: &[c32], incx: i32) -> usize {
 }
 
 #[inline]
+/// setup Givens rotation (complex double-precision)
 pub fn zrotg(a: &mut c64, b: c64, c: &mut f64, s: &mut c64) {
     unsafe {
         ffi::zrotg_(a as *mut _ as *mut _, &b as *const _ as *const _, c, s as *mut _ as *mut _)
@@ -304,6 +344,7 @@ pub fn zrotg(a: &mut c64, b: c64, c: &mut f64, s: &mut c64) {
 }
 
 #[inline]
+/// apply Givens rotation (complex double-precision)
 pub fn zdrot(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32, c: f64, s: f64) {
     unsafe {
         ffi::zdrot_(&n, x.as_mut_ptr() as *mut _, &incx, y.as_mut_ptr() as *mut _, &incy, &c, &s)
@@ -311,6 +352,7 @@ pub fn zdrot(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32, c: f64,
 }
 
 #[inline]
+/// swap x and y (complex double-precision)
 pub fn zswap(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32) {
     unsafe {
         ffi::zswap_(&n, x.as_mut_ptr() as *mut _, &incx, y.as_mut_ptr() as *mut _, &incy)
@@ -318,6 +360,7 @@ pub fn zswap(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32) {
 }
 
 #[inline]
+/// x = α·x (complex double-precision)
 pub fn zscal(n: i32, a: c64, x: &mut [c64], incx: i32) {
     unsafe {
         ffi::zscal_(&n, &a as *const _ as *const _, x.as_mut_ptr() as *mut _, &incx)
@@ -325,6 +368,7 @@ pub fn zscal(n: i32, a: c64, x: &mut [c64], incx: i32) {
 }
 
 #[inline]
+/// x = α·x, scalar α (complex double-precision)
 pub fn zdscal(n: i32, a: f64, x: &mut [c64], incx: i32) {
     unsafe {
         ffi::zdscal_(&n, &a, x.as_mut_ptr() as *mut _, &incx)
@@ -332,6 +376,7 @@ pub fn zdscal(n: i32, a: f64, x: &mut [c64], incx: i32) {
 }
 
 #[inline]
+/// copy x into y (complex double-precision)
 pub fn zcopy(n: i32, x: &[c64], incx: i32, y: &mut [c64], incy: i32) {
     unsafe {
         ffi::zcopy_(&n, x.as_ptr() as *const _, &incx, y.as_mut_ptr() as *mut _, &incy)
@@ -339,6 +384,7 @@ pub fn zcopy(n: i32, x: &[c64], incx: i32, y: &mut [c64], incy: i32) {
 }
 
 #[inline]
+/// y = α·x + y (complex double-precision)
 pub fn zaxpy(n: i32, alpha: c64, x: &[c64], incx: i32, y: &mut [c64], incy: i32) {
     unsafe {
         ffi::zaxpy_(&n, &alpha as *const _ as *const _, x.as_ptr() as *const _, &incx,
@@ -347,6 +393,7 @@ pub fn zaxpy(n: i32, alpha: c64, x: &[c64], incx: i32, y: &mut [c64], incy: i32)
 }
 
 #[inline]
+/// y = x<sup>T</sup> · y, dot product (complex double-precision)
 pub fn zdotu(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], incy: i32) {
     unsafe {
         ffi::zdotu_(pres.as_mut_ptr() as *mut _, &n, x.as_ptr() as *const _, &incx,
@@ -355,6 +402,7 @@ pub fn zdotu(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], incy: i3
 }
 
 #[inline]
+/// y = x<sup>T</sup> · y, dot product with first argument conjugated (complex double-precision)
 pub fn zdotc(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], incy: i32) {
     unsafe {
         ffi::zdotc_(pres.as_mut_ptr() as *mut _, &n, x.as_ptr() as *const _, &incx,
@@ -363,6 +411,7 @@ pub fn zdotc(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], incy: i3
 }
 
 #[inline]
+/// sum of absolute values (double-precision)
 pub fn dzasum(n: i32, x: &[c64], incx: i32) -> f64 {
     unsafe {
         ffi::dzasum_(&n, x.as_ptr() as *const _, &incx)
@@ -370,6 +419,7 @@ pub fn dzasum(n: i32, x: &[c64], incx: i32) -> f64 {
 }
 
 #[inline]
+/// index of max abs value (complex double-precision)
 pub fn izamax(n: i32, x: &[c64], incx: i32) -> usize {
     unsafe {
         ffi::izamax_(&n, x.as_ptr() as *const _, &incx) as usize
@@ -377,6 +427,7 @@ pub fn izamax(n: i32, x: &[c64], incx: i32) -> usize {
 }
 
 #[inline]
+/// matrix-vector multiply (real single-precision)
 pub fn sgemv(trans: u8, m: i32, n: i32, alpha: f32, a: &[f32], lda: i32, x: &[f32], incx: i32,
              beta: f32, y: &mut [f32], incy: i32) {
 
@@ -387,6 +438,7 @@ pub fn sgemv(trans: u8, m: i32, n: i32, alpha: f32, a: &[f32], lda: i32, x: &[f3
 }
 
 #[inline]
+/// banded matrix-vector multiply (real single-precision)
 pub fn sgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: f32, a: &[f32], lda: i32,
              x: &[f32], incx: i32, beta: f32, y: &mut [f32], incy: i32) {
 
@@ -397,6 +449,7 @@ pub fn sgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: f32, a: &[f32],
 }
 
 #[inline]
+/// symmetric matrix-vector multiply (real single-precision)
 pub fn ssymv(uplo: u8, n: i32, alpha: f32, a: &[f32], lda: i32, x: &[f32], incx: i32, beta: f32,
              y: &mut [f32], incy: i32) {
 
@@ -407,6 +460,7 @@ pub fn ssymv(uplo: u8, n: i32, alpha: f32, a: &[f32], lda: i32, x: &[f32], incx:
 }
 
 #[inline]
+/// symmetric banded matrix-vector multiply (real single-precision)
 pub fn ssbmv(uplo: u8, n: i32, k: i32, alpha: f32, a: &[f32], lda: i32, x: &[f32], incx: i32,
              beta: f32, y: &mut [f32], incy: i32) {
 
@@ -417,6 +471,7 @@ pub fn ssbmv(uplo: u8, n: i32, k: i32, alpha: f32, a: &[f32], lda: i32, x: &[f32
 }
 
 #[inline]
+/// symmetric packed matrix-vector multiply (real single-precision)
 pub fn sspmv(uplo: u8, n: i32, alpha: f32, ap: &[f32], x: &[f32], incx: i32, beta: f32,
              y: &mut [f32], incy: i32) {
 
@@ -427,6 +482,7 @@ pub fn sspmv(uplo: u8, n: i32, alpha: f32, ap: &[f32], x: &[f32], incx: i32, bet
 }
 
 #[inline]
+/// triangular matrix-vector multiply (real single-precision)
 pub fn strmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[f32], lda: i32, b: &mut [f32],
              incx: i32) {
 
@@ -437,6 +493,7 @@ pub fn strmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[f32], lda: i32, b: &mu
 }
 
 #[inline]
+/// triangular banded matrix-vector multiply (real single-precision)
 pub fn stbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f32], lda: i32, x: &mut [f32],
              incx: i32) {
 
@@ -447,6 +504,7 @@ pub fn stbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f32], lda: i32,
 }
 
 #[inline]
+/// triangular packed matrix-vector multiply (real single-precision)
 pub fn stpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [f32], incx: i32) {
     unsafe {
         ffi::stpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n, ap.as_ptr(),
@@ -455,6 +513,7 @@ pub fn stpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [f32], i
 }
 
 #[inline]
+/// solving triangular matrix problems (real single-precision)
 pub fn strsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[f32], lda: i32, x: &mut [f32],
              incx: i32) {
 
@@ -465,6 +524,7 @@ pub fn strsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[f32], lda: i32, x: &mut
 }
 
 #[inline]
+/// solving triangular banded matrix problems (real single-precision)
 pub fn stbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f32], lda: i32, x: &mut [f32],
              incx: i32) {
 
@@ -475,6 +535,7 @@ pub fn stbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f32], lda: i32,
 }
 
 #[inline]
+/// solving triangular packed matrix problems (real single-precision)
 pub fn stpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [f32], incx: i32) {
     unsafe {
         ffi::stpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n, ap.as_ptr(),
@@ -483,6 +544,7 @@ pub fn stpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [f32], i
 }
 
 #[inline]
+/// performs the rank 1 operation A := α·x·y' + A (real single-precision)
 pub fn sger(m: i32, n: i32, alpha: f32, x: &[f32], incx: i32, y: &[f32], incy: i32, a: &mut [f32],
             lda: i32) {
 
@@ -492,6 +554,7 @@ pub fn sger(m: i32, n: i32, alpha: f32, x: &[f32], incx: i32, y: &[f32], incy: i
 }
 
 #[inline]
+/// performs the symmetric rank 1 operation A := α·x·x' + A (real single-precision)
 pub fn ssyr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, a: &mut [f32], lda: i32) {
     unsafe {
         ffi::ssyr_(&(uplo as c_char), &n, &alpha, x.as_ptr(), &incx, a.as_mut_ptr(), &lda)
@@ -499,6 +562,7 @@ pub fn ssyr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, a: &mut [f32], l
 }
 
 #[inline]
+/// symmetric packed rank 1 operation A := α·x·x' + A (real single-precision)
 pub fn sspr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, ap: &mut [f32]) {
     unsafe {
         ffi::sspr_(&(uplo as c_char), &n, &alpha, x.as_ptr(), &incx, ap.as_mut_ptr())
@@ -506,6 +570,7 @@ pub fn sspr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, ap: &mut [f32]) 
 }
 
 #[inline]
+/// performs the symmetric rank 2 operation, A := α·x·y' + α·y·x' + A (real single-precision)
 pub fn ssyr2(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, y: &[f32], incy: i32,
              a: &mut [f32], lda: i32) {
 
@@ -516,6 +581,7 @@ pub fn ssyr2(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, y: &[f32], incy
 }
 
 #[inline]
+/// performs the symmetric packed rank 2 operation, A := α·x·y' + α·y·x' + A (real single-precision)
 pub fn sspr2(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, y: &[f32], incy: i32,
              ap: &mut [f32]) {
 
@@ -526,6 +592,7 @@ pub fn sspr2(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, y: &[f32], incy
 }
 
 #[inline]
+/// matrix-vector multiply (real double-precision)
 pub fn dgemv(trans: u8, m: i32, n: i32, alpha: f64, a: &[f64], lda: i32, x: &[f64], incx: i32,
              beta: f64, y: &mut [f64], incy: i32) {
 
@@ -536,6 +603,7 @@ pub fn dgemv(trans: u8, m: i32, n: i32, alpha: f64, a: &[f64], lda: i32, x: &[f6
 }
 
 #[inline]
+/// banded matrix-vector multiply (real double-precision)
 pub fn dgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: f64, a: &[f64], lda: i32,
              x: &[f64], incx: i32, beta: f64, y: &mut [f64], incy: i32) {
 
@@ -546,6 +614,7 @@ pub fn dgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: f64, a: &[f64],
 }
 
 #[inline]
+/// symmetric matrix-vector multiply (real double-precision)
 pub fn dsymv(uplo: u8, n: i32, alpha: f64, a: &[f64], lda: i32, x: &[f64], incx: i32, beta: f64,
              y: &mut [f64], incy: i32) {
 
@@ -556,6 +625,7 @@ pub fn dsymv(uplo: u8, n: i32, alpha: f64, a: &[f64], lda: i32, x: &[f64], incx:
 }
 
 #[inline]
+/// symmetric banded matrix-vector multiply (real double-precision)
 pub fn dsbmv(uplo: u8, n: i32, k: i32, alpha: f64, a: &[f64], lda: i32, x: &[f64], incx: i32,
              beta: f64, y: &mut [f64], incy: i32) {
 
@@ -566,6 +636,7 @@ pub fn dsbmv(uplo: u8, n: i32, k: i32, alpha: f64, a: &[f64], lda: i32, x: &[f64
 }
 
 #[inline]
+/// symmetric packed matrix-vector multiply (real double-precision)
 pub fn dspmv(uplo: u8, n: i32, alpha: f64, ap: &[f64], x: &[f64], incx: i32, beta: f64,
              y: &mut [f64], incy: i32) {
 
@@ -576,6 +647,7 @@ pub fn dspmv(uplo: u8, n: i32, alpha: f64, ap: &[f64], x: &[f64], incx: i32, bet
 }
 
 #[inline]
+/// triangular matrix-vector multiply (real double-precision)
 pub fn dtrmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[f64], lda: i32, b: &mut [f64],
              incx: i32) {
 
@@ -586,6 +658,7 @@ pub fn dtrmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[f64], lda: i32, b: &mu
 }
 
 #[inline]
+/// triangular banded matrix-vector multiply (real double-precision)
 pub fn dtbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f64], lda: i32, x: &mut [f64],
              incx: i32) {
 
@@ -596,6 +669,7 @@ pub fn dtbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f64], lda: i32,
 }
 
 #[inline]
+/// triangular packed matrix-vector multiply (real double-precision)
 pub fn dtpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [f64], incx: i32) {
     unsafe {
         ffi::dtpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n, ap.as_ptr(),
@@ -604,6 +678,7 @@ pub fn dtpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [f64], i
 }
 
 #[inline]
+/// solving triangular matrix problems (real double-precision)
 pub fn dtrsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[f64], lda: i32, x: &mut [f64],
              incx: i32) {
 
@@ -614,6 +689,7 @@ pub fn dtrsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[f64], lda: i32, x: &mut
 }
 
 #[inline]
+/// solving triangular banded matrix problems (real double-precision)
 pub fn dtbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f64], lda: i32, x: &mut [f64],
              incx: i32) {
 
@@ -624,6 +700,7 @@ pub fn dtbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[f64], lda: i32,
 }
 
 #[inline]
+/// solving triangular packed matrix problems (real double-precision)
 pub fn dtpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [f64], incx: i32) {
     unsafe {
         ffi::dtpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n, ap.as_ptr(),
@@ -632,6 +709,7 @@ pub fn dtpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [f64], i
 }
 
 #[inline]
+/// performs the rank 1 operation A := α·x·y' + A (real double-precision)
 pub fn dger(m: i32, n: i32, alpha: f64, x: &[f64], incx: i32, y: &[f64], incy: i32, a: &mut [f64],
             lda: i32) {
 
@@ -641,6 +719,7 @@ pub fn dger(m: i32, n: i32, alpha: f64, x: &[f64], incx: i32, y: &[f64], incy: i
 }
 
 #[inline]
+/// performs the symmetric rank 1 operation A := α·x·x' + A (real double-precision)
 pub fn dsyr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, a: &mut [f64], lda: i32) {
     unsafe {
         ffi::dsyr_(&(uplo as c_char), &n, &alpha, x.as_ptr(), &incx, a.as_mut_ptr(), &lda)
@@ -648,6 +727,7 @@ pub fn dsyr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, a: &mut [f64], l
 }
 
 #[inline]
+/// symmetric packed rank 1 operation A := α·x·x' + A (real double-precision)
 pub fn dspr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, ap: &mut [f64]) {
     unsafe {
         ffi::dspr_(&(uplo as c_char), &n, &alpha, x.as_ptr(), &incx, ap.as_mut_ptr())
@@ -655,6 +735,7 @@ pub fn dspr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, ap: &mut [f64]) 
 }
 
 #[inline]
+/// performs the symmetric rank 2 operation, A := α·x·y' + α·y·x' + A (real double-precision)
 pub fn dsyr2(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, y: &[f64], incy: i32,
              a: &mut [f64], lda: i32) {
 
@@ -665,6 +746,7 @@ pub fn dsyr2(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, y: &[f64], incy
 }
 
 #[inline]
+/// performs the symmetric packed rank 2 operation, A := α·x·y' + α·y·x' + A (real double-precision)
 pub fn dspr2(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, y: &[f64], incy: i32,
              ap: &mut [f64]) {
 
@@ -675,6 +757,7 @@ pub fn dspr2(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, y: &[f64], incy
 }
 
 #[inline]
+/// matrix-vector multiply (complex single-precision)
 pub fn cgemv(trans: u8, m: i32, n: i32, alpha: c32, a: &[c32], lda: i32, x: &[c32], incx: i32,
              beta: c32, y: &mut [c32], incy: i32) {
 
@@ -686,6 +769,7 @@ pub fn cgemv(trans: u8, m: i32, n: i32, alpha: c32, a: &[c32], lda: i32, x: &[c3
 }
 
 #[inline]
+/// banded matrix-vector multiply (complex single-precision)
 pub fn cgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: c32, a: &[c32], lda: i32,
              x: &[c32], incx: i32, beta: c32, y: &mut [c32], incy: i32) {
 
@@ -697,6 +781,7 @@ pub fn cgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: c32, a: &[c32],
 }
 
 #[inline]
+/// hermitian matrix-vector multiply (complex single-precision)
 pub fn chemv(uplo: u8, n: i32, alpha: c32, a: &[c32], lda: i32, x: &[c32], incx: i32, beta: c32,
              y: &mut [c32], incy: i32) {
 
@@ -708,6 +793,7 @@ pub fn chemv(uplo: u8, n: i32, alpha: c32, a: &[c32], lda: i32, x: &[c32], incx:
 }
 
 #[inline]
+/// hermitian banded matrix-vector multiply (complex single-precision)
 pub fn chbmv(uplo: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i32, x: &[c32], incx: i32,
              beta: c32, y: &mut [c32], incy: i32) {
 
@@ -719,6 +805,7 @@ pub fn chbmv(uplo: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i32, x: &[c32
 }
 
 #[inline]
+/// hermitian packed matrix-vector multiply (complex single-precision)
 pub fn chpmv(uplo: u8, n: i32, alpha: c32, ap: &[c32], x: &[c32], incx: i32, beta: c32,
              y: &mut [c32], incy: i32) {
 
@@ -730,6 +817,7 @@ pub fn chpmv(uplo: u8, n: i32, alpha: c32, ap: &[c32], x: &[c32], incx: i32, bet
 }
 
 #[inline]
+/// triangular matrix-vector multiply (complex single-precision)
 pub fn ctrmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[c32], lda: i32, b: &mut [c32],
              incx: i32) {
 
@@ -740,6 +828,7 @@ pub fn ctrmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[c32], lda: i32, b: &mu
 }
 
 #[inline]
+/// triangular banded matrix-vector multiply (complex single-precision)
 pub fn ctbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c32], lda: i32, x: &mut [c32],
              incx: i32) {
 
@@ -750,6 +839,7 @@ pub fn ctbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c32], lda: i32,
 }
 
 #[inline]
+/// triangular packed matrix-vector multiply (complex single-precision)
 pub fn ctpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [c32], incx: i32) {
     unsafe {
         ffi::ctpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n,
@@ -758,6 +848,7 @@ pub fn ctpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [c32], i
 }
 
 #[inline]
+/// solving triangular matrix problems (complex single-precision)
 pub fn ctrsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[c32], lda: i32, x: &mut [c32],
              incx: i32) {
 
@@ -768,6 +859,7 @@ pub fn ctrsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[c32], lda: i32, x: &mut
 }
 
 #[inline]
+/// solving triangular banded matrix problems (complex single-precision)
 pub fn ctbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c32], lda: i32, x: &mut [c32],
              incx: i32) {
 
@@ -778,6 +870,7 @@ pub fn ctbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c32], lda: i32,
 }
 
 #[inline]
+/// solving triangular packed matrix problems (complex single-precision)
 pub fn ctpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [c32], incx: i32) {
     unsafe {
         ffi::ctpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n,
@@ -786,6 +879,7 @@ pub fn ctpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [c32], i
 }
 
 #[inline]
+/// performs the rank 1 operation A := α·x·y' + A (complex single-precision)
 pub fn cgeru(m: i32, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy: i32, a: &mut [c32],
              lda: i32) {
 
@@ -796,6 +890,7 @@ pub fn cgeru(m: i32, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy: 
 }
 
 #[inline]
+/// performs the rank 1 operation A := α·x·conjg( y' ) + A (complex single-precision)
 pub fn cgerc(m: i32, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy: i32, a: &mut [c32],
              lda: i32) {
 
@@ -806,6 +901,7 @@ pub fn cgerc(m: i32, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy: 
 }
 
 #[inline]
+/// hermitian rank 1 operation A := α·x·conjg(x') + A (complex single-precision)
 pub fn cher(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, a: &mut [c32], lda: i32) {
     unsafe {
         ffi::cher_(&(uplo as c_char), &n, &alpha, x.as_ptr() as *const _, &incx,
@@ -814,6 +910,7 @@ pub fn cher(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, a: &mut [c32], l
 }
 
 #[inline]
+/// hermitian packed rank 1 operation A := α·x·conjg( x' ) + A (complex single-precision)
 pub fn chpr(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, ap: &mut [c32]) {
     unsafe {
         ffi::chpr_(&(uplo as c_char), &n, &alpha, x.as_ptr() as *const _, &incx,
@@ -822,6 +919,7 @@ pub fn chpr(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, ap: &mut [c32]) 
 }
 
 #[inline]
+/// hermitian packed rank 2 operation (complex single-precision)
 pub fn chpr2(uplo: u8, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy: i32,
              ap: &mut [c32]) {
 
@@ -832,6 +930,7 @@ pub fn chpr2(uplo: u8, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy
 }
 
 #[inline]
+/// hermitian rank 2 operation (complex single-precision)
 pub fn cher2(uplo: u8, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy: i32,
              a: &mut [c32], lda: i32) {
 
@@ -842,6 +941,7 @@ pub fn cher2(uplo: u8, n: i32, alpha: c32, x: &[c32], incx: i32, y: &[c32], incy
 }
 
 #[inline]
+/// matrix-vector multiply (complex double-precision)
 pub fn zgemv(trans: u8, m: i32, n: i32, alpha: c64, a: &[c64], lda: i32, x: &[c64], incx: i32,
              beta: c64, y: &mut [c64], incy: i32) {
 
@@ -853,6 +953,7 @@ pub fn zgemv(trans: u8, m: i32, n: i32, alpha: c64, a: &[c64], lda: i32, x: &[c6
 }
 
 #[inline]
+/// banded matrix-vector multiply (complex double-precision)
 pub fn zgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: c64, a: &[c64], lda: i32,
              x: &[c64], incx: i32, beta: c64, y: &mut [c64], incy: i32) {
 
@@ -864,6 +965,7 @@ pub fn zgbmv(trans: u8, m: i32, n: i32, kl: i32, ku: i32, alpha: c64, a: &[c64],
 }
 
 #[inline]
+/// hermitian matrix-vector multiply (complex double-precision)
 pub fn zhemv(uplo: u8, n: i32, alpha: c64, a: &[c64], lda: i32, x: &[c64], incx: i32, beta: c64,
              y: &mut [c64], incy: i32) {
 
@@ -875,6 +977,7 @@ pub fn zhemv(uplo: u8, n: i32, alpha: c64, a: &[c64], lda: i32, x: &[c64], incx:
 }
 
 #[inline]
+/// hermitian banded matrix-vector multiply (complex double-precision)
 pub fn zhbmv(uplo: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i32, x: &[c64], incx: i32,
              beta: c64, y: &mut [c64], incy: i32) {
 
@@ -886,6 +989,7 @@ pub fn zhbmv(uplo: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i32, x: &[c64
 }
 
 #[inline]
+/// hermitian packed matrix-vector multiply (complex double-precision)
 pub fn zhpmv(uplo: u8, n: i32, alpha: c64, ap: &[c64], x: &[c64], incx: i32, beta: c64,
              y: &mut [c64], incy: i32) {
 
@@ -897,6 +1001,7 @@ pub fn zhpmv(uplo: u8, n: i32, alpha: c64, ap: &[c64], x: &[c64], incx: i32, bet
 }
 
 #[inline]
+/// triangular matrix-vector multiply (complex double-precision)
 pub fn ztrmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[c64], lda: i32, b: &mut [c64],
              incx: i32) {
 
@@ -907,6 +1012,7 @@ pub fn ztrmv(uplo: u8, transa: u8, diag: u8, n: i32, a: &[c64], lda: i32, b: &mu
 }
 
 #[inline]
+/// triangular banded matrix-vector multiply (complex double-precision)
 pub fn ztbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c64], lda: i32, x: &mut [c64],
              incx: i32) {
 
@@ -917,6 +1023,7 @@ pub fn ztbmv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c64], lda: i32,
 }
 
 #[inline]
+/// triangular packed matrix-vector multiply (complex double-precision)
 pub fn ztpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [c64], incx: i32) {
     unsafe {
         ffi::ztpmv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n,
@@ -925,6 +1032,7 @@ pub fn ztpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [c64], i
 }
 
 #[inline]
+/// solving triangular matrix problems (complex double-precision)
 pub fn ztrsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[c64], lda: i32, x: &mut [c64],
              incx: i32) {
 
@@ -935,6 +1043,7 @@ pub fn ztrsv(uplo: u8, trans: u8, diag: u8, n: i32, a: &[c64], lda: i32, x: &mut
 }
 
 #[inline]
+/// solving triangular banded matrix problems (complex double-precision)
 pub fn ztbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c64], lda: i32, x: &mut [c64],
              incx: i32) {
 
@@ -945,6 +1054,7 @@ pub fn ztbsv(uplo: u8, trans: u8, diag: u8, n: i32, k: i32, a: &[c64], lda: i32,
 }
 
 #[inline]
+/// solving triangular packed matrix problems (complex double-precision)
 pub fn ztpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [c64], incx: i32) {
     unsafe {
         ffi::ztpsv_(&(uplo as c_char), &(trans as c_char), &(diag as c_char), &n,
@@ -953,6 +1063,7 @@ pub fn ztpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [c64], i
 }
 
 #[inline]
+/// performs the rank 1 operation A := α·x·y' + A (complex double-precision)
 pub fn zgeru(m: i32, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy: i32, a: &mut [c64],
              lda: i32) {
 
@@ -963,6 +1074,7 @@ pub fn zgeru(m: i32, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy: 
 }
 
 #[inline]
+/// performs the rank 1 operation A := α·x·conjg( y' ) + A (complex double-precision)
 pub fn zgerc(m: i32, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy: i32, a: &mut [c64],
              lda: i32) {
 
@@ -973,6 +1085,7 @@ pub fn zgerc(m: i32, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy: 
 }
 
 #[inline]
+/// hermitian rank 1 operation A := α·x·conjg(x') + A (complex double-precision)
 pub fn zher(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, a: &mut [c64], lda: i32) {
     unsafe {
         ffi::zher_(&(uplo as c_char), &n, &alpha, x.as_ptr() as *const _, &incx,
@@ -981,6 +1094,7 @@ pub fn zher(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, a: &mut [c64], l
 }
 
 #[inline]
+/// hermitian packed rank 1 operation A := α·x·conjg( x' ) + A (complex double-precision)
 pub fn zhpr(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, ap: &mut [c64]) {
     unsafe {
         ffi::zhpr_(&(uplo as c_char), &n, &alpha, x.as_ptr() as *const _, &incx,
@@ -989,6 +1103,7 @@ pub fn zhpr(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, ap: &mut [c64]) 
 }
 
 #[inline]
+/// hermitian rank 2 operation (complex double-precision)
 pub fn zher2(uplo: u8, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy: i32,
              a: &mut [c64], lda: i32) {
 
@@ -999,6 +1114,7 @@ pub fn zher2(uplo: u8, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy
 }
 
 #[inline]
+/// hermitian packed rank 2 operation (complex double-precision)
 pub fn zhpr2(uplo: u8, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy: i32,
              ap: &mut [c64]) {
 
@@ -1009,6 +1125,7 @@ pub fn zhpr2(uplo: u8, n: i32, alpha: c64, x: &[c64], incx: i32, y: &[c64], incy
 }
 
 #[inline]
+/// matrix-matrix multiply (real single-precision)
 pub fn sgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: f32, a: &[f32], lda: i32,
              b: &[f32], ldb: i32, beta: f32, c: &mut [f32], ldc: i32) {
 
@@ -1019,6 +1136,7 @@ pub fn sgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: f32, a: &[f3
 }
 
 #[inline]
+/// symmetric matrix-matrix multiply (real single-precision)
 pub fn ssymm(side: u8, uplo: u8, m: i32, n: i32, alpha: f32, a: &[f32], lda: i32, b: &[f32],
              ldb: i32, beta: f32, c: &mut [f32], ldc: i32) {
 
@@ -1029,6 +1147,7 @@ pub fn ssymm(side: u8, uplo: u8, m: i32, n: i32, alpha: f32, a: &[f32], lda: i32
 }
 
 #[inline]
+/// symmetric rank-k update to a matrix (real single-precision)
 pub fn ssyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f32, a: &[f32], lda: i32, beta: f32,
              c: &mut [f32], ldc: i32) {
 
@@ -1039,6 +1158,7 @@ pub fn ssyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f32, a: &[f32], lda: i3
 }
 
 #[inline]
+/// symmetric rank-2k update to a matrix (real single-precision)
 pub fn ssyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: f32, a: &[f32], lda: i32, b: &[f32],
               ldb: i32, beta: f32, c: &mut [f32], ldc: i32) {
 
@@ -1049,6 +1169,7 @@ pub fn ssyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: f32, a: &[f32], lda: i
 }
 
 #[inline]
+/// triangular matrix-matrix multiply (real single-precision)
 pub fn strmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f32, a: &[f32],
              lda: i32, b: &mut [f32], ldb: i32) {
 
@@ -1059,6 +1180,7 @@ pub fn strmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f3
 }
 
 #[inline]
+/// solving triangular matrix with multiple right hand sides (real single-precision)
 pub fn strsm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f32, a: &[f32],
              lda: i32, b: &mut [f32], ldb: i32) {
 
@@ -1069,6 +1191,7 @@ pub fn strsm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f3
 }
 
 #[inline]
+/// matrix-matrix multiply (real double-precision)
 pub fn dgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: f64, a: &[f64], lda: i32,
              b: &[f64], ldb: i32, beta: f64, c: &mut [f64], ldc: i32) {
 
@@ -1079,6 +1202,7 @@ pub fn dgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: f64, a: &[f6
 }
 
 #[inline]
+/// symmetric matrix-matrix multiply (real double-precision)
 pub fn dsymm(side: u8, uplo: u8, m: i32, n: i32, alpha: f64, a: &[f64], lda: i32, b: &[f64],
              ldb: i32, beta: f64, c: &mut [f64], ldc: i32) {
 
@@ -1089,6 +1213,7 @@ pub fn dsymm(side: u8, uplo: u8, m: i32, n: i32, alpha: f64, a: &[f64], lda: i32
 }
 
 #[inline]
+/// symmetric rank-k update to a matrix (real double-precision)
 pub fn dsyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f64, a: &[f64], lda: i32, beta: f64,
              c: &mut [f64], ldc: i32) {
 
@@ -1099,6 +1224,7 @@ pub fn dsyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f64, a: &[f64], lda: i3
 }
 
 #[inline]
+/// symmetric rank-2k update to a matrix (real double-precision)
 pub fn dsyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: f64, a: &[f64], lda: i32, b: &[f64],
               ldb: i32, beta: f64, c: &mut [f64], ldc: i32) {
 
@@ -1109,6 +1235,7 @@ pub fn dsyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: f64, a: &[f64], lda: i
 }
 
 #[inline]
+/// triangular matrix-matrix multiply (real double-precision)
 pub fn dtrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f64, a: &[f64],
              lda: i32, b: &mut [f64], ldb: i32) {
 
@@ -1119,6 +1246,7 @@ pub fn dtrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f6
 }
 
 #[inline]
+/// solving triangular matrix with multiple right hand sides (real double-precision)
 pub fn dtrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f64, a: &[f64],
              lda: i32, b: &mut [f64], ldb: i32) {
 
@@ -1129,6 +1257,7 @@ pub fn dtrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: f6
 }
 
 #[inline]
+/// matrix-matrix multiply (complex single-precision)
 pub fn cgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: c32, a: &[c32], lda: i32,
              b: &[c32], ldb: i32, beta: c32, c: &mut [c32], ldc: i32) {
 
@@ -1141,6 +1270,7 @@ pub fn cgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: c32, a: &[c3
 }
 
 #[inline]
+/// symmetric matrix-matrix multiply (complex single-precision)
 pub fn csymm(side: u8, uplo: u8, m: i32, n: i32, alpha: c32, a: &[c32], lda: i32, b: &[c32],
              ldb: i32, beta: c32, c: &mut [c32], ldc: i32) {
 
@@ -1152,6 +1282,7 @@ pub fn csymm(side: u8, uplo: u8, m: i32, n: i32, alpha: c32, a: &[c32], lda: i32
 }
 
 #[inline]
+/// hermitian matrix-matrix multiply (complex single-precision)
 pub fn chemm(side: u8, uplo: u8, m: i32, n: i32, alpha: c32, a: &[c32], lda: i32, b: &[c32],
              ldb: i32, beta: c32, c: &mut [c32], ldc: i32) {
 
@@ -1163,6 +1294,7 @@ pub fn chemm(side: u8, uplo: u8, m: i32, n: i32, alpha: c32, a: &[c32], lda: i32
 }
 
 #[inline]
+/// symmetric rank-k update to a matrix (complex single-precision)
 pub fn csyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i32, beta: c32,
              c: &mut [c32], ldc: i32) {
 
@@ -1174,6 +1306,7 @@ pub fn csyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i3
 }
 
 #[inline]
+/// hermitian rank-k update to a matrix (complex single-precision)
 pub fn cherk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f32, a: &[c32], lda: i32, beta: f32,
              c: &mut [c32], ldc: i32) {
 
@@ -1184,6 +1317,7 @@ pub fn cherk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f32, a: &[c32], lda: i3
 }
 
 #[inline]
+/// symmetric rank-2k update to a matrix (complex single-precision)
 pub fn csyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i32, b: &[c32],
               ldb: i32, beta: c32, c: &mut [c32], ldc: i32) {
 
@@ -1195,6 +1329,7 @@ pub fn csyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i
 }
 
 #[inline]
+/// hermitian rank-2k update to a matrix (complex single-precision)
 pub fn cher2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i32, b: &[c32],
               ldb: i32, beta: f32, c: &mut [c32], ldc: i32) {
 
@@ -1206,6 +1341,7 @@ pub fn cher2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c32, a: &[c32], lda: i
 }
 
 #[inline]
+/// triangular matrix-matrix multiply (complex single-precision)
 pub fn ctrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: c32, a: &[c32],
              lda: i32, b: &mut [c32], ldb: i32) {
 
@@ -1217,6 +1353,7 @@ pub fn ctrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: c3
 }
 
 #[inline]
+/// solving triangular matrix with multiple right hand sides (complex single-precision)
 pub fn ctrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: c32, a: &[c32],
              lda: i32, b: &mut [c32], ldb: i32) {
 
@@ -1228,6 +1365,7 @@ pub fn ctrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: c3
 }
 
 #[inline]
+/// matrix-matrix multiply (complex double-precision)
 pub fn zgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: c64, a: &[c64], lda: i32,
              b: &[c64], ldb: i32, beta: c64, c: &mut [c64], ldc: i32) {
 
@@ -1240,6 +1378,7 @@ pub fn zgemm(transa: u8, transb: u8, m: i32, n: i32, k: i32, alpha: c64, a: &[c6
 }
 
 #[inline]
+/// symmetric matrix-matrix multiply (complex double-precision)
 pub fn zsymm(side: u8, uplo: u8, m: i32, n: i32, alpha: c64, a: &[c64], lda: i32, b: &[c64],
              ldb: i32, beta: c64, c: &mut [c64], ldc: i32) {
 
@@ -1251,6 +1390,7 @@ pub fn zsymm(side: u8, uplo: u8, m: i32, n: i32, alpha: c64, a: &[c64], lda: i32
 }
 
 #[inline]
+/// hermitian matrix-matrix multiply (complex double-precision)
 pub fn zhemm(side: u8, uplo: u8, m: i32, n: i32, alpha: c64, a: &[c64], lda: i32, b: &[c64],
              ldb: i32, beta: c64, c: &mut [c64], ldc: i32) {
 
@@ -1262,6 +1402,7 @@ pub fn zhemm(side: u8, uplo: u8, m: i32, n: i32, alpha: c64, a: &[c64], lda: i32
 }
 
 #[inline]
+/// symmetric rank-k update to a matrix (complex double-precision)
 pub fn zsyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i32, beta: c64,
              c: &mut [c64], ldc: i32) {
 
@@ -1273,6 +1414,7 @@ pub fn zsyrk(uplo: u8, trans: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i3
 }
 
 #[inline]
+/// hermitian rank-k update to a matrix (complex double-precision)
 pub fn zherk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f64, a: &[c64], lda: i32, beta: f64,
              c: &mut [c64], ldc: i32) {
 
@@ -1283,6 +1425,7 @@ pub fn zherk(uplo: u8, trans: u8, n: i32, k: i32, alpha: f64, a: &[c64], lda: i3
 }
 
 #[inline]
+/// symmetric rank-2k update to a matrix (complex double-precision)
 pub fn zsyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i32, b: &[c64],
               ldb: i32, beta: c64, c: &mut [c64], ldc: i32) {
 
@@ -1294,6 +1437,7 @@ pub fn zsyr2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i
 }
 
 #[inline]
+/// hermitian rank-2k update to a matrix (complex double-precision)
 pub fn zher2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i32, b: &[c64],
               ldb: i32, beta: f64, c: &mut [c64], ldc: i32) {
 
@@ -1305,6 +1449,7 @@ pub fn zher2k(uplo: u8, trans: u8, n: i32, k: i32, alpha: c64, a: &[c64], lda: i
 }
 
 #[inline]
+/// triangular matrix-matrix multiply (complex double-precision)
 pub fn ztrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: c64, a: &[c64],
              lda: i32, b: &mut [c64], ldb: i32) {
 
@@ -1316,6 +1461,7 @@ pub fn ztrmm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: c6
 }
 
 #[inline]
+/// solving triangular matrix with multiple right hand sides (complex double-precision)
 pub fn ztrsm(side: u8, uplo: u8, transa: u8, diag: u8, m: i32, n: i32, alpha: c64, a: &[c64],
              lda: i32, b: &mut [c64], ldb: i32) {
 
