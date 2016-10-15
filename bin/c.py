@@ -1,6 +1,8 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals, print_function
 
 import re
+from doc import format_documentation
 
 level_scalars = {
     1: ["c", "z"],
@@ -452,7 +454,7 @@ level3 = """
 
 name_re = re.compile("\s*pub fn cblas_(\w+)")
 argument_re = re.compile("(\w+): ([^,]*)(,|\))")
-return_re = re.compile("(?:\s*->\s*([^;]+))?");
+return_re = re.compile("(?:\s*->\s*([^;]+))?")
 
 def pull_name(s):
     match = name_re.match(s)
@@ -676,11 +678,13 @@ def prepare(level, code):
 def do(funcs):
     for f in funcs:
         print("#[inline]")
+        print(format_documentation(f.name, f.args))
         print(format_header(f))
         print(format_body(f))
         print("}\n")
 
-do(prepare(1, level1_functions))
-do(prepare(1, level1_routines))
-do(prepare(2, level2))
-do(prepare(3, level3))
+if __name__ == "__main__":
+    do(prepare(1, level1_functions))
+    do(prepare(1, level1_routines))
+    do(prepare(2, level2))
+    do(prepare(3, level3))
