@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import re
+from doc import format_documentation
 
 level_scalars = {
     1: ["alpha", "a", "b", "c", "s", "d1", "d2", "x1", "y1"],
@@ -649,6 +650,7 @@ def prepare(level, code):
 def do(funcs):
     for f in funcs:
         print("#[inline]")
+        print(format_documentation(f.name))
         print(format_header(f))
         print(format_body(f))
         print("}\n")
