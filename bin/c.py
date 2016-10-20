@@ -678,12 +678,16 @@ def prepare(level, code):
 def do(funcs):
     for f in funcs:
         print("#[inline]")
-        print(format_documentation(f.name))
+        print(format_documentation(f.name, f.args))
         print(format_header(f))
         print(format_body(f))
         print("}\n")
 
-do(prepare(1, level1_functions))
-do(prepare(1, level1_routines))
-do(prepare(2, level2))
-do(prepare(3, level3))
+if __name__ == "__main__":
+    with open("c_intro.rs") as  f:
+        print(f.read())
+
+    do(prepare(1, level1_functions))
+    do(prepare(1, level1_routines))
+    do(prepare(2, level2))
+    do(prepare(3, level3))
