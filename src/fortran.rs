@@ -146,6 +146,7 @@ pub fn sdot(n: i32, x: &[f32], incx: i32, y: &[f32], incy: i32) -> f32 {
 
 #[inline]
 /// dot product with extended precision accumulation (real single-precision)
+/// 
 ///
 pub fn sdsdot(n: i32, sb: &[f32], x: &[f32], incx: i32, y: &[f32], incy: i32) -> f32 {
     unsafe {
