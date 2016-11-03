@@ -17,9 +17,6 @@ env:
     - FEATURE=netlib
     - FEATURE=openblas
 
-  global:
-    - secure: CAsWkX68mwPcXVNOiBaekoq8lMWgKRhVVyNhmT2ruMpAbeTmnDLzs9IFWOjvytacMv/YH8Z85HedWxIcg7m6gCIdpIOeNqlDUvGi3T18UdIu55pp6ScOcCyHd762OsC1UGOCudVIBDwK1a8gm6D/6xzzrbxPT3Bs99HXF/vL+E8=
-
 matrix:
   exclude:
     - os: linux
@@ -32,11 +29,6 @@ script:
   - cargo test -vv --no-default-features --features=$FEATURE
   - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
       cargo bench -vv --no-default-features --features=$FEATURE;
-    fi
-
-after_success:
-  - if [ "$TRAVIS_OS_NAME" == "osx" ] && [ "$FEATURE" == "openblas" ]; then
-      curl https://stainless-steel.github.io/travis/documentation.sh | bash;
     fi
 
 addons:

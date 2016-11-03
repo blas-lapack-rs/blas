@@ -2,7 +2,7 @@
 
 The package provides an interface to the [Basic Linear Algebra Subprograms][1].
 
-## [Documentation][doc]
+## [Documentation][documentation]
 
 ## Example (C)
 
@@ -43,7 +43,7 @@ will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
 
 [1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 
-[doc]: https://stainless-steel.github.io/blas
+[documentation]: https://docs.rs/blas
 [status-img]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [status-url]: https://travis-ci.org/stainless-steel/blas
 [version-img]: https://img.shields.io/crates/v/blas.svg
