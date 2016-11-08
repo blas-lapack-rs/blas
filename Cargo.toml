@@ -3,9 +3,9 @@ name = "blas"
 version = "0.15.2"
 license = "Apache-2.0/MIT"
 authors = [
-  "Andrew Straw <strawman@astraw.com>",
-  "Corey Richardson <corey@octayn.net>",
-  "Ivan Ukhov <ivan.ukhov@gmail.com>",
+    "Andrew Straw <strawman@astraw.com>",
+    "Corey Richardson <corey@octayn.net>",
+    "Ivan Ukhov <ivan.ukhov@gmail.com>",
 ]
 description = "The package provides an interface to the Basic Linear Algebra Subprograms."
 documentation = "https://docs.rs/blas"
