@@ -3,6 +3,7 @@ import sys
 import os
 import re
 
+
 def purpose_section(filename):
     """Return the purpose string, stripped of prefix characters, from the
 file specified by filename.
@@ -58,15 +59,18 @@ file specified by filename.
 
     return lines
 
+
 def _usage():
-    print("""Generate the default documentation for blas functions.
+    print("""Generate the default documentation for blas functions, based on the
+NETLIB documentation.
 
 usage: python {} NETLIB_REPOSITORY_ROOT.
 """.format(sys.argv[1]))
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2):
-        usage()
+
+def main():
+    if len(sys.argv) < 2:
+        _usage()
         sys.exit(1)
 
     lapack_root = sys.argv[1]
@@ -85,3 +89,6 @@ if __name__ == "__main__":
         print("\n".join('{}'.format(line) for line in lines))
         print('"""')
         print("")
+
+if __name__ == "__main__":
+    main()

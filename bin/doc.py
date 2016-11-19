@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import division, print_function, unicode_literals
 import re
-import os
 from long_docs import ROUTINE_DOCS
 
+
 class RoutineDesc(object):
+    """Type-independent representation of a BLAS routine, including
+summary documentation."""
     def __init__(self, name, short_doc, level):
         self.name = name
         self.short_doc = short_doc
         self.level = level
-
-LAPACK_ROOT = "../../ref-lapack"
 
 ROUTINES = [
     RoutineDesc("rotg", "setup Givens rotation", 1),
@@ -141,7 +141,11 @@ class BlasFunction(object):
             return u"{} ({})".format(desc, self.TYPE_DESC[self.argtype])
         return ""
 
+
 def format_documentation(f_name, f_args):
+    """
+    Return the formatted documentation for a routine given the name and arguments.
+    """
     bf = BlasFunction.parse(f_name)
     arg_names = {a[0] for a in f_args}
 
