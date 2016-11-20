@@ -32,17 +32,23 @@ class Text(Blob):
         self.lines.append(line)
 
     def finish(self, index, total, f):
+        lines = self.lines
+
         if index == 0:
-            first = re.sub(r"(?i)\s*{}\s+".format(f.name), "", self.lines[0])
-            first = first.strip().capitalize()
-            self.lines[0] = first
+            first = re.sub(r"(?i)\s*{}\s+".format(f.name), "", lines[0])
+            lines[0] = first
 
-        if index == total - 1 and self.lines[-1][-1] != '.':
-            self.lines[-1] = "{}.".format(self.lines[-1])
+        text = " ".join(lines)
+        text = re.sub(r"\s+", " ", text)
 
-        text = re.sub(r"\s+", " ", " ".join(self.lines))
+        if index == total - 1 and text[-1] != ".":
+            text = "{}.".format(text)
+
         lines = text.split(". ")
-        lines[1:] = [line.capitalize() for line in lines[1:]]
+        lowercase = ["alpha", "or", "where"]
+        for i, line in enumerate(lines):
+            if all([not line.startswith(word) for word in lowercase]):
+                lines[i] = "{}{}".format(line[0].upper(), line[1:])
         text = ". ".join(lines)
 
         chunks = text.split(" ")
