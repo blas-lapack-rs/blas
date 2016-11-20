@@ -56,7 +56,7 @@ class Text(Blob):
         count = 0
         while len(chunks) > 0:
             current = " ".join(chunks[:count])
-            if count == len(chunks) or 4 + len(current) + len(chunks[0]) > 80:
+            if count == len(chunks) or 4 + len(current) + len(chunks[count]) >= 80:
                 lines.append(current)
                 chunks = chunks[count:]
                 count = 0
