@@ -4,7 +4,7 @@ class Blob:
     def append(self, _):
         pass
 
-    def finish(self, _, __):
+    def finish(self, _, __, ___):
         pass
 
 class Formula(Blob):
@@ -31,11 +31,25 @@ class Text(Blob):
     def append(self, line):
         self.lines.append(line)
 
-    def finish(self, i, f):
-        if i == 0:
+    def finish(self, index, total, f):
+        if index == 0:
             first = re.sub(r"(?i)\s*{}\s+".format(f.name), "", self.lines[0])
             first = first.strip().capitalize()
             self.lines[0] = first
+
+        words = re.split(r"\s+", " ".join(self.lines))
+        lines = []
+        count = 0
+        while len(words) > 0:
+            current = " ".join(words[:count])
+            if count == len(words) or 4 + len(current) + len(words[0]) > 80:
+                lines.append(current)
+                words = words[count:]
+                count = 0
+            else:
+                count += 1
+
+        self.lines = lines
 
     def format(self, output):
         for line in self.lines:
@@ -108,6 +122,7 @@ def print_documentation(f, reference):
     filename = os.path.join(reference, "BLAS", "SRC", "{}.f".format(f.name))
     if not os.path.exists(filename):
         return
-    for i, paragraph in enumerate(partition(clean(extract(filename)))):
-        paragraph.finish(i, f)
+    paragraphs = partition(clean(extract(filename)))
+    for i, paragraph in enumerate(paragraphs):
+        paragraph.finish(i, len(paragraphs), f)
         paragraph.format(sys.stdout)
