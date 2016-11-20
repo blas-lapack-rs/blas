@@ -51,6 +51,10 @@ class Text(Blob):
                 lines[i] = "{}{}".format(line[0].upper(), line[1:])
         text = ". ".join(lines)
 
+        substitutes = {"Compute": "Computes"}
+        for key, value in substitutes.items():
+            text = re.sub(r"\b{}\b".format(key), value, text)
+
         chunks = text.split(" ")
         lines = []
         count = 0
