@@ -37,6 +37,9 @@ class Text(Blob):
             first = first.strip().capitalize()
             self.lines[0] = first
 
+        if index == total - 1 and self.lines[-1][-1] != '.':
+            self.lines[-1] = "{}.".format(self.lines[-1])
+
         words = re.split(r"\s+", " ".join(self.lines))
         lines = []
         count = 0
