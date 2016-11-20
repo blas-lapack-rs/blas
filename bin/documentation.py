@@ -40,14 +40,19 @@ class Text(Blob):
         if index == total - 1 and self.lines[-1][-1] != '.':
             self.lines[-1] = "{}.".format(self.lines[-1])
 
-        words = re.split(r"\s+", " ".join(self.lines))
+        text = re.sub(r"\s+", " ", " ".join(self.lines))
+        lines = text.split(". ")
+        lines[1:] = [line.capitalize() for line in lines[1:]]
+        text = ". ".join(lines)
+
+        chunks = text.split(" ")
         lines = []
         count = 0
-        while len(words) > 0:
-            current = " ".join(words[:count])
-            if count == len(words) or 4 + len(current) + len(words[0]) > 80:
+        while len(chunks) > 0:
+            current = " ".join(chunks[:count])
+            if count == len(chunks) or 4 + len(current) + len(chunks[0]) > 80:
                 lines.append(current)
-                words = words[count:]
+                chunks = chunks[count:]
                 count = 0
             else:
                 count += 1
@@ -67,7 +72,7 @@ def clean(lines):
     while len(lines) > 0 and lines[-1].strip() == "":
         lines = lines[:-1]
 
-    margin = 0
+    margin = 42
     for line in lines:
         if len(line.strip()) > 0:
             margin = min(margin, len(line) - len(line.strip()))
