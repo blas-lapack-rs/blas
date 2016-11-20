@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
+from documentation import print_documentation
 from function import Function
-import re
+import re, sys
 
 level_scalars = {
     1: ["c", "z"],
@@ -623,15 +624,16 @@ def prepare(level, code):
     lines = filter(lambda line: not re.match(r'^\s*$', line), lines)
     return [Function.parse(level, line) for line in lines]
 
-def do(funcs):
-    for f in funcs:
+def do(functions, reference):
+    for f in functions:
+        print_documentation(f, reference)
         print("#[inline]")
         print(format_header(f))
         print(format_body(f))
         print("}\n")
 
-if __name__ == "__main__":
-    do(prepare(1, level1_functions))
-    do(prepare(1, level1_routines))
-    do(prepare(2, level2))
-    do(prepare(3, level3))
+reference = sys.argv[1] if len(sys.argv) > 1 else None
+do(prepare(1, level1_functions), reference)
+do(prepare(1, level1_routines), reference)
+do(prepare(2, level2), reference)
+do(prepare(3, level3), reference)
