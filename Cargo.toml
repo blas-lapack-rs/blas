@@ -6,6 +6,7 @@ authors = [
     "Andrew Straw <strawman@astraw.com>",
     "Corey Richardson <corey@octayn.net>",
     "Ivan Ukhov <ivan.ukhov@gmail.com>",
+    "Mason Smith <masonium@gmail.com>",
 ]
 description = "The package provides an interface to the Basic Linear Algebra Subprograms."
 documentation = "https://docs.rs/blas"
