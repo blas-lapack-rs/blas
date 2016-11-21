@@ -1,10 +1,10 @@
 import os, re, sys
 
 class Blob:
-    def append(self, _):
+    def append(self, *_):
         pass
 
-    def finish(self, _, __, ___):
+    def finish(self, *_):
         pass
 
 class Formula(Blob):
@@ -14,10 +14,18 @@ class Formula(Blob):
     def append(self, line):
         self.lines.append(line)
 
+    def finish(self, *_):
+        for i, line in enumerate(self.lines):
+            assert(len(line[:3].strip()) == 0)
+            line = re.sub(r"\s+", " ", line[3:])
+            line = re.sub(r"\(\s+", "(", line)
+            line = re.sub(r"\s+\)", ")", line)
+            self.lines[i] = line
+
     def format(self, output):
         output.write("/// ```text\n")
         for line in self.lines:
-            output.write("/// {}\n".format(line[3:]))
+            output.write("/// {}\n".format(line))
         output.write("/// ```\n")
 
 class Space(Blob):
@@ -38,24 +46,26 @@ class Text(Blob):
             first = re.sub(r"(?i)\s*{}\s+".format(f.name), "", lines[0])
             lines[0] = first
 
-        text = " ".join(lines)
-        text = re.sub(r"\s+", " ", text)
+        line = " ".join(lines)
+        line = re.sub(r"\s+", " ", line)
+        line = re.sub(r"\(\s+", "(", line)
+        line = re.sub(r"\s+\)", ")", line)
 
-        if index == total - 1 and text[-1] != ".":
-            text = "{}.".format(text)
+        if index == total - 1 and line[-1] != ".":
+            line = "{}.".format(line)
 
-        lines = text.split(". ")
+        lines = line.split(". ")
         lowercase = ["alpha", "or", "where"]
         for i, line in enumerate(lines):
             if all([not line.startswith(word) for word in lowercase]):
                 lines[i] = "{}{}".format(line[0].upper(), line[1:])
-        text = ". ".join(lines)
+        line = ". ".join(lines)
 
         substitutes = {"Compute": "Computes"}
         for key, value in substitutes.items():
-            text = re.sub(r"\b{}\b".format(key), value, text)
+            line = re.sub(r"\b{}\b".format(key), value, line)
 
-        chunks = text.split(" ")
+        chunks = line.split(" ")
         lines = []
         count = 0
         while len(chunks) > 0:
