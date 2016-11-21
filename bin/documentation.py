@@ -61,7 +61,10 @@ class Text(Blob):
                 lines[i] = "{}{}".format(line[0].upper(), line[1:])
         line = ". ".join(lines)
 
-        substitutes = {"Compute": "Computes"}
+        substitutes = {
+            "Compute": "Computes",
+            "equal to 1": "equal to one",
+        }
         for key, value in substitutes.items():
             line = re.sub(r"\b{}\b".format(key), value, line)
 
