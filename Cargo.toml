@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.15.2"
+version = "0.15.3"
 license = "Apache-2.0/MIT"
 authors = [
     "Andrew Straw <strawman@astraw.com>",
@@ -12,6 +12,8 @@ description = "The package provides an interface to the Basic Linear Algebra Sub
 documentation = "https://docs.rs/blas"
 homepage = "https://github.com/stainless-steel/blas"
 repository = "https://github.com/stainless-steel/blas"
+categories = ["api-bindings", "science"]
+keywords = ["linear-algebra"]
 
 [features]
 default = ["openblas"]
