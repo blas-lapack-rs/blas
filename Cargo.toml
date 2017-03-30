@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.15.3"
+version = "0.15.4"
 license = "Apache-2.0/MIT"
 authors = [
     "Andrew Straw <strawman@astraw.com>",

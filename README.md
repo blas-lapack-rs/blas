@@ -1,8 +1,32 @@
 # BLAS [![Version][version-img]][version-url] [![Status][status-img]][status-url]
 
-The package provides an interface to the [Basic Linear Algebra Subprograms][1].
+The package provides an interface to the [Basic Linear Algebra
+Subprograms][blas].
 
 ## [Documentation][documentation]
+
+## Configuration
+
+The underlying implementation of BLAS to compile, if needed, and link to can be
+chosen among the following options:
+
+* Apple’s [Accelerate framework][accelerate] (macOS only),
+* Netlib’s [reference implementation][netlib], and
+* [OpenBLAS][openblas] (default).
+
+An implementation can be chosen using the package’s features as follows:
+
+```toml
+[dependencies]
+# Apple’s Accelerate framework
+blas = { version = "0.15", default-features = false, features = ["accelerate"] }
+# Netlib’s reference implementation
+blas = { version = "0.15", default-features = false, features = ["netlib"] }
+# OpenBLAS
+blas = { version = "0.15", default-features = false, features = ["openblas"] }
+# OpenBLAS
+blas = { version = "0.15" }
+```
 
 ## Example (C)
 
@@ -41,7 +65,10 @@ Your contribution is highly appreciated. Do not hesitate to open an issue or a
 pull request. Note that any contribution submitted for inclusion in the project
 will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
 
-[1]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
+[accelerate]: https://developer.apple.com/reference/accelerate
+[blas]: https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
+[netlib]: http://www.netlib.org/blas
+[openblas]: http://www.openblas.net
 
 [documentation]: https://docs.rs/blas
 [status-img]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
