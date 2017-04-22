@@ -47,38 +47,52 @@ class Text(Blob):
             lines[0] = first
 
         line = " ".join(lines)
-        line = re.sub(r"\s+", " ", line)
-        line = re.sub(r"\(\s+", "(", line)
-        line = re.sub(r"\s+\)", ")", line)
 
-        if index == total - 1 and line[-1] != ".":
-            line = "{}.".format(line)
+        # Heuristic: We expect that if the text contains an equal sign (`=`) then
+        # it is not safe to reformat the text.
+        #
+        # Holds for:
+        # * https://github.com/Reference-LAPACK/lapack/blob/master/BLAS/SRC/drotm.f
+        # * https://github.com/Reference-LAPACK/lapack/blob/master/BLAS/SRC/drotmg.f
+        # * https://github.com/Reference-LAPACK/lapack/blob/master/BLAS/SRC/dsdot.f
+        # * https://github.com/Reference-LAPACK/lapack/blob/master/BLAS/SRC/srotm.f
+        # * https://github.com/Reference-LAPACK/lapack/blob/master/BLAS/SRC/srotmg.f
+        #
+        if "=" in line:
+            pass
+        else:
+            line = re.sub(r"\s+", " ", line)
+            line = re.sub(r"\(\s+", "(", line)
+            line = re.sub(r"\s+\)", ")", line)
 
-        lines = line.split(". ")
-        lowercase = ["alpha", "or", "where"]
-        for i, line in enumerate(lines):
-            if all([not line.startswith(word) for word in lowercase]):
-                lines[i] = "{}{}".format(line[0].upper(), line[1:])
-        line = ". ".join(lines)
+            if index == total - 1 and line[-1] != ".":
+                line = "{}.".format(line)
 
-        substitutes = {
-            "Compute": "Computes",
-            "equal to 1": "equal to one",
-        }
-        for key, value in substitutes.items():
-            line = re.sub(r"\b{}\b".format(key), value, line)
+            lines = line.split(". ")
+            lowercase = ["alpha", "or", "where"]
+            for i, line in enumerate(lines):
+                if all([not line.startswith(word) for word in lowercase]):
+                    lines[i] = "{}{}".format(line[0].upper(), line[1:])
+            line = ". ".join(lines)
 
-        chunks = line.split(" ")
-        lines = []
-        count = 0
-        while len(chunks) > 0:
-            current = " ".join(chunks[:count])
-            if count == len(chunks) or 4 + len(current) + len(chunks[count]) >= 80:
-                lines.append(current)
-                chunks = chunks[count:]
-                count = 0
-            else:
-                count += 1
+            substitutes = {
+                "Compute": "Computes",
+                "equal to 1": "equal to one",
+            }
+            for key, value in substitutes.items():
+                line = re.sub(r"\b{}\b".format(key), value, line)
+
+            chunks = line.split(" ")
+            lines = []
+            count = 0
+            while len(chunks) > 0:
+                current = " ".join(chunks[:count])
+                if count == len(chunks) or 4 + len(current) + len(chunks[count]) >= 80:
+                    lines.append(current)
+                    chunks = chunks[count:]
+                    count = 0
+                else:
+                    count += 1
 
         self.lines = lines
 
