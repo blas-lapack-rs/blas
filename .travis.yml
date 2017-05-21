@@ -1,4 +1,6 @@
 language: rust
+
+dist: trusty
 sudo: required
 
 os:
@@ -33,11 +35,7 @@ script:
 
 addons:
   apt:
-    sources:
-      - kubuntu-backports
-
     packages:
-      - cmake
       - gfortran
 
 notifications:
