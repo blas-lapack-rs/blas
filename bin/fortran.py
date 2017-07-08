@@ -510,17 +510,17 @@ def translate_return_type(cty):
 def format_header(f):
     args = format_header_arguments(f)
     if f.ret is None:
-        return "pub fn {}({})".format(f.name, args)
+        return "pub unsafe fn {}({})".format(f.name, args)
     else:
-        return "pub fn {}({}) -> {}".format(f.name, args, translate_return_type(f.ret))
+        return "pub unsafe fn {}({}) -> {}".format(f.name, args, translate_return_type(f.ret))
 
 def format_body(f):
     args = format_body_arguments(f)
     ret = format_body_return(f)
     if ret is None:
-        return "unsafe {{ ffi::{}_({}) }}".format(f.name, args)
+        return "ffi::{}_({})".format(f.name, args)
     else:
-        return "unsafe {{ ffi::{}_({}) as {} }}".format(f.name, args, ret)
+        return "ffi::{}_({}) as {}".format(f.name, args, ret)
 
 def format_header_arguments(f):
     s = []
