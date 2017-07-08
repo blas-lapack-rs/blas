@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+from common import Function
 from documentation import print_documentation
-from function import Function
 import re, sys
 
 level_scalars = {
