@@ -14,6 +14,7 @@ homepage = "https://github.com/stainless-steel/blas"
 repository = "https://github.com/stainless-steel/blas"
 categories = ["api-bindings", "science"]
 keywords = ["linear-algebra"]
+exclude = ["bin/*"]
 
 [features]
 default = ["openblas"]
