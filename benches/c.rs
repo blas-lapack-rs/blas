@@ -47,7 +47,7 @@ fn run(layout: Layout, m: i32, bencher: &mut Bencher) {
     let x = vec![1.0; m as usize];
     let mut y = vec![1.0; m as usize];
 
-    bencher.iter(|| {
+    bencher.iter(|| unsafe {
         dgemv(
             layout,
             Transpose::None,

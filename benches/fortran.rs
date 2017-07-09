@@ -27,5 +27,7 @@ fn run(m: i32, bencher: &mut Bencher) {
     let x = vec![1.0; m as usize];
     let mut y = vec![1.0; m as usize];
 
-    bencher.iter(|| dgemv(b'N', m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1));
+    bencher.iter(|| unsafe {
+        dgemv(b'N', m, m, 1.0, &a, m, &x, 1, 1.0, &mut y, 1)
+    });
 }
