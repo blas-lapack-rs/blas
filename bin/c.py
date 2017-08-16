@@ -5,10 +5,9 @@ from documentation import print_documentation
 import re, sys
 
 level_scalars = {
-    1: ["c", "z"],
-    2: [],
-    3: [],
-    0: [],
+    1: ["alpha", "c", "z"],
+    2: ["alpha", "beta"],
+    3: ["alpha", "beta"],
 }
 
 level1_functions = """
