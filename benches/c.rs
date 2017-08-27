@@ -1,6 +1,6 @@
 use test::Bencher;
 
-use blas::c::{Layout, Transpose, dgemv};
+use blas::c::{dgemv, Layout, Transpose};
 
 #[bench]
 fn dgemv_cm_00010(bencher: &mut Bencher) {
