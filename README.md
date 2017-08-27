@@ -17,13 +17,13 @@ An implementation can be chosen using the package’s features as follows:
 ```toml
 [dependencies]
 # Apple’s Accelerate framework
-blas = { version = "0.17", default-features = false, features = ["accelerate"] }
+blas = { version = "0.18", default-features = false, features = ["accelerate"] }
 # Netlib’s reference implementation
-blas = { version = "0.17", default-features = false, features = ["netlib"] }
+blas = { version = "0.18", default-features = false, features = ["netlib"] }
 # OpenBLAS
-blas = { version = "0.17", default-features = false, features = ["openblas"] }
+blas = { version = "0.18", default-features = false, features = ["openblas"] }
 # OpenBLAS
-blas = { version = "0.17" }
+blas = { version = "0.18" }
 ```
 
 ## Example (C)
