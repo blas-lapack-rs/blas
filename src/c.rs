@@ -314,8 +314,8 @@ pub unsafe fn zaxpy(n: i32, alpha: c64, x: &[c64], incx: i32, y: &mut [c64], inc
 }
 
 #[inline]
-pub unsafe fn srotg(a: &mut [f32], b: &mut [f32], c: &mut f32, s: &mut [f32]) {
-    ffi::cblas_srotg(a.as_mut_ptr(), b.as_mut_ptr(), c, s.as_mut_ptr())
+pub unsafe fn srotg(a: &mut f32, b: &mut f32, c: &mut f32, s: &mut [f32]) {
+    ffi::cblas_srotg(a, b, c, s.as_mut_ptr())
 }
 
 #[inline]
@@ -340,8 +340,8 @@ pub unsafe fn srotm(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, 
 }
 
 #[inline]
-pub unsafe fn drotg(a: &mut [f64], b: &mut [f64], c: &mut f64, s: &mut [f64]) {
-    ffi::cblas_drotg(a.as_mut_ptr(), b.as_mut_ptr(), c, s.as_mut_ptr())
+pub unsafe fn drotg(a: &mut f64, b: &mut f64, c: &mut f64, s: &mut [f64]) {
+    ffi::cblas_drotg(a, b, c, s.as_mut_ptr())
 }
 
 #[inline]

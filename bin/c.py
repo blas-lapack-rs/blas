@@ -5,7 +5,7 @@ from documentation import print_documentation
 import re, sys
 
 level_scalars = {
-    1: ["alpha", "c", "z"],
+    1: ["alpha", "a", "b", "c", "z"],
     2: ["alpha", "beta"],
     3: ["alpha", "beta"],
 }
