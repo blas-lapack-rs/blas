@@ -681,6 +681,9 @@ def translate_return_type(cty):
     elif cty == "c_double":
         return "f64"
 
+    if cty == "CBLAS_INDEX":
+        return "i32"
+
     assert False, "cannot translate `{}`".format(cty)
 
 def format_header(f):
