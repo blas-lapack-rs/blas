@@ -47,3 +47,19 @@ def pull_return(s):
     if match is None:
         return None, s
     return match.group(1), s[match.end(1):]
+
+def read_functions(path):
+    sections = []
+    lines = []
+    with open(path) as file:
+        append = False
+        for line in file:
+            if line == 'extern "C" {\n':
+                append = True
+            elif line == '}\n' and append:
+                append = False
+                sections.append(''.join(lines))
+                lines = []
+            elif append:
+                lines.append(line)
+    return sections
