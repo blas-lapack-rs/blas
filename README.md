@@ -1,7 +1,6 @@
 # BLAS [![Package][package-img]][package-url] [![Documentation][documentation-img]][documentation-url] [![Build][build-img]][build-url]
 
-The package provides an interface to the [Basic Linear Algebra
-Subprograms][blas].
+The package provides wrappers for [BLAS] (Fortran).
 
 ## Example (C)
 
@@ -102,10 +101,10 @@ Your contribution is highly appreciated. Do not hesitate to open an issue or a
 pull request. Note that any contribution submitted for inclusion in the project
 will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
 
-[blas]: https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
+[blas]: https://en.wikipedia.org/wiki/BLAS
 
-[build-img]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
-[build-url]: https://travis-ci.org/stainless-steel/blas
+[build-img]: https://travis-ci.org/blas-lapack-rs/blas.svg?branch=master
+[build-url]: https://travis-ci.org/blas-lapack-rs/blas
 [documentation-img]: https://docs.rs/blas/badge.svg
 [documentation-url]: https://docs.rs/blas
 [package-img]: https://img.shields.io/crates/v/blas.svg
