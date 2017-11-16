@@ -2,7 +2,7 @@
 //!
 //! ## Example
 //!
-//! ```
+//! ```no_run
 //! use blas::fortran::*;
 //!
 //! let (m, n, k) = (2, 4, 3);

@@ -3,29 +3,6 @@
 The package provides an interface to the [Basic Linear Algebra
 Subprograms][blas].
 
-## Configuration
-
-The underlying implementation of BLAS to compile, if needed, and link to can be
-chosen among the following options:
-
-* Apple’s [Accelerate framework][accelerate] (macOS only),
-* Netlib’s [reference implementation][netlib], and
-* [OpenBLAS][openblas] (default).
-
-An implementation can be chosen using the package’s features as follows:
-
-```toml
-[dependencies]
-# Apple’s Accelerate framework
-blas = { version = "0.18", default-features = false, features = ["accelerate"] }
-# Netlib’s reference implementation
-blas = { version = "0.18", default-features = false, features = ["netlib"] }
-# OpenBLAS
-blas = { version = "0.18", default-features = false, features = ["openblas"] }
-# OpenBLAS
-blas = { version = "0.18" }
-```
-
 ## Example (C)
 
 ```rust
