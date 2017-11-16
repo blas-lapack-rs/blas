@@ -34,7 +34,3 @@ default-features = false
 [dependencies.blas-sys]
 version = "0.6"
 default-features = false
-
-[[bench]]
-name = "lib"
-path = "benches/lib.rs"

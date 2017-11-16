@@ -29,9 +29,6 @@ before_install:
 
 script:
   - cargo test -vv --no-default-features --features=$FEATURE
-  - if [ "$TRAVIS_RUST_VERSION" == "nightly" ]; then
-      cargo bench -vv --no-default-features --features=$FEATURE;
-    fi
 
 addons:
   apt:
