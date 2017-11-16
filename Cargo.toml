@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.18.1"
+version = "0.19.0"
 license = "Apache-2.0/MIT"
 authors = [
     "Andrew Straw <strawman@astraw.com>",
@@ -16,13 +16,6 @@ readme = "README.md"
 categories = ["api-bindings", "science"]
 keywords = ["linear-algebra"]
 exclude = ["bin/*"]
-
-[features]
-default = ["openblas"]
-
-accelerate = ["blas-sys/accelerate"]
-netlib = ["blas-sys/netlib"]
-openblas = ["blas-sys/openblas"]
 
 [dependencies]
 libc = "0.2"
