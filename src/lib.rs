@@ -1,4 +1,4 @@
-//! Wrappers for [BLAS] (Fortran)
+//! Wrappers for [BLAS] \(Fortran)
 //!
 //! [blas]: https://en.wikipedia.org/wiki/BLAS
 
