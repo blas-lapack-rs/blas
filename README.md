@@ -102,10 +102,7 @@ Your contribution is highly appreciated. Do not hesitate to open an issue or a
 pull request. Note that any contribution submitted for inclusion in the project
 will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
 
-[accelerate]: https://developer.apple.com/reference/accelerate
 [blas]: https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
-[netlib]: http://www.netlib.org/blas
-[openblas]: http://www.openblas.net
 
 [build-img]: https://travis-ci.org/stainless-steel/blas.svg?branch=master
 [build-url]: https://travis-ci.org/stainless-steel/blas
