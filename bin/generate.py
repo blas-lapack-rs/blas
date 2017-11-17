@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from common import Function, read_functions
 from documentation import print_documentation
+from function import Function, read_functions
 import argparse
 import os
 import re
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     parser.add_argument('--sys', required=True)
     parser.add_argument('--doc')
     arguments = parser.parse_args()
-    sections = read_functions(os.path.join(arguments.sys, 'src', 'fortran.rs'))
+    sections = read_functions(os.path.join(arguments.sys, 'src', 'lib.rs'))
     assert(len(sections) == 3)
     do(prepare(1, sections[0]), arguments.doc)
     do(prepare(2, sections[1]), arguments.doc)
