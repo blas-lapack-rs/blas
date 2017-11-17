@@ -15,7 +15,6 @@ repository = "https://github.com/blas-lapack-rs/blas"
 readme = "README.md"
 categories = ["api-bindings", "science"]
 keywords = ["linear-algebra"]
-exclude = ["bin/*"]
 
 [dependencies]
 libc = "0.2"
