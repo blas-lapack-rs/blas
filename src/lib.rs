@@ -1,4 +1,4 @@
-//! Wrappers for [BLAS] \(Fortran)
+//! Wrappers for [BLAS] \(Fortran).
 //!
 //! The usage of the package is explained [here][usage].
 //!
