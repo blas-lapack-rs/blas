@@ -1,6 +1,6 @@
 //! Wrappers for [BLAS] \(Fortran).
 //!
-//! The usage of the package is explained [here][usage].
+//! ## [Architecture]
 //!
 //! ## Example
 //!
@@ -40,8 +40,8 @@
 //! );
 //! ```
 //!
+//! [architecture]: https://blas-lapack-rs.github.io/architecture
 //! [blas]: https://en.wikipedia.org/wiki/BLAS
-//! [usage]: https://blas-lapack-rs.github.io/usage
 
 extern crate blas_sys as ffi;
 extern crate libc;

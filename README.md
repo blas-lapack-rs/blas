@@ -2,7 +2,7 @@
 
 The package provides wrappers for [BLAS] (Fortran).
 
-The usage of the package is explained [here][usage].
+## [Architecture]
 
 ## Example
 
@@ -48,8 +48,8 @@ Your contribution is highly appreciated. Do not hesitate to open an issue or a
 pull request. Note that any contribution submitted for inclusion in the project
 will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
 
+[architecture]: https://blas-lapack-rs.github.io/architecture
 [blas]: https://en.wikipedia.org/wiki/BLAS
-[usage]: https://blas-lapack-rs.github.io/usage
 
 [build-img]: https://travis-ci.org/blas-lapack-rs/blas.svg?branch=master
 [build-url]: https://travis-ci.org/blas-lapack-rs/blas
