@@ -17,12 +17,12 @@ categories = ["api-bindings", "science"]
 keywords = ["linear-algebra"]
 
 [dependencies]
-libc = "0.2.84"
+libc = "0.2"
 
 [dependencies.num-complex]
-version = "0.3.1"
+version = "0.3"
 default-features = false
 
 [dependencies.blas-sys]
-version = "0.7.1"
+version = "0.7"
 default-features = false
