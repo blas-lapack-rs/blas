@@ -7,6 +7,7 @@ authors = [
     "Corey Richardson <corey@octayn.net>",
     "Ivan Ukhov <ivan.ukhov@gmail.com>",
     "Mason Smith <masonium@gmail.com>",
+    "Toshiki Teramura <toshiki.teramura@gmail.com>",
 ]
 description = "The package provides wrappers for BLAS (Fortran)."
 documentation = "https://docs.rs/blas"
