@@ -57,21 +57,22 @@ pub type c32 = num::Complex<f32>;
 #[allow(non_camel_case_types)]
 pub type c64 = num::Complex<f64>;
 
+/// setup Givens rotation
 #[inline]
 pub unsafe fn srotg(a: &mut f32, b: &mut f32, c: &mut f32, s: &mut f32) {
     ffi::srotg_(a, b, c, s)
 }
-
+// setup modified Givens rotation
 #[inline]
 pub unsafe fn srotmg(d1: &mut f32, d2: &mut f32, x1: &mut f32, y1: f32, param: &mut [f32]) {
     ffi::srotmg_(d1, d2, x1, &y1, param.as_mut_ptr())
 }
-
+/// apply Givens rotation
 #[inline]
 pub unsafe fn srot(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, c: f32, s: f32) {
     ffi::srot_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy, &c, &s)
 }
-
+/// apply modified Givens rotation
 #[inline]
 pub unsafe fn srotm(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, param: &[f32]) {
     ffi::srotm_(
@@ -83,72 +84,72 @@ pub unsafe fn srotm(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32, 
         param.as_ptr(),
     )
 }
-
+/// swap x and y
 #[inline]
 pub unsafe fn sswap(n: i32, x: &mut [f32], incx: i32, y: &mut [f32], incy: i32) {
     ffi::sswap_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy)
 }
-
+/// x = a*x
 #[inline]
 pub unsafe fn sscal(n: i32, a: f32, x: &mut [f32], incx: i32) {
     ffi::sscal_(&n, &a, x.as_mut_ptr(), &incx)
 }
-
+/// copy x into y
 #[inline]
 pub unsafe fn scopy(n: i32, x: &[f32], incx: i32, y: &mut [f32], incy: i32) {
     ffi::scopy_(&n, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
 }
-
+/// y = a*x + y
 #[inline]
 pub unsafe fn saxpy(n: i32, alpha: f32, x: &[f32], incx: i32, y: &mut [f32], incy: i32) {
     ffi::saxpy_(&n, &alpha, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
 }
-
+/// dot product
 #[inline]
 pub unsafe fn sdot(n: i32, x: &[f32], incx: i32, y: &[f32], incy: i32) -> f32 {
     ffi::sdot_(&n, x.as_ptr(), &incx, y.as_ptr(), &incy)
 }
-
+/// dot product with extended precision accumulation
 #[inline]
 pub unsafe fn sdsdot(n: i32, sb: &[f32], x: &[f32], incx: i32, y: &[f32], incy: i32) -> f32 {
     ffi::sdsdot_(&n, sb.as_ptr(), x.as_ptr(), &incx, y.as_ptr(), &incy)
 }
-
+/// Euclidean norm
 #[inline]
 pub unsafe fn snrm2(n: i32, x: &[f32], incx: i32) -> f32 {
     ffi::snrm2_(&n, x.as_ptr(), &incx)
 }
-
+/// Euclidean norm
 #[inline]
 pub unsafe fn scnrm2(n: i32, x: &[c32], incx: i32) -> f32 {
     ffi::scnrm2_(&n, x.as_ptr() as *const _, &incx)
 }
-
+/// sum of absolute values
 #[inline]
 pub unsafe fn sasum(n: i32, x: &[f32], incx: i32) -> f32 {
     ffi::sasum_(&n, x.as_ptr(), &incx)
 }
-
+/// index of max abs value
 #[inline]
 pub unsafe fn isamax(n: i32, x: &[f32], incx: i32) -> usize {
     ffi::isamax_(&n, x.as_ptr(), &incx) as usize
 }
-
+/// setup Givens rotation
 #[inline]
 pub unsafe fn drotg(a: &mut f64, b: &mut f64, c: &mut f64, s: &mut f64) {
     ffi::drotg_(a, b, c, s)
 }
-
+/// setup modified Givens rotation
 #[inline]
 pub unsafe fn drotmg(d1: &mut f64, d2: &mut f64, x1: &mut f64, y1: f64, param: &mut [f64]) {
     ffi::drotmg_(d1, d2, x1, &y1, param.as_mut_ptr())
 }
-
+/// apply Givens rotation
 #[inline]
 pub unsafe fn drot(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32, c: f64, s: f64) {
     ffi::drot_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy, &c, &s)
 }
-
+/// apply modified Givens rotation
 #[inline]
 pub unsafe fn drotm(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32, param: &[f64]) {
     ffi::drotm_(
@@ -160,57 +161,57 @@ pub unsafe fn drotm(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32, 
         param.as_ptr(),
     )
 }
-
+/// swap x and y
 #[inline]
 pub unsafe fn dswap(n: i32, x: &mut [f64], incx: i32, y: &mut [f64], incy: i32) {
     ffi::dswap_(&n, x.as_mut_ptr(), &incx, y.as_mut_ptr(), &incy)
 }
-
+/// x = a*x
 #[inline]
 pub unsafe fn dscal(n: i32, a: f64, x: &mut [f64], incx: i32) {
     ffi::dscal_(&n, &a, x.as_mut_ptr(), &incx)
 }
-
+/// copy x into y
 #[inline]
 pub unsafe fn dcopy(n: i32, x: &[f64], incx: i32, y: &mut [f64], incy: i32) {
     ffi::dcopy_(&n, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
 }
-
+/// y = a*x + y
 #[inline]
 pub unsafe fn daxpy(n: i32, alpha: f64, x: &[f64], incx: i32, y: &mut [f64], incy: i32) {
     ffi::daxpy_(&n, &alpha, x.as_ptr(), &incx, y.as_mut_ptr(), &incy)
 }
-
+/// dot product
 #[inline]
 pub unsafe fn ddot(n: i32, x: &[f64], incx: i32, y: &[f64], incy: i32) -> f64 {
     ffi::ddot_(&n, x.as_ptr(), &incx, y.as_ptr(), &incy)
 }
-
+/// dot product with extended precision accumulation
 #[inline]
 pub unsafe fn dsdot(n: i32, x: &[f32], incx: i32, y: &[f32], incy: i32) -> f64 {
     ffi::dsdot_(&n, x.as_ptr(), &incx, y.as_ptr(), &incy)
 }
-
+/// Euclidean norm
 #[inline]
 pub unsafe fn dnrm2(n: i32, x: &[f64], incx: i32) -> f64 {
     ffi::dnrm2_(&n, x.as_ptr(), &incx)
 }
-
+/// Euclidean norm
 #[inline]
 pub unsafe fn dznrm2(n: i32, x: &[c64], incx: i32) -> f64 {
     ffi::dznrm2_(&n, x.as_ptr() as *const _, &incx)
 }
-
+/// sum of absolute values
 #[inline]
 pub unsafe fn dasum(n: i32, x: &[f64], incx: i32) -> f64 {
     ffi::dasum_(&n, x.as_ptr(), &incx)
 }
-
+/// index of max abs value
 #[inline]
 pub unsafe fn idamax(n: i32, x: &[f64], incx: i32) -> usize {
     ffi::idamax_(&n, x.as_ptr(), &incx) as usize
 }
-
+/// setup Givens rotation
 #[inline]
 pub unsafe fn crotg(a: &mut c32, b: c32, c: &mut f32, s: &mut c32) {
     ffi::crotg_(
@@ -220,7 +221,7 @@ pub unsafe fn crotg(a: &mut c32, b: c32, c: &mut f32, s: &mut c32) {
         s as *mut _ as *mut _,
     )
 }
-
+/// apply Givens rotation
 #[inline]
 pub unsafe fn csrot(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32, c: f32, s: f32) {
     ffi::csrot_(
@@ -233,7 +234,7 @@ pub unsafe fn csrot(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32, 
         &s,
     )
 }
-
+/// swap x and y
 #[inline]
 pub unsafe fn cswap(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32) {
     ffi::cswap_(
@@ -244,7 +245,7 @@ pub unsafe fn cswap(n: i32, x: &mut [c32], incx: i32, y: &mut [c32], incy: i32) 
         &incy,
     )
 }
-
+/// x = a*x
 #[inline]
 pub unsafe fn cscal(n: i32, a: c32, x: &mut [c32], incx: i32) {
     ffi::cscal_(
@@ -254,12 +255,12 @@ pub unsafe fn cscal(n: i32, a: c32, x: &mut [c32], incx: i32) {
         &incx,
     )
 }
-
+/// x = a*x
 #[inline]
 pub unsafe fn csscal(n: i32, a: f32, x: &mut [c32], incx: i32) {
     ffi::csscal_(&n, &a, x.as_mut_ptr() as *mut _, &incx)
 }
-
+/// copy x into y
 #[inline]
 pub unsafe fn ccopy(n: i32, x: &[c32], incx: i32, y: &mut [c32], incy: i32) {
     ffi::ccopy_(
@@ -270,7 +271,7 @@ pub unsafe fn ccopy(n: i32, x: &[c32], incx: i32, y: &mut [c32], incy: i32) {
         &incy,
     )
 }
-
+/// y = a*x + y
 #[inline]
 pub unsafe fn caxpy(n: i32, alpha: c32, x: &[c32], incx: i32, y: &mut [c32], incy: i32) {
     ffi::caxpy_(
@@ -282,7 +283,7 @@ pub unsafe fn caxpy(n: i32, alpha: c32, x: &[c32], incx: i32, y: &mut [c32], inc
         &incy,
     )
 }
-
+/// dot product
 #[inline]
 pub unsafe fn cdotu(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], incy: i32) {
     ffi::cdotu_(
@@ -294,7 +295,7 @@ pub unsafe fn cdotu(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], i
         &incy,
     )
 }
-
+/// dot product, conjugating the first vector
 #[inline]
 pub unsafe fn cdotc(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], incy: i32) {
     ffi::cdotc_(
@@ -306,17 +307,17 @@ pub unsafe fn cdotc(pres: &mut [c32], n: i32, x: &[c32], incx: i32, y: &[c32], i
         &incy,
     )
 }
-
+/// sum of absolute values
 #[inline]
 pub unsafe fn scasum(n: i32, x: &[c32], incx: i32) -> f32 {
     ffi::scasum_(&n, x.as_ptr() as *const _, &incx)
 }
-
+/// index of max abs value
 #[inline]
 pub unsafe fn icamax(n: i32, x: &[c32], incx: i32) -> usize {
     ffi::icamax_(&n, x.as_ptr() as *const _, &incx) as usize
 }
-
+/// setup Givens rotation
 #[inline]
 pub unsafe fn zrotg(a: &mut c64, b: c64, c: &mut f64, s: &mut c64) {
     ffi::zrotg_(
@@ -326,7 +327,7 @@ pub unsafe fn zrotg(a: &mut c64, b: c64, c: &mut f64, s: &mut c64) {
         s as *mut _ as *mut _,
     )
 }
-
+/// apply Givens rotation
 #[inline]
 pub unsafe fn zdrot(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32, c: f64, s: f64) {
     ffi::zdrot_(
@@ -339,7 +340,7 @@ pub unsafe fn zdrot(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32, 
         &s,
     )
 }
-
+/// swap x and y
 #[inline]
 pub unsafe fn zswap(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32) {
     ffi::zswap_(
@@ -350,7 +351,7 @@ pub unsafe fn zswap(n: i32, x: &mut [c64], incx: i32, y: &mut [c64], incy: i32) 
         &incy,
     )
 }
-
+/// x = a*x
 #[inline]
 pub unsafe fn zscal(n: i32, a: c64, x: &mut [c64], incx: i32) {
     ffi::zscal_(
@@ -360,12 +361,12 @@ pub unsafe fn zscal(n: i32, a: c64, x: &mut [c64], incx: i32) {
         &incx,
     )
 }
-
+/// x = a*x
 #[inline]
 pub unsafe fn zdscal(n: i32, a: f64, x: &mut [c64], incx: i32) {
     ffi::zdscal_(&n, &a, x.as_mut_ptr() as *mut _, &incx)
 }
-
+/// copy x into y
 #[inline]
 pub unsafe fn zcopy(n: i32, x: &[c64], incx: i32, y: &mut [c64], incy: i32) {
     ffi::zcopy_(
@@ -376,7 +377,7 @@ pub unsafe fn zcopy(n: i32, x: &[c64], incx: i32, y: &mut [c64], incy: i32) {
         &incy,
     )
 }
-
+/// y = a*x + y
 #[inline]
 pub unsafe fn zaxpy(n: i32, alpha: c64, x: &[c64], incx: i32, y: &mut [c64], incy: i32) {
     ffi::zaxpy_(
@@ -388,7 +389,7 @@ pub unsafe fn zaxpy(n: i32, alpha: c64, x: &[c64], incx: i32, y: &mut [c64], inc
         &incy,
     )
 }
-
+/// dot product
 #[inline]
 pub unsafe fn zdotu(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], incy: i32) {
     ffi::zdotu_(
@@ -400,7 +401,7 @@ pub unsafe fn zdotu(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], i
         &incy,
     )
 }
-
+/// dot product, conjugating the first vector
 #[inline]
 pub unsafe fn zdotc(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], incy: i32) {
     ffi::zdotc_(
@@ -412,17 +413,17 @@ pub unsafe fn zdotc(pres: &mut [c64], n: i32, x: &[c64], incx: i32, y: &[c64], i
         &incy,
     )
 }
-
+/// sum of absolute values
 #[inline]
 pub unsafe fn dzasum(n: i32, x: &[c64], incx: i32) -> f64 {
     ffi::dzasum_(&n, x.as_ptr() as *const _, &incx)
 }
-
+/// index of max abs value
 #[inline]
 pub unsafe fn izamax(n: i32, x: &[c64], incx: i32) -> usize {
     ffi::izamax_(&n, x.as_ptr() as *const _, &incx) as usize
 }
-
+/// matrix vector multiply
 #[inline]
 pub unsafe fn sgemv(
     trans: u8,
@@ -451,7 +452,7 @@ pub unsafe fn sgemv(
         &incy,
     )
 }
-
+/// banded matrix vector multiply
 #[inline]
 pub unsafe fn sgbmv(
     trans: u8,
@@ -484,7 +485,7 @@ pub unsafe fn sgbmv(
         &incy,
     )
 }
-
+/// symmetric matrix vector multiply
 #[inline]
 pub unsafe fn ssymv(
     uplo: u8,
@@ -511,7 +512,7 @@ pub unsafe fn ssymv(
         &incy,
     )
 }
-
+/// symmetric banded matrix vector multiply
 #[inline]
 pub unsafe fn ssbmv(
     uplo: u8,
@@ -540,7 +541,7 @@ pub unsafe fn ssbmv(
         &incy,
     )
 }
-
+/// symmetric packed matrix vector multiply
 #[inline]
 pub unsafe fn sspmv(
     uplo: u8,
@@ -565,7 +566,7 @@ pub unsafe fn sspmv(
         &incy,
     )
 }
-
+/// triangular matrix vector multiply
 #[inline]
 pub unsafe fn strmv(
     uplo: u8,
@@ -588,7 +589,7 @@ pub unsafe fn strmv(
         &incx,
     )
 }
-
+/// triangular banded matrix vector multiply
 #[inline]
 pub unsafe fn stbmv(
     uplo: u8,
@@ -613,7 +614,7 @@ pub unsafe fn stbmv(
         &incx,
     )
 }
-
+/// triangular packed matrix vector multiply
 #[inline]
 pub unsafe fn stpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [f32], incx: i32) {
     ffi::stpmv_(
@@ -626,7 +627,7 @@ pub unsafe fn stpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [
         &incx,
     )
 }
-
+/// solving triangular matrix problems
 #[inline]
 pub unsafe fn strsv(
     uplo: u8,
@@ -649,7 +650,7 @@ pub unsafe fn strsv(
         &incx,
     )
 }
-
+/// solving triangular banded matrix problems
 #[inline]
 pub unsafe fn stbsv(
     uplo: u8,
@@ -674,7 +675,7 @@ pub unsafe fn stbsv(
         &incx,
     )
 }
-
+/// solving triangular packed matrix problems
 #[inline]
 pub unsafe fn stpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [f32], incx: i32) {
     ffi::stpsv_(
@@ -687,7 +688,7 @@ pub unsafe fn stpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f32], x: &mut [
         &incx,
     )
 }
-
+/// performs the rank 1 operation A := alpha*x*y' + A
 #[inline]
 pub unsafe fn sger(
     m: i32,
@@ -712,7 +713,7 @@ pub unsafe fn sger(
         &lda,
     )
 }
-
+/// performs the symmetric rank 1 operation A := alpha*x*x' + A
 #[inline]
 pub unsafe fn ssyr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, a: &mut [f32], lda: i32) {
     ffi::ssyr_(
@@ -725,7 +726,7 @@ pub unsafe fn ssyr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, a: &mut [
         &lda,
     )
 }
-
+/// symmetric packed rank 1 operation A := alpha*x*x' + A
 #[inline]
 pub unsafe fn sspr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, ap: &mut [f32]) {
     ffi::sspr_(
@@ -737,7 +738,7 @@ pub unsafe fn sspr(uplo: u8, n: i32, alpha: f32, x: &[f32], incx: i32, ap: &mut 
         ap.as_mut_ptr(),
     )
 }
-
+/// performs the symmetric rank 2 operation, A := alpha*x*y' + alpha*y*x' + A
 #[inline]
 pub unsafe fn ssyr2(
     uplo: u8,
@@ -762,7 +763,7 @@ pub unsafe fn ssyr2(
         &lda,
     )
 }
-
+/// performs the symmetric packed rank 2 operation, A := alpha*x*y' + alpha*y*x' + A
 #[inline]
 pub unsafe fn sspr2(
     uplo: u8,
@@ -785,7 +786,7 @@ pub unsafe fn sspr2(
         ap.as_mut_ptr(),
     )
 }
-
+/// matrix vector multiply
 #[inline]
 pub unsafe fn dgemv(
     trans: u8,
@@ -814,7 +815,7 @@ pub unsafe fn dgemv(
         &incy,
     )
 }
-
+/// banded matrix vector multiply
 #[inline]
 pub unsafe fn dgbmv(
     trans: u8,
@@ -847,7 +848,7 @@ pub unsafe fn dgbmv(
         &incy,
     )
 }
-
+/// symmetric matrix vector multiply
 #[inline]
 pub unsafe fn dsymv(
     uplo: u8,
@@ -874,7 +875,7 @@ pub unsafe fn dsymv(
         &incy,
     )
 }
-
+/// symmetric banded matrix vector multiply
 #[inline]
 pub unsafe fn dsbmv(
     uplo: u8,
@@ -903,7 +904,7 @@ pub unsafe fn dsbmv(
         &incy,
     )
 }
-
+/// symmetric packed matrix vector multiply
 #[inline]
 pub unsafe fn dspmv(
     uplo: u8,
@@ -928,7 +929,7 @@ pub unsafe fn dspmv(
         &incy,
     )
 }
-
+/// triangular matrix vector multiply
 #[inline]
 pub unsafe fn dtrmv(
     uplo: u8,
@@ -951,7 +952,7 @@ pub unsafe fn dtrmv(
         &incx,
     )
 }
-
+/// triangular banded matrix vector multiply
 #[inline]
 pub unsafe fn dtbmv(
     uplo: u8,
@@ -976,7 +977,7 @@ pub unsafe fn dtbmv(
         &incx,
     )
 }
-
+/// triangular packed matrix vector multiply
 #[inline]
 pub unsafe fn dtpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [f64], incx: i32) {
     ffi::dtpmv_(
@@ -989,7 +990,7 @@ pub unsafe fn dtpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [
         &incx,
     )
 }
-
+/// solving triangular matrix problems
 #[inline]
 pub unsafe fn dtrsv(
     uplo: u8,
@@ -1012,7 +1013,7 @@ pub unsafe fn dtrsv(
         &incx,
     )
 }
-
+/// solving triangular banded matrix problems
 #[inline]
 pub unsafe fn dtbsv(
     uplo: u8,
@@ -1037,7 +1038,7 @@ pub unsafe fn dtbsv(
         &incx,
     )
 }
-
+/// solving triangular packed matrix problems
 #[inline]
 pub unsafe fn dtpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [f64], incx: i32) {
     ffi::dtpsv_(
@@ -1050,7 +1051,7 @@ pub unsafe fn dtpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[f64], x: &mut [
         &incx,
     )
 }
-
+/// performs the rank 1 operation A := alpha*x*y' + A
 #[inline]
 pub unsafe fn dger(
     m: i32,
@@ -1075,7 +1076,7 @@ pub unsafe fn dger(
         &lda,
     )
 }
-
+/// performs the symmetric rank 1 operation A := alpha*x*x' + A
 #[inline]
 pub unsafe fn dsyr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, a: &mut [f64], lda: i32) {
     ffi::dsyr_(
@@ -1088,7 +1089,7 @@ pub unsafe fn dsyr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, a: &mut [
         &lda,
     )
 }
-
+/// symmetric packed rank 1 operation A := alpha*x*x' + A
 #[inline]
 pub unsafe fn dspr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, ap: &mut [f64]) {
     ffi::dspr_(
@@ -1100,7 +1101,7 @@ pub unsafe fn dspr(uplo: u8, n: i32, alpha: f64, x: &[f64], incx: i32, ap: &mut 
         ap.as_mut_ptr(),
     )
 }
-
+/// performs the symmetric rank 2 operation, A := alpha*x*y' + alpha*y*x' + A
 #[inline]
 pub unsafe fn dsyr2(
     uplo: u8,
@@ -1125,7 +1126,7 @@ pub unsafe fn dsyr2(
         &lda,
     )
 }
-
+/// performs the symmetric packed rank 2 operation, A := alpha*x*y' + alpha*y*x' + A
 #[inline]
 pub unsafe fn dspr2(
     uplo: u8,
@@ -1148,7 +1149,7 @@ pub unsafe fn dspr2(
         ap.as_mut_ptr(),
     )
 }
-
+/// matrix vector multiply
 #[inline]
 pub unsafe fn cgemv(
     trans: u8,
@@ -1177,7 +1178,7 @@ pub unsafe fn cgemv(
         &incy,
     )
 }
-
+/// banded matrix vector multiply
 #[inline]
 pub unsafe fn cgbmv(
     trans: u8,
@@ -1210,7 +1211,7 @@ pub unsafe fn cgbmv(
         &incy,
     )
 }
-
+/// hermitian matrix vector multiply
 #[inline]
 pub unsafe fn chemv(
     uplo: u8,
@@ -1237,7 +1238,7 @@ pub unsafe fn chemv(
         &incy,
     )
 }
-
+/// hermitian banded matrix vector multiply
 #[inline]
 pub unsafe fn chbmv(
     uplo: u8,
@@ -1266,7 +1267,7 @@ pub unsafe fn chbmv(
         &incy,
     )
 }
-
+/// hermitian packed matrix vector multiply
 #[inline]
 pub unsafe fn chpmv(
     uplo: u8,
@@ -1291,7 +1292,7 @@ pub unsafe fn chpmv(
         &incy,
     )
 }
-
+/// triangular matrix vector multiply
 #[inline]
 pub unsafe fn ctrmv(
     uplo: u8,
@@ -1314,7 +1315,7 @@ pub unsafe fn ctrmv(
         &incx,
     )
 }
-
+/// triangular banded matrix vector multiply
 #[inline]
 pub unsafe fn ctbmv(
     uplo: u8,
@@ -1339,7 +1340,7 @@ pub unsafe fn ctbmv(
         &incx,
     )
 }
-
+/// triangular packed matrix vector multiply
 #[inline]
 pub unsafe fn ctpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [c32], incx: i32) {
     ffi::ctpmv_(
@@ -1352,7 +1353,7 @@ pub unsafe fn ctpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [
         &incx,
     )
 }
-
+/// solving triangular matrix problems
 #[inline]
 pub unsafe fn ctrsv(
     uplo: u8,
@@ -1375,7 +1376,7 @@ pub unsafe fn ctrsv(
         &incx,
     )
 }
-
+/// solving triangular banded matrix problems
 #[inline]
 pub unsafe fn ctbsv(
     uplo: u8,
@@ -1400,7 +1401,7 @@ pub unsafe fn ctbsv(
         &incx,
     )
 }
-
+/// solving triangular packed matrix problems
 #[inline]
 pub unsafe fn ctpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [c32], incx: i32) {
     ffi::ctpsv_(
@@ -1413,7 +1414,7 @@ pub unsafe fn ctpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c32], x: &mut [
         &incx,
     )
 }
-
+/// performs the rank 1 operation A := alpha*x*y' + A
 #[inline]
 pub unsafe fn cgeru(
     m: i32,
@@ -1438,7 +1439,7 @@ pub unsafe fn cgeru(
         &lda,
     )
 }
-
+/// performs the rank 1 operation A := alpha*x*conjg( y' ) + A
 #[inline]
 pub unsafe fn cgerc(
     m: i32,
@@ -1463,7 +1464,7 @@ pub unsafe fn cgerc(
         &lda,
     )
 }
-
+/// hermitian rank 1 operation A := alpha*x*conjg(x') + A
 #[inline]
 pub unsafe fn cher(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, a: &mut [c32], lda: i32) {
     ffi::cher_(
@@ -1476,7 +1477,7 @@ pub unsafe fn cher(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, a: &mut [
         &lda,
     )
 }
-
+/// hermitian packed rank 1 operation A := alpha*x*conjg( x' ) + A
 #[inline]
 pub unsafe fn chpr(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, ap: &mut [c32]) {
     ffi::chpr_(
@@ -1488,7 +1489,7 @@ pub unsafe fn chpr(uplo: u8, n: i32, alpha: f32, x: &[c32], incx: i32, ap: &mut 
         ap.as_mut_ptr() as *mut _,
     )
 }
-
+/// hermitian rank 2 operation
 #[inline]
 pub unsafe fn chpr2(
     uplo: u8,
@@ -1511,7 +1512,7 @@ pub unsafe fn chpr2(
         ap.as_mut_ptr() as *mut _,
     )
 }
-
+/// hermitian packed rank 2 operation
 #[inline]
 pub unsafe fn cher2(
     uplo: u8,
@@ -1536,7 +1537,7 @@ pub unsafe fn cher2(
         &lda,
     )
 }
-
+/// matrix vector multiply
 #[inline]
 pub unsafe fn zgemv(
     trans: u8,
@@ -1565,7 +1566,7 @@ pub unsafe fn zgemv(
         &incy,
     )
 }
-
+/// banded matrix vector multiply
 #[inline]
 pub unsafe fn zgbmv(
     trans: u8,
@@ -1598,7 +1599,7 @@ pub unsafe fn zgbmv(
         &incy,
     )
 }
-
+/// hermitian matrix vector multiply
 #[inline]
 pub unsafe fn zhemv(
     uplo: u8,
@@ -1625,7 +1626,7 @@ pub unsafe fn zhemv(
         &incy,
     )
 }
-
+/// hermitian banded matrix vector multiply
 #[inline]
 pub unsafe fn zhbmv(
     uplo: u8,
@@ -1654,7 +1655,7 @@ pub unsafe fn zhbmv(
         &incy,
     )
 }
-
+/// hermitian packed matrix vector multiply
 #[inline]
 pub unsafe fn zhpmv(
     uplo: u8,
@@ -1679,7 +1680,7 @@ pub unsafe fn zhpmv(
         &incy,
     )
 }
-
+/// triangular matrix vector multiply
 #[inline]
 pub unsafe fn ztrmv(
     uplo: u8,
@@ -1702,7 +1703,7 @@ pub unsafe fn ztrmv(
         &incx,
     )
 }
-
+/// triangular banded matrix vector multiply
 #[inline]
 pub unsafe fn ztbmv(
     uplo: u8,
@@ -1727,7 +1728,7 @@ pub unsafe fn ztbmv(
         &incx,
     )
 }
-
+/// triangular packed matrix vector multiply
 #[inline]
 pub unsafe fn ztpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [c64], incx: i32) {
     ffi::ztpmv_(
@@ -1740,7 +1741,7 @@ pub unsafe fn ztpmv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [
         &incx,
     )
 }
-
+/// solving triangular matrix problems
 #[inline]
 pub unsafe fn ztrsv(
     uplo: u8,
@@ -1763,7 +1764,7 @@ pub unsafe fn ztrsv(
         &incx,
     )
 }
-
+/// solving triangular banded matrix problems
 #[inline]
 pub unsafe fn ztbsv(
     uplo: u8,
@@ -1788,7 +1789,7 @@ pub unsafe fn ztbsv(
         &incx,
     )
 }
-
+/// solving triangular packed matrix problems
 #[inline]
 pub unsafe fn ztpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [c64], incx: i32) {
     ffi::ztpsv_(
@@ -1801,7 +1802,7 @@ pub unsafe fn ztpsv(uplo: u8, trans: u8, diag: u8, n: i32, ap: &[c64], x: &mut [
         &incx,
     )
 }
-
+/// performs the rank 1 operation A := alpha*x*y' + A
 #[inline]
 pub unsafe fn zgeru(
     m: i32,
@@ -1826,7 +1827,7 @@ pub unsafe fn zgeru(
         &lda,
     )
 }
-
+/// performs the rank 1 operation A := alpha*x*conjg( y' ) + A
 #[inline]
 pub unsafe fn zgerc(
     m: i32,
@@ -1851,7 +1852,7 @@ pub unsafe fn zgerc(
         &lda,
     )
 }
-
+/// hermitian rank 1 operation A := alpha*x*conjg(x') + A
 #[inline]
 pub unsafe fn zher(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, a: &mut [c64], lda: i32) {
     ffi::zher_(
@@ -1864,7 +1865,7 @@ pub unsafe fn zher(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, a: &mut [
         &lda,
     )
 }
-
+/// hermitian packed rank 1 operation A := alpha*x*conjg( x' ) + A
 #[inline]
 pub unsafe fn zhpr(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, ap: &mut [c64]) {
     ffi::zhpr_(
@@ -1876,7 +1877,7 @@ pub unsafe fn zhpr(uplo: u8, n: i32, alpha: f64, x: &[c64], incx: i32, ap: &mut 
         ap.as_mut_ptr() as *mut _,
     )
 }
-
+/// hermitian rank 2 operation
 #[inline]
 pub unsafe fn zher2(
     uplo: u8,
@@ -1901,7 +1902,7 @@ pub unsafe fn zher2(
         &lda,
     )
 }
-
+/// hermitian packed rank 2 operation
 #[inline]
 pub unsafe fn zhpr2(
     uplo: u8,
@@ -1924,7 +1925,7 @@ pub unsafe fn zhpr2(
         ap.as_mut_ptr() as *mut _,
     )
 }
-
+/// matrix matrix multiply
 #[inline]
 pub unsafe fn sgemm(
     transa: u8,
@@ -1957,7 +1958,7 @@ pub unsafe fn sgemm(
         &ldc,
     )
 }
-
+/// symmetric matrix matrix multiply
 #[inline]
 pub unsafe fn ssymm(
     side: u8,
@@ -1988,7 +1989,7 @@ pub unsafe fn ssymm(
         &ldc,
     )
 }
-
+/// symmetric rank-k update to a matrix
 #[inline]
 pub unsafe fn ssyrk(
     uplo: u8,
@@ -2015,7 +2016,7 @@ pub unsafe fn ssyrk(
         &ldc,
     )
 }
-
+/// symmetric rank-2k update to a matrix
 #[inline]
 pub unsafe fn ssyr2k(
     uplo: u8,
@@ -2046,7 +2047,7 @@ pub unsafe fn ssyr2k(
         &ldc,
     )
 }
-
+/// triangular matrix matrix multiply
 #[inline]
 pub unsafe fn strmm(
     side: u8,
@@ -2075,7 +2076,7 @@ pub unsafe fn strmm(
         &ldb,
     )
 }
-
+/// solving triangular matrix with multiple right hand sides
 #[inline]
 pub unsafe fn strsm(
     side: u8,
@@ -2104,7 +2105,7 @@ pub unsafe fn strsm(
         &ldb,
     )
 }
-
+/// matrix matrix multiply
 #[inline]
 pub unsafe fn dgemm(
     transa: u8,
@@ -2137,7 +2138,7 @@ pub unsafe fn dgemm(
         &ldc,
     )
 }
-
+/// symmetric matrix matrix multiply
 #[inline]
 pub unsafe fn dsymm(
     side: u8,
@@ -2168,7 +2169,7 @@ pub unsafe fn dsymm(
         &ldc,
     )
 }
-
+/// symmetric rank-k update to a matrix
 #[inline]
 pub unsafe fn dsyrk(
     uplo: u8,
@@ -2195,7 +2196,7 @@ pub unsafe fn dsyrk(
         &ldc,
     )
 }
-
+/// symmetric rank-2k update to a matrix
 #[inline]
 pub unsafe fn dsyr2k(
     uplo: u8,
@@ -2226,7 +2227,7 @@ pub unsafe fn dsyr2k(
         &ldc,
     )
 }
-
+/// triangular matrix matrix multiply
 #[inline]
 pub unsafe fn dtrmm(
     side: u8,
@@ -2255,7 +2256,7 @@ pub unsafe fn dtrmm(
         &ldb,
     )
 }
-
+/// solving triangular matrix with multiple right hand sides
 #[inline]
 pub unsafe fn dtrsm(
     side: u8,
@@ -2284,7 +2285,7 @@ pub unsafe fn dtrsm(
         &ldb,
     )
 }
-
+/// matrix matrix multiply
 #[inline]
 pub unsafe fn cgemm(
     transa: u8,
@@ -2317,7 +2318,7 @@ pub unsafe fn cgemm(
         &ldc,
     )
 }
-
+/// symmetric matrix matrix multiply
 #[inline]
 pub unsafe fn csymm(
     side: u8,
@@ -2348,7 +2349,7 @@ pub unsafe fn csymm(
         &ldc,
     )
 }
-
+/// hermitian matrix matrix multiply
 #[inline]
 pub unsafe fn chemm(
     side: u8,
@@ -2379,7 +2380,7 @@ pub unsafe fn chemm(
         &ldc,
     )
 }
-
+/// symmetric rank-k update to a matrix
 #[inline]
 pub unsafe fn csyrk(
     uplo: u8,
@@ -2406,7 +2407,7 @@ pub unsafe fn csyrk(
         &ldc,
     )
 }
-
+/// hermitian rank-k update to a matrix
 #[inline]
 pub unsafe fn cherk(
     uplo: u8,
@@ -2433,7 +2434,7 @@ pub unsafe fn cherk(
         &ldc,
     )
 }
-
+/// symmetric rank-2k update to a matrix
 #[inline]
 pub unsafe fn csyr2k(
     uplo: u8,
@@ -2464,7 +2465,7 @@ pub unsafe fn csyr2k(
         &ldc,
     )
 }
-
+/// hermitian rank-2k update to a matrix
 #[inline]
 pub unsafe fn cher2k(
     uplo: u8,
@@ -2495,7 +2496,7 @@ pub unsafe fn cher2k(
         &ldc,
     )
 }
-
+/// triangular matrix matrix multiply
 #[inline]
 pub unsafe fn ctrmm(
     side: u8,
@@ -2524,7 +2525,7 @@ pub unsafe fn ctrmm(
         &ldb,
     )
 }
-
+/// solving triangular matrix with multiple right hand sides
 #[inline]
 pub unsafe fn ctrsm(
     side: u8,
@@ -2553,7 +2554,7 @@ pub unsafe fn ctrsm(
         &ldb,
     )
 }
-
+/// matrix matrix multiply
 #[inline]
 pub unsafe fn zgemm(
     transa: u8,
@@ -2586,7 +2587,7 @@ pub unsafe fn zgemm(
         &ldc,
     )
 }
-
+/// symmetric matrix matrix multiply
 #[inline]
 pub unsafe fn zsymm(
     side: u8,
@@ -2617,7 +2618,7 @@ pub unsafe fn zsymm(
         &ldc,
     )
 }
-
+/// hermitian matrix matrix multiply
 #[inline]
 pub unsafe fn zhemm(
     side: u8,
@@ -2648,7 +2649,7 @@ pub unsafe fn zhemm(
         &ldc,
     )
 }
-
+/// symmetric rank-k update to a matrix
 #[inline]
 pub unsafe fn zsyrk(
     uplo: u8,
@@ -2675,7 +2676,7 @@ pub unsafe fn zsyrk(
         &ldc,
     )
 }
-
+/// hermitian rank-k update to a matrix
 #[inline]
 pub unsafe fn zherk(
     uplo: u8,
@@ -2702,7 +2703,7 @@ pub unsafe fn zherk(
         &ldc,
     )
 }
-
+/// symmetric rank-2k update to a matrix
 #[inline]
 pub unsafe fn zsyr2k(
     uplo: u8,
@@ -2733,7 +2734,7 @@ pub unsafe fn zsyr2k(
         &ldc,
     )
 }
-
+/// hermitian rank-2k update to a matrix
 #[inline]
 pub unsafe fn zher2k(
     uplo: u8,
@@ -2764,7 +2765,7 @@ pub unsafe fn zher2k(
         &ldc,
     )
 }
-
+/// triangular matrix matrix multiply
 #[inline]
 pub unsafe fn ztrmm(
     side: u8,
@@ -2793,7 +2794,7 @@ pub unsafe fn ztrmm(
         &ldb,
     )
 }
-
+/// solving triangular matrix with multiple right hand sides
 #[inline]
 pub unsafe fn ztrsm(
     side: u8,
