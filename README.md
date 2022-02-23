@@ -5,8 +5,16 @@ The package provides wrappers for [BLAS] (Fortran).
 ## [Architecture]
 
 ## Example
-
+`Cargo.toml`:
+```toml
+# ...
+[dependencies]
+blas = "0.22.0"
+openblas-src = "0.10.4"
+```
+`src/main.rs`:
 ```rust
+extern crate openblas_src;
 use blas::*;
 
 let (m, n, k) = (2, 4, 3);

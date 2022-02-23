@@ -4,7 +4,16 @@
 //!
 //! ## Example
 //!
-//! ```no_run
+//! `Cargo.toml`:
+//! ```ignore
+//! ## ...
+//! [dependencies]
+//! blas = "0.22.0"
+//! openblas-src = "0.10.4"
+//! ```
+//! `src/main.rs`:
+//! ```ignore
+//! extern crate openblas_src;
 //! use blas::*;
 //!
 //! let (m, n, k) = (2, 4, 3);
