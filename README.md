@@ -3,6 +3,7 @@
 The package provides wrappers for [BLAS] (Fortran).
 
 ## [Architecture]
+Note: this wrapper layer requires a dedicated source implementation to be specified - see [sources](https://github.com/blas-lapack-rs/blas-lapack-rs.github.io/wiki#sources) section for more details.
 
 ## Example
 
