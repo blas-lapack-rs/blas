@@ -1,6 +1,6 @@
 [package]
 name = "blas"
-version = "0.22.0"
+version = "0.22.1"
 license = "Apache-2.0/MIT"
 authors = [
     "Andrew Straw <strawman@astraw.com>",
@@ -19,11 +19,15 @@ keywords = ["linear-algebra"]
 
 [dependencies]
 libc = "0.2"
+half = {version="2.3.1", optional=true}
 
 [dependencies.num-complex]
 version = "0.4"
 default-features = false
 
 [dependencies.blas-sys]
-version = "0.7"
+version = "0.7.2"
 default-features = false
+
+[features]
+half = ["blas-sys/half", "dep:half"]

@@ -2822,3 +2822,37 @@ pub unsafe fn ztrsm(
         &ldb,
     )
 }
+
+#[cfg(feature = "half")]
+#[inline]
+pub unsafe fn hgemm(
+    transa: u8,
+    transb: u8,
+    m: i32,
+    n: i32,
+    k: i32,
+    alpha: half::f16,
+    a: &[half::f16],
+    lda: i32,
+    b: &[half::f16],
+    ldb: i32,
+    beta: half::f16,
+    c: &mut [half::f16],
+    ldc: i32,
+) {
+    ffi::hgemm_(
+        &(transa as c_char),
+        &(transb as c_char),
+        &m,
+        &n,
+        &k,
+        &alpha,
+        a.as_ptr(),
+        &lda,
+        b.as_ptr(),
+        &ldb,
+        &beta,
+        c.as_mut_ptr(),
+        &ldc,
+    )
+}
