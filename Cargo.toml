@@ -2,7 +2,7 @@
 name = "blas"
 version = "0.23.0"
 edition = "2021"
-license = "Apache-2.0/MIT"
+license = "Apache-2.0 OR MIT"
 authors = [
     "Andrew Straw <strawman@astraw.com>",
     "Corey Richardson <corey@octayn.net>",
