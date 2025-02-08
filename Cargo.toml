@@ -1,6 +1,7 @@
 [package]
 name = "blas"
-version = "0.22.0"
+version = "0.23.0"
+edition = "2021"
 license = "Apache-2.0/MIT"
 authors = [
     "Andrew Straw <strawman@astraw.com>",
@@ -25,5 +26,5 @@ version = "0.4"
 default-features = false
 
 [dependencies.blas-sys]
-version = "0.7"
+version = "0.8"
 default-features = false

@@ -44,7 +44,6 @@
 //! [blas]: https://en.wikipedia.org/wiki/BLAS
 
 extern crate blas_sys as ffi;
-extern crate libc;
 extern crate num_complex as num;
 
 use libc::c_char;
